@@ -4,7 +4,7 @@ repos:
   rev: v2.0.0
   hooks:
     - id: autoflake
-      name: remove imports
+      name: remove duplicate imports
       entry: autoflake
       language: python
       "types": [python]
