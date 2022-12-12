@@ -1,7 +1,6 @@
 import os
 
 import dotenv
-import numpy
 from fxcmpy import fxcmpy
 from pandas import DataFrame
 

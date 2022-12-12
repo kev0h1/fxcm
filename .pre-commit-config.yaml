@@ -17,11 +17,6 @@ repos:
       language: python
       "types": [python]
       require_serial: true
-      args:
-        - "--in-place"
-        - "--expand-star-imports"
-        - "--remove-duplicate-keys"
-        - "--remove-unused-variables"
 
 - repo: https://github.com/asottile/seed-isort-config
   rev: v1.9.3
