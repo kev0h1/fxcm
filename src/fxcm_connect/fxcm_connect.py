@@ -1,7 +1,9 @@
+import os
+
 import dotenv
 from fxcmpy import fxcmpy
-import os
 from pandas import DataFrame
+
 from src.config import ForexPairEnum, PeriodEnum
 
 env = os.path.abspath(os.curdir) + "\\src\\.env"
