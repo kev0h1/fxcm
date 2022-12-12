@@ -1,3 +1,4 @@
+import numpy as np
 from pandas import DataFrame, concat
 
 
@@ -110,18 +111,76 @@ class Indicators:
         minus_dm[minus_dm > 0] = 0
 
         tr1 = data[high] - data[low]
-        tr2 = abs(data[high] - data[close].shift(1))
-        tr3 = abs(data[low] - data[close].shift(1))
+        tr2 = np.abs(data[high] - data[close].shift(1))
+        tr3 = np.abs(data[low] - data[close].shift(1))
         # frames = [tr1, tr2, tr3]
         tr = concat([tr1, tr2, tr3], axis=1).max(axis=1)
         atr = tr.rolling(period).mean()
 
         plus_di = 100 * (plus_dm.ewm(alpha=1 / period).mean() / atr)
-        minus_di = abs(100 * (minus_dm.ewm(alpha=1 / period).mean() / atr))
-        dx = (abs(plus_di - minus_di) / abs(plus_di + minus_di)) * 100
+        minus_di = np.abs(100 * (minus_dm.ewm(alpha=1 / period).mean() / atr))
+        dx = (np.abs(plus_di - minus_di) / np.abs(plus_di + minus_di)) * 100
         adx = ((dx.shift(1) * (period - 1)) + dx) / period
         adx_smooth = adx.ewm(alpha=1 / period).mean()
         data["plus_di"] = plus_di
         data["minus_di"] = minus_di
         data["adx"] = adx_smooth
+        return data
+
+    def get_atr(
+        self,
+        data: DataFrame,
+        period: int = 14,
+        close: str = "close",
+        high: str = "high",
+        low: str = "low",
+    ):
+        """Get the atr"""
+        high_low = data[high] - data[low]
+        high_close = np.abs(data[high] - data[close].shift())
+        low_close = np.abs(data[low] - data[close].shift())
+        ranges = concat([high_low, high_close, low_close], axis=1)
+        true_range = np.max(ranges, axis=1)
+        atr = true_range.rolling(14).sum() / period
+        data["atr"] = atr
+        return data
+
+    def get_obv(
+        self, data: DataFrame, close: str = "close", volume: str = "volume"
+    ):
+        """Get the obv"""
+        obv = (np.sign(data[close].diff()) * data[volume]).fillna(0).cumsum()
+        data["obv"] = obv
+        return data
+
+    def get_accumulation_distribution(
+        self,
+        data: DataFrame,
+        high: str = "high",
+        low: str = "low",
+        close: str = "close",
+        volume: str = "volume",
+    ):
+        """Get the ad"""
+        # Current money flow volume
+        high_low = data[high] - data[low]
+        CMFV = np.multiply(
+            np.divide(
+                np.subtract(
+                    np.subtract(data[low], data[close]),
+                    np.subtract(data[high], data[close]),
+                ),
+                high_low,
+            ),
+            data[volume],
+        )
+        ad = []
+        for t in range(len(CMFV)):
+            if t == 0:
+                ad.append(CMFV[t])
+            else:
+                ad.append(ad[-1] + CMFV[t])
+
+        data["ad"] = ad
+
         return data

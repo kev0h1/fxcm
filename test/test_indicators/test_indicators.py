@@ -1,9 +1,11 @@
-import pandas as pd
 import os
+
+import pandas as pd
+
 from src.data.data import Data
+from src.indicators.indicators import Indicators
 
 file = os.path.abspath(os.curdir) + "\\test\\data.csv"
-from src.indicators.indicators import Indicators
 
 
 class TestIndicators:
@@ -95,3 +97,33 @@ class TestIndicators:
         assert "minus_di" in data
         assert "adx" in data
         assert len(data.columns) == 9
+
+    def test_get_atr(self):
+        """Test the get stocastic method"""
+        data = pd.read_csv(file)
+        data_obj = Data(data)
+        refined_data = data_obj.get_refined_data()
+        indicators = Indicators()
+        data = indicators.get_atr(refined_data)
+        assert "atr" in data
+        assert len(data.columns) == 7
+
+    def test_get_obv(self):
+        """Test the get stocastic method"""
+        data = pd.read_csv(file)
+        data_obj = Data(data)
+        refined_data = data_obj.get_refined_data()
+        indicators = Indicators()
+        data = indicators.get_obv(refined_data)
+        assert "obv" in data
+        assert len(data.columns) == 7
+
+    def test_get_accumulation_distribution(self):
+        """Test the get stocastic method"""
+        data = pd.read_csv(file)
+        data_obj = Data(data)
+        refined_data = data_obj.get_refined_data()
+        indicators = Indicators()
+        data = indicators.get_accumulation_distribution(refined_data)
+        assert "ad" in data
+        assert len(data.columns) == 7
