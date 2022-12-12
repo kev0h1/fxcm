@@ -31,3 +31,7 @@ ipykernel = "^6.17.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.autoflake]
+check = true
+imports = ["django", "requests", "urllib3"]
