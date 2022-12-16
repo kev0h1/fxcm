@@ -108,8 +108,6 @@ env/
 venv/
 ENV/
 env.bak/
-venv.bak/
-.vscode/
 .idea/
 
 # Spyder project settings
