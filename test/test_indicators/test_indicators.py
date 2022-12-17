@@ -5,7 +5,7 @@ import pandas as pd
 from src.data.data import Data
 from src.indicators.indicators import Indicators
 
-file = os.path.abspath(os.curdir) + "\\test\\data.csv"
+file = os.path.abspath(os.curdir) + "/test/data.csv"
 
 
 class TestIndicators:

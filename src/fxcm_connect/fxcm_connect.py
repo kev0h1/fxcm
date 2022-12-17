@@ -6,7 +6,7 @@ from pandas import DataFrame
 
 from src.config import ForexPairEnum, PeriodEnum
 
-env = os.path.abspath(os.curdir) + "\\src\\.env"
+env = os.path.abspath(os.curdir) + "/src/.env"
 config = dotenv.dotenv_values(env)
 
 

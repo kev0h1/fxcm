@@ -1,6 +1,6 @@
 import os
 
-file = os.path.abspath(os.curdir) + "\\test\\data.csv"
+file = os.path.abspath(os.curdir) + "/test/data.csv"
 import mock
 import pandas as pd
 from src.data.data import Data
