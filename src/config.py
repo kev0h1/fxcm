@@ -25,3 +25,8 @@ class ForexPairEnum(Enum):
     USDCAD = "USD/CAD"
     AUDUSD = "AUD/USD"
     NZDUSD = "NZD/USD"
+
+
+class OrderTypeEnum(Enum):
+    AT_MARKET = "AtMarket"
+    MARKET_RANGE = "MarketRange"
