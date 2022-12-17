@@ -15,6 +15,7 @@ if __name__ == "__main__":
 
     f = open("social.txt", "a")
     f.write("data\n")
+
     for item in arr:
         try:
             f.write(item.text + "\n")

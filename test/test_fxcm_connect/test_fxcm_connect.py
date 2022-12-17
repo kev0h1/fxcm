@@ -1,9 +1,10 @@
-from src.fxcm_connect.fxcm_connect import FXCMConnect, config
-from fxcmpy import fxcmpy
-import pandas as pd
 import mock
-from src.config import ForexPairEnum, PeriodEnum
+import pandas as pd
 import pytest
+from fxcmpy import fxcmpy
+
+from src.config import ForexPairEnum, PeriodEnum
+from src.fxcm_connect.fxcm_connect import FXCMConnect, config
 
 
 class TestFXCMConnect:
