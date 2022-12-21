@@ -6,6 +6,7 @@ from fxcmpy import fxcmpy
 from pandas import DataFrame
 
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum
+from src.errors.errors import NoStopDefinedException
 
 env = os.path.abspath(os.curdir) + "/src/.env"
 config = dotenv.dotenv_values(env)
@@ -51,6 +52,9 @@ class FXCMConnect:
             stops["limit"] = limit
         if stop:
             stops["stop"] = stop
+
+        if not limit and not stop:
+            raise NoStopDefinedException()
 
         trade = self.con.open_trade(
             symbol=instrument.value,

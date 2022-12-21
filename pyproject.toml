@@ -20,6 +20,9 @@ html5lib = "^1.1"
 pre-commit = "^2.20.0"
 autoflake = "^2.0.0"
 isort = "^5.11.3"
+radon = "^5.1.0"
+sqlalchemy = "^1.4.45"
+psycopg2-binary = "^2.9.5"
 
 [tool.poetry.group.dev.dependencies]
 fxcmpy = "^1.3.3"

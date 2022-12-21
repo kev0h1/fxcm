@@ -1,7 +1,6 @@
 import html5lib
 import requests
 from bs4 import BeautifulSoup
-
 from src.config import ForexPairEnum, PeriodEnum
 from src.fxcm_connect.fxcm_connect import FXCMConnect, config
 

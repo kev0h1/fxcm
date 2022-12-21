@@ -26,5 +26,7 @@
     "python.testing.pytestEnabled": true,
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": ["--line-length", "79"],
-    "python.linting.enabled": true
+    "python.linting.enabled": true,
+    "python.radon.executable": "radon",
+    "python.defaultInterpreterPath": "./venv/Scripts/python.exe"
 }
