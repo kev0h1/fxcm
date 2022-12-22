@@ -15,13 +15,23 @@ config = dotenv.dotenv_values(env)
 class FXCMConnect:
     def __init__(self, conf: dict) -> None:
         """set up the connection to fxcm"""
-        token = conf["TOKEN"] if "TOKEN" in conf else None
+        self.token = conf["TOKEN"] if "TOKEN" in conf else None
 
-        if token is None:
+        if self.token is None:
             raise ValueError("No config defined")
-        self.con = fxcmpy(
-            access_token=token or conf["TOKEN"], log_level="error"
-        )
+        self.open_connection()
+
+    def get_connection_status(self) -> None:
+        """Get the connection status"""
+        return self.con.is_connected()
+
+    def close_connection(self) -> None:
+        """Closes the connection"""
+        self.con.close()
+
+    def open_connection(self) -> None:
+        """Open the connection"""
+        self.con = fxcmpy(access_token=self.token, log_level="error")
 
     def get_candle_data(
         self, instrument: ForexPairEnum, period: PeriodEnum, number: int = 100
@@ -62,6 +72,6 @@ class FXCMConnect:
             is_in_pips=is_pips,
             amount=amount,
             time_in_force=time_in_force,
-            order_type=order_type,
+            order_type=order_type.value,
             **stops
         )
