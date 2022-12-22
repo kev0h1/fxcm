@@ -18,6 +18,4 @@ repos:
         entry: isort
         language: python
         args: ["--filter-files", "--profile", "black", "--line-length=79"]
-      - id: xenon
-        args: ["--max-average=A", "--max-modules=C", "--max-absolute=C"]
 
