@@ -3,6 +3,7 @@ def calculate_lotsize(risk_percentage, stoploss_in_pips, equity):
 
 
 def ten_pip_value(currency_pair):
+    """Calculates the 10 pip value"""
     if "JPY" in currency_pair:
         return 0.1
     return 0.001
