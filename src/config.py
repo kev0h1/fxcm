@@ -30,3 +30,8 @@ class ForexPairEnum(Enum):
 class OrderTypeEnum(Enum):
     AT_MARKET = "AtMarket"
     MARKET_RANGE = "MarketRange"
+
+
+class SignalTypeEnum(Enum):
+    MOVING_AVERAGE = "Moving Average"
+    MACD = "MACD"

@@ -4,7 +4,8 @@ import os
 import dotenv
 from fxcmpy import fxcmpy
 from pandas import DataFrame
-
+from src.classes.trade import Trade
+from sqlalchemy.orm import Session
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum
 from src.errors.errors import NoStopDefinedException
 
@@ -31,7 +32,11 @@ class FXCMConnect:
 
     def open_connection(self) -> None:
         """Open the connection"""
-        self.con = fxcmpy(access_token=self.token, log_level="error")
+
+        self.con = fxcmpy(
+            access_token=self.token,
+            log_level="error",
+        )
 
     def get_candle_data(
         self, instrument: ForexPairEnum, period: PeriodEnum, number: int = 100
@@ -41,14 +46,19 @@ class FXCMConnect:
             instrument=instrument.value, period=period.value, number=number
         )
 
+    def get_open_positions(self, **kwargs):
+        """returns the open positions"""
+        return self.con.get_open_positions()
+
     def open_trade(
         self,
+        session: Session,
         instrument: ForexPairEnum,
         is_buy: bool,
         is_pips: bool,
-        stop: Decimal,
-        limit: Decimal,
-        amount: Decimal,
+        stop: float,
+        limit: float,
+        amount: int,
         order_type: OrderTypeEnum = OrderTypeEnum.AT_MARKET,
         time_in_force: str = "GTC",
     ):
@@ -66,7 +76,7 @@ class FXCMConnect:
         if not limit and not stop:
             raise NoStopDefinedException()
 
-        trade = self.con.open_trade(
+        self.con.open_trade(
             symbol=instrument.value,
             is_buy=is_buy,
             is_in_pips=is_pips,
@@ -75,3 +85,20 @@ class FXCMConnect:
             order_type=order_type.value,
             **stops
         )
+        self.create_trade_obj(session)
+
+    def create_trade_obj(self, session):
+        fxcm_postion = self.get_open_positions()[-1]
+        trade_id = fxcm_postion.iloc[-1]["tradeId"]
+        if not Trade.get_trade_by_trade_id(session=session, trade_id=trade_id):
+            _ = Trade(
+                trade_id=trade_id,
+                position_size=fxcm_postion["amountK"],
+                stop=fxcm_postion["stop"],
+                limit=fxcm_postion["limit"],
+                is_buy=fxcm_postion["isBuy"],
+            )
+
+    def close_trade(self, trade_id: str, amount: Decimal):
+        """Closes the trade position"""
+        self.con.close_trade(trade_id=trade_id, amount=amount)
