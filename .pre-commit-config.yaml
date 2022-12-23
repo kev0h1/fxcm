@@ -19,5 +19,8 @@ repos:
         language: python
         args: ["--filter-files", "--profile", "black", "--line-length=79"]
       - id: xenon
+        name: Calculate code complexity
+        entry: xenon
+        language: python
         args: ["--max-average=A", "--max-modules=C", "--max-absolute=C"]
 
