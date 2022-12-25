@@ -35,14 +35,3 @@ class DbSession:
         metadata.bind = DbSession.session
         metadata.drop_all(DbSession.engine)
         metadata.create_all(DbSession.engine)
-
-
-# order for reseting the database
-DbSession.init_engine()
-create_mappers()
-DbSession.reset_db(metadata=metadata_obj)
-
-
-with DbSession.session.begin() as session:
-    session.add(Trade(231, 123, 1231, 1231))
-    session.commit()

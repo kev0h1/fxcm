@@ -43,3 +43,8 @@ build-backend = "poetry.core.masonry.api"
 [tool.autoflake]
 check = true
 imports = ["django", "requests", "urllib3"]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]

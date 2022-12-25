@@ -15,6 +15,7 @@ from src.config import SignalTypeEnum
 
 
 def create_trade_table(metadata_obj: MetaData):
+    """Create the trade table"""
     return Table(
         "trades",
         metadata_obj,

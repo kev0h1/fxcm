@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum
 from src.errors.errors import InvalidTradeParameter, NoStopDefinedException
 
+
 env = os.path.abspath(os.curdir) + "/src/.env"
 config = dotenv.dotenv_values(env)
 
@@ -68,9 +69,9 @@ class FXCMConnect:
         open_trade(symbol, is_buy, amount, time_in_force, order_type, rate=0, is_in_pips=True,
         limit=None, at_market=0, stop=None, trailing_step=None, account_id=None)"""
         stops = {}
-        if limit:
+        if limit is not None:
             stops["limit"] = limit
-        if stop:
+        if stop is not None:
             stops["stop"] = stop
 
         self.validate_stops(is_buy, is_pips, stop, limit)
@@ -88,9 +89,6 @@ class FXCMConnect:
 
     def validate_stops(self, is_buy, is_pips, stop, limit):
         """Validates the stops and limits"""
-        if not limit and not stop:
-            raise NoStopDefinedException()
-
         if not stop:
             raise InvalidTradeParameter("no stop defined")
 
@@ -103,18 +101,29 @@ class FXCMConnect:
                 raise InvalidTradeParameter(
                     "stop must be less than 0 for trades when using pips"
                 )
-        if not is_pips:
-            if is_buy and limit and stop and limit < stop:
+        else:
+            if (
+                is_buy
+                and limit is not None
+                and stop is not None
+                and limit < stop
+            ):
                 raise InvalidTradeParameter(
                     "limit must be greater for buy trades"
                 )
-            if not is_buy and limit and stop and limit > stop:
+            if (
+                not is_buy
+                and limit is not None
+                and stop is not None
+                and limit > stop
+            ):
                 raise InvalidTradeParameter(
                     "limit must be less than stop for sell trade"
                 )
 
     def create_trade_obj(self, session):
-        fxcm_postion = self.get_open_positions()[-1]
+        """Creates the trade object"""
+        fxcm_postion = self.get_open_positions()
         trade_id = fxcm_postion.iloc[-1]["tradeId"]
         if not Trade.get_trade_by_trade_id(session=session, trade_id=trade_id):
             _ = Trade(
@@ -125,6 +134,6 @@ class FXCMConnect:
                 is_buy=fxcm_postion["isBuy"],
             )
 
-    def close_trade(self, trade_id: str, amount: Decimal):
+    def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""
         self.con.close_trade(trade_id=trade_id, amount=amount)
