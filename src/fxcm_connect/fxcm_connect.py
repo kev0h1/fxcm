@@ -7,7 +7,7 @@ from pandas import DataFrame
 from src.classes.trade import Trade
 from sqlalchemy.orm import Session
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum
-from src.errors.errors import NoStopDefinedException
+from src.errors.errors import InvalidTradeParameter, NoStopDefinedException
 
 env = os.path.abspath(os.curdir) + "/src/.env"
 config = dotenv.dotenv_values(env)
@@ -73,8 +73,7 @@ class FXCMConnect:
         if stop:
             stops["stop"] = stop
 
-        if not limit and not stop:
-            raise NoStopDefinedException()
+        self.validate_stops(is_buy, is_pips, stop, limit)
 
         self.con.open_trade(
             symbol=instrument.value,
@@ -86,6 +85,33 @@ class FXCMConnect:
             **stops
         )
         self.create_trade_obj(session)
+
+    def validate_stops(self, is_buy, is_pips, stop, limit):
+        """Validates the stops and limits"""
+        if not limit and not stop:
+            raise NoStopDefinedException()
+
+        if not stop:
+            raise InvalidTradeParameter("no stop defined")
+
+        if is_pips:
+            if limit < 0:
+                raise InvalidTradeParameter(
+                    "limit must be greated than 0 for trades when using pips"
+                )
+            if stop > 0:
+                raise InvalidTradeParameter(
+                    "stop must be less than 0 for trades when using pips"
+                )
+        if not is_pips:
+            if is_buy and limit and stop and limit < stop:
+                raise InvalidTradeParameter(
+                    "limit must be greater for buy trades"
+                )
+            if not is_buy and limit and stop and limit > stop:
+                raise InvalidTradeParameter(
+                    "limit must be less than stop for sell trade"
+                )
 
     def create_trade_obj(self, session):
         fxcm_postion = self.get_open_positions()[-1]
