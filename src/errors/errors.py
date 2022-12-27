@@ -20,3 +20,14 @@ class InvalidTradeParameter(Exception):
     def __init__(self, message: str = "invalid trading parameters"):
         self.message = message
         super().__init__(self.message)
+
+
+class NoEconomicImpactDefined(Exception):
+    """Exception raised for errors when setting stops and limits.
+
+    message -- explanation of the error
+    """
+
+    def __init__(self, message: str = "Cannot identify the impact"):
+        self.message = message
+        super().__init__(self.message)

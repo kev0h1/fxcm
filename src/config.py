@@ -19,7 +19,7 @@ class PeriodEnum(Enum):
 
 class ForexPairEnum(Enum):
     EURUSD = "EUR/USD"
-    USDJPY = "USD/JPY"
+    USDJPY = "USD/JPY"  # DO NOT TRADE TOO MUCH UNCERTAINTY
     GBPUSD = "GBP/USD"
     USDCHF = "USD/CHF"
     USDCAD = "USD/CAD"
@@ -35,3 +35,14 @@ class OrderTypeEnum(Enum):
 class SignalTypeEnum(Enum):
     MOVING_AVERAGE = "Moving Average"
     MACD = "MACD"
+
+
+class CurrencyEnum(Enum):
+    USD = "USD"
+    GBP = "GBP"
+    AUD = "AUD"
+    CAD = "CAD"
+    EUR = "EUR"
+    CHF = "CHF"
+    JPY = "JPY"
+    NSD = "NZD"

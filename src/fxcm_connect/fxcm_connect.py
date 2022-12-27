@@ -126,13 +126,14 @@ class FXCMConnect:
         fxcm_postion = self.get_open_positions()
         trade_id = fxcm_postion.iloc[-1]["tradeId"]
         if not Trade.get_trade_by_trade_id(session=session, trade_id=trade_id):
-            _ = Trade(
+            trade = Trade(
                 trade_id=trade_id,
                 position_size=fxcm_postion["amountK"],
                 stop=fxcm_postion["stop"],
                 limit=fxcm_postion["limit"],
                 is_buy=fxcm_postion["isBuy"],
             )
+            session.add(trade)
 
     def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""

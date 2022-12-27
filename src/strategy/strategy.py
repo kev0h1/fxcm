@@ -7,3 +7,7 @@ def ten_pip_value(currency_pair):
     if "JPY" in currency_pair:
         return 0.1
     return 0.001
+
+
+# take in fundamental data - CPI, Unemployment Rate, PPI, GDP, Empire State Manufacturing Index, Flash Services PMI
+# trade a simple tech strategy
