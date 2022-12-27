@@ -1,10 +1,19 @@
 from dataclasses import dataclass
-from src.config import CurrencyEnum
+from src.config import CurrencyEnum, SentimentEnum, CalendarEventEnum
 from datetime import datetime
 
 
 @dataclass
-class Trend:
+class FundamentalData:
     currency: CurrencyEnum
     last_updated: datetime
-    sentiment: 
+    forecast: float
+    actual: float
+    previous: float
+    calendar_event: CalendarEventEnum
+
+
+@dataclass
+class Trend:
+    sentiment: SentimentEnum
+    fundamental_data: FundamentalData

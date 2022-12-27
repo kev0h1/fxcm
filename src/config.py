@@ -45,4 +45,18 @@ class CurrencyEnum(Enum):
     EUR = "EUR"
     CHF = "CHF"
     JPY = "JPY"
-    NSD = "NZD"
+    NZD = "NZD"
+
+
+class SentimentEnum(Enum):
+    BULLISH = "BULLISH"
+    BEARISH = "BEARISH"
+
+
+class CalendarEventEnum(Enum):
+    CPI = "CPI"
+    UNEMPLOYMENT_RATE = "Unemployment Rate"
+    PPI = "PPI"
+    GDP = "GDP"
+    ESMI = "Empire State Manufacturing Index"
+    FLASH_PMI = "Flash Services PMI"

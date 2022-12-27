@@ -21,6 +21,10 @@ class TestFundamentals:
                 return impact_value
             raise ValueError("Undefined impact")
 
+        def get_event_values(self, element: element.Tag, class_name: str):
+            data = element.find("td", {"class": class_name})
+            return data.getText().strip()
+
         def test_get_daily_data(self):
             calendar_objects = soup.find_all("tr", {"class": "calendar__row"})
             group_func = lambda tr: "calendar__row--day-breaker" in tr["class"]
