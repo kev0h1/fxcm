@@ -11,9 +11,11 @@ class FundamentalData:
     actual: float
     previous: float
     calendar_event: CalendarEventEnum
+    
+    
 
 
 @dataclass
-class Trend:
+class FundamentalTrend:
     sentiment: SentimentEnum
     fundamental_data: FundamentalData

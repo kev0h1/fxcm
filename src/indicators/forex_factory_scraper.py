@@ -49,9 +49,11 @@ class ForexFactoryScraper:
         """Groups the data by date
         This follows filtering of the unwanted data
         """
-        return itertools.groupby(
+        items = itertools.groupby(
             data, lambda tr: "calendar__row--day-breaker" in tr["class"]
         )
+
+        return [list(i) for _, i in items]
 
     def get_impact(self, element: element.Tag) -> str:
         """Get the impact of the news"""
@@ -59,10 +61,14 @@ class ForexFactoryScraper:
         impact = element.find("td", {"class": "calendar__impact"})
         if impact is None:
             raise NoEconomicImpactDefined("Cannot determine impact")
-        impact_value = impact.attrs["class"][-1].split("--")
+        impact_value = self.get_impact_value(impact)
         if impact_value in impact_values:
             return impact_value
         raise NoEconomicImpactDefined("Undefined impact")
+
+    def get_impact_value(self, impact):
+        """Returns impact value"""
+        return impact.attrs["class"][-1].split("--")[-1]
 
     def get_event_values(self, element: element.Tag, class_name: str) -> str:
         """Get event values"""
@@ -99,14 +105,16 @@ class ForexFactoryScraper:
     ) -> Union[None, FundamentalData]:
         """Create fundamental data object"""
         calendar_event = self.get_event_values(
-            element=day_tag, class_name=CALENDAR_EVENT
+            element=tag, class_name=CALENDAR_EVENT
         )
         calendar_event = self.remove_period_values(calendar_event)
 
-        if calendar_event not in CalendarEventEnum:
+        if calendar_event not in CalendarEventEnum.__members__:
             return None
 
-        day_value = self.get_event_values(element=tag, class_name=CALENDAR_DAY)
+        day_value = self.get_event_values(
+            element=day_tag, class_name=CALENDAR_DAY
+        )
         date_ = self.get_date_value(day_value)
 
         time_value = self.get_event_values(
@@ -144,7 +152,4 @@ class ForexFactoryScraper:
         )
 
 
-data = ForexFactoryScraper()
-# with open("output1.html", "w") as file:
-#     file.write(str(data.soup))
-print("hi")
+# ForexFactoryScraper()
