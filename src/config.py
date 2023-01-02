@@ -51,6 +51,7 @@ class CurrencyEnum(Enum):
 class SentimentEnum(Enum):
     BULLISH = "BULLISH"
     BEARISH = "BEARISH"
+    FLAT = "FLAT"
 
 
 class CalendarEventEnum(Enum):

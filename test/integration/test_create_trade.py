@@ -1,5 +1,4 @@
 from src.models.db_connect import DbSession
-from src.models.model import create_mappers, metadata_obj
 from src.classes.trade import Trade
 from hypothesis.strategies import from_type
 from hypothesis import given, settings

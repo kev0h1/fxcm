@@ -1,14 +1,17 @@
 import itertools
 from typing import Union
 from bs4 import BeautifulSoup, element
-from src.classes.trend import FundamentalData
+from src.classes.fundamental import FundamentalData
 import requests
 from datetime import datetime, time, date
 from src.config import CalendarEventEnum, CurrencyEnum
+import re
+from src.errors.errors import (
+    InvalidEventTypeException,
+    NoEconomicImpactDefined,
+)
 
-from src.errors.errors import NoEconomicImpactDefined
-
-URL = "https://www.forexfactory.com/calendar"
+URL = "https://www.forexfactory.com/calendar?day=dec7.2022"
 CALENDAR_ACTUAL = "calendar__actual"
 CALENDAR_FORECAST = "calendar__forecast"
 CALENDAR_PREVIOUS = "calendar__previous"
@@ -16,16 +19,20 @@ CALENDAR_EVENT = "calendar__event"
 CALENDAR_TIME = "calendar__time"
 CALENDAR_DAY = "calendar__cell"
 CALENDAR_CURRENCY = "calendar__currency"
-trim_list = ["y/y", "m/m", "q/q"]
 
 
 class ForexFactoryScraper:
-    def __init__(self, url: str = URL):
+    def __init__(self, url: str):
         headers = {
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0"
         }
         page = requests.get(url, headers=headers, verify=False)
         self.soup = BeautifulSoup(page.content, "html.parser")
+
+    @staticmethod
+    def get_correct_date_format(self, date_: datetime = datetime.today()):
+        """Get the correct day format"""
+        return date_.strftime("%b%d-.%Y")
 
     def get_calendar_objects(self) -> element.ResultSet:
         """Get all calendar objects"""
@@ -75,41 +82,50 @@ class ForexFactoryScraper:
         data = element.find("td", {"class": class_name})
         return data.getText().strip()
 
+    def get_time_value(
+        self, grouped_data: list[element.Tag], day_index, tag_index
+    ):
+        """Get the time value for an event"""
+        time = None
+        while not time:
+            data = grouped_data[day_index][tag_index]
+            value = self.get_event_values(data, CALENDAR_TIME)
+            if value is not "":
+                time = value
+            tag_index -= 1
+        return datetime.strptime(time, "%H:%M%p").time()
+
     def get_absolute_value(self, value: str) -> float:
         """Get the absolute value of percentage value"""
-        return float(value.strip("%"))
-
-    def get_time_value(self, value: str) -> time:
-        """Return the time value"""
-        return datetime.strptime(value, "%H:%M%p").time()
+        try:
+            result = re.sub(r"[^0-9.]", "", value)
+            return float(result)
+        except ValueError:
+            return None
 
     def get_date_value(self, value: str) -> date:
         """Return the current date"""
         date = datetime.strptime(value, "%a%b %d").date()
         return datetime(datetime.today().year, date.month, date.day)
 
-    def remove_period_values(self, value: str) -> str:
-        """Remove period markers for event"""
-        return " ".join(
-            [
-                f
-                for f in filter(
-                    lambda x: x if x not in trim_list else None,
-                    value.split(" "),
-                )
-            ]
-        )
+    def get_event_type(self, value: str) -> CalendarEventEnum:
+        """Get the required event"""
+        for val in CalendarEventEnum:
+            if val.value in value:
+                return CalendarEventEnum(val)
+
+        raise InvalidEventTypeException()
 
     def create_fundamental_data_object(
-        self, day_tag: element.Tag, tag: element.Tag
+        self, day_tag: element.Tag, tag: element.Tag, time: time
     ) -> Union[None, FundamentalData]:
         """Create fundamental data object"""
         calendar_event = self.get_event_values(
             element=tag, class_name=CALENDAR_EVENT
         )
-        calendar_event = self.remove_period_values(calendar_event)
-
-        if calendar_event not in CalendarEventEnum.__members__:
+        try:
+            calendar_event = self.get_event_type(calendar_event)
+        except InvalidEventTypeException:
             return None
 
         day_value = self.get_event_values(
@@ -117,10 +133,7 @@ class ForexFactoryScraper:
         )
         date_ = self.get_date_value(day_value)
 
-        time_value = self.get_event_values(
-            element=tag, class_name=CALENDAR_TIME
-        )
-        time_ = self.get_time_value(time_value)
+        time_ = time
 
         date_time = datetime.combine(date_, time_)
 
@@ -150,6 +163,3 @@ class ForexFactoryScraper:
             previous=previous,
             calendar_event=CalendarEventEnum(calendar_event),
         )
-
-
-# ForexFactoryScraper()
