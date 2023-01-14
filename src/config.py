@@ -49,15 +49,22 @@ class CurrencyEnum(Enum):
 
 
 class SentimentEnum(Enum):
-    BULLISH = "BULLISH"
-    BEARISH = "BEARISH"
+    BULLISH = "better"
+    BEARISH = "worse"
     FLAT = "FLAT"
 
 
 class CalendarEventEnum(Enum):
-    CPI = "CPI"
+    CPI_Q = "CPI q/q"
+    CPI_M = "CPI m/m"
+    CPI_Y = "CPI y/y"
     UNEMPLOYMENT_RATE = "Unemployment Rate"
-    PPI = "PPI"
-    GDP = "GDP"
-    ESMI = "Empire State Manufacturing Index"
-    FLASH_PMI = "Flash Services PMI"
+    PPI_Q = "PPI q/q"
+    PPI_M = "PPI m/m"
+    PPI_Y = "PPI y/y"
+    GDP_Q = "GDP q/q"
+    GDP_M = "GDP m/m"
+    GDP_Y = "GDP q/q"
+    ESMI = "Empire State Manufacturing Index"  # fine
+    FLASH_PMI = "Flash Services PMI"  # fine
+    ISM = "ISM Manufacturing PMI"

@@ -10,12 +10,18 @@ class TestFundamentalOrm:
     @given(from_type(FundamentalData))
     @settings(max_examples=1)
     def test_add_fundamental_data_to_db(self, data):
+        currency = data.currency
+        last_updated = data.last_updated
         with DbSession.session.begin() as session:
             session.add(data)
 
         with DbSession.session.begin() as session:
             objs = FundamentalData.get_all_fundamental_data(session)
             assert len(objs) > 0
+            fundamental_data = FundamentalData.get_fundamental_data(
+                session, currency, last_updated
+            )
+            assert fundamental_data is not None
 
 
 class TestTrendOrm:

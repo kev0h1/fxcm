@@ -21,7 +21,7 @@ def create_app():
 
     DbSession.init_engine()
     create_mappers()
-    api.add_resource(DebugResource(), "/delete", tags=["Debug"])
+    api.add_resource(DebugResource(), "/debug", tags=["Debug"])
 
     @app.on_event("startup")
     async def start_up():

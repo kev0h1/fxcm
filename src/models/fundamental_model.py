@@ -20,6 +20,7 @@ def create_fundamental_data_table(metadata_obj: MetaData):
         metadata_obj,
         Column("currency", Enum(CurrencyEnum)),
         Column("calendar_event", Enum(CalendarEventEnum)),
+        Column("sentiment", Enum(SentimentEnum)),
         Column("forecast", FLOAT, nullable=True),
         Column("actual", FLOAT, nullable=True),
         Column("previous", FLOAT, nullable=True),
@@ -35,12 +36,14 @@ def create_fundamental_trend_table(metadata_obj: MetaData):
         metadata_obj,
         Column("currency", Enum(CurrencyEnum)),
         Column("last_updated", DateTime),
-        Column("sentiment", Enum(SentimentEnum)),
-        PrimaryKeyConstraint("currency"),
+        PrimaryKeyConstraint(
+            "currency", "last_updated", name="trend_primary_key"
+        ),
         ForeignKeyConstraint(
             ["currency", "last_updated"],
             ["fundamental_data.currency", "fundamental_data.last_updated"],
-            name="fk1",
+            onupdate="CASCADE",
+            ondelete="CASCADE",
         ),
     )
 
@@ -53,21 +56,19 @@ def create_fundamental_mapper(metadata_obj: MetaData):
     fundamental_trend_table = create_fundamental_trend_table(
         metadata_obj=metadata_obj
     )
-    mapper_registry.map_imperatively(
-        FundamentalTrend,
-        fundamental_trend_table,
-        properties={
-            "fundamental_data": relationship(
-                FundamentalData, back_populates="data", cascade="all, delete"
-            )
-        },
-    )
+
     mapper_registry.map_imperatively(
         FundamentalData,
         fundamental_data_table,
         properties={
-            "data": relationship(
-                FundamentalTrend, back_populates="fundamental_data"
+            "fundamental_data": relationship(
+                FundamentalTrend,
+                backref="fundamental_data",
             )
         },
+    )
+
+    mapper_registry.map_imperatively(
+        FundamentalTrend,
+        fundamental_trend_table,
     )
