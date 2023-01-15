@@ -7,7 +7,7 @@ from src.classes.fundamental import FundamentalData, FundamentalTrend
 
 from src.indicators.forex_factory_scraper import ForexFactoryScraper
 from sqlalchemy.orm import Session
-
+from src.models.db_connect import DbSession
 
 # @scheduler.scheduled_job("interval")
 def get_fundamental_trend_data():
@@ -15,10 +15,12 @@ def get_fundamental_trend_data():
     url = ForexFactoryScraper.get_url_for_today(date_=date_)
     scraper = ForexFactoryScraper(url=url)
     objects = scraper.get_fundamental_items()
-    day_tag, scraped_data = objects[0][0], objects[-1]
+    scraped_data = objects[-1]
     fundamental_data_items: List[FundamentalData] = get_fundamental_data_items(
         scraper, objects, date_, scraped_data
     )
+    with DbSession.session.begin() as session:
+        process_fundamental_data_items(session, fundamental_data_items)
 
 
 def get_fundamental_data_items(
@@ -56,16 +58,17 @@ def process_fundamental_data_items(
             fundamental_data.actual = data.actual
             fundamental_data.previous = data.previous
             fundamental_data.forecast = data.forecast
+            fundamental_data.sentiment = data.sentiment
 
-        if data.actual and data.forecast and data.previous:
-            trend: FundamentalTrend = (
-                FundamentalTrend.get_trend_data_for_currency(
-                    session=session, currency=data.currency
-                )
-            )
+        # if data.actual:
+        #     trend: FundamentalTrend = (
+        #         FundamentalTrend.get_trend_data_for_currency(
+        #             session=session, currency=data.currency
+        #         )
+        #     )
 
-            if not trend:
-                trend = FundamentalTrend(
-                    last_updated=data.last_updated, currency=data.currency
-                )
-                session.add(trend)
+        #     if not trend:
+        #         trend = FundamentalTrend(
+        #             last_updated=data.last_updated, currency=data.currency
+        #         )
+        #         session.add(trend)

@@ -1,9 +1,9 @@
+from typing import Callable
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import Session, sessionmaker
-from src.classes.trade import Trade
 from sqlalchemy.engine import Engine
-from src.models.model import create_mappers, metadata_obj
 from sqlalchemy.schema import CreateSchema, DropSchema
+from contextlib import contextmanager, AbstractContextManager
 
 
 class DbSession:
@@ -35,3 +35,15 @@ class DbSession:
         metadata.bind = DbSession.session
         metadata.drop_all(DbSession.engine)
         metadata.create_all(DbSession.engine)
+
+    @contextmanager
+    def session(self) -> Callable[..., AbstractContextManager[Session]]:
+        session: Session = self._session_factory()
+        try:
+            yield session
+        except Exception:
+            # logger.exception("Session rollback because of exception")
+            session.rollback()
+            raise
+        finally:
+            session.close()
