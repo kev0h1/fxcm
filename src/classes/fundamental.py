@@ -14,22 +14,6 @@ class FundamentalData:
     previous: float = field(default=None)
     sentiment: SentimentEnum = field(default=SentimentEnum.FLAT)
 
-    @classmethod
-    def get_all_fundamental_data(cls, session: Session, **kwargs):
-        """Get trades"""
-        return session.query(cls).filter_by(**kwargs).all()
-
-    @classmethod
-    def get_fundamental_data(
-        cls, session: Session, currency: CurrencyEnum, last_updated: datetime
-    ):
-        """Get fundamental data by currency and date"""
-        return (
-            session.query(cls)
-            .filter_by(currency=currency, last_updated=last_updated)
-            .one_or_none()
-        )
-
 
 @dataclass
 class FundamentalTrend:

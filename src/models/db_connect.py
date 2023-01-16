@@ -1,28 +1,28 @@
 from typing import Callable
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.engine import Engine
+from sqlalchemy import create_engine, MetaData, orm
+from sqlalchemy.orm import Session
 from sqlalchemy.schema import CreateSchema, DropSchema
 from contextlib import contextmanager, AbstractContextManager
 
 
-class DbSession:
-    engine: Engine
-    session: Session
-
-    @classmethod
-    def init_engine(cls):
-        cls.engine = create_engine(
+class Database:
+    def __init__(self):
+        self._engine = create_engine(
             "postgresql://kevinmaingi:password@localhost:5432/postgres",
             future=True,
             echo=True,
         )
-        cls.session = sessionmaker(cls.engine)
+        self._session_factory = orm.scoped_session(
+            orm.sessionmaker(
+                autocommit=False,
+                autoflush=False,
+                bind=self._engine,
+            ),
+        )
 
-    @staticmethod
-    def reset_db(metadata: MetaData) -> None:
+    def reset_db(self, metadata: MetaData) -> None:
         """Reset the database"""
-        with DbSession.engine.connect() as conn:
+        with self._engine.connect() as conn:
             for schema in metadata._schemas:
                 if conn.dialect.has_schema(conn, schema):
                     conn.execute(DropSchema(schema, cascade=True))
@@ -32,9 +32,9 @@ class DbSession:
                     conn.execute(CreateSchema(schema))
                     conn.commit()
 
-        metadata.bind = DbSession.session
-        metadata.drop_all(DbSession.engine)
-        metadata.create_all(DbSession.engine)
+        # metadata.bind = DbSession.session
+        metadata.drop_all(self._engine)
+        metadata.create_all(self._engine)
 
     @contextmanager
     def session(self) -> Callable[..., AbstractContextManager[Session]]:
