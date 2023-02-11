@@ -6,9 +6,9 @@ create_mappers()
 
 
 @pytest.fixture(autouse=True)
-def reset_db():
+def get_db():
     """Resets the database"""
-    Database.init_engine()
-    Database.reset_db(metadata=metadata_obj)
-    yield
-    Database.reset_db(metadata=metadata_obj)
+    db = Database()
+    db.reset_db(metadata=metadata_obj)
+    yield db
+    db.reset_db(metadata=metadata_obj)

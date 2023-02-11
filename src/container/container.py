@@ -10,16 +10,14 @@ class Container(containers.DeclarativeContainer):
             "src.api.routes.fundamental_routes",
             "src.api.routes.debug_routes",
             "src.scheduler.scheduler",
+            "src.fxcm_connect.fxcm_connect",
         ]
     )
     db = providers.Singleton(Database)
 
-    fundamnetal_data_repository = providers.Factory(
-        FundamentalDataRepository,
-        session_factory=db.provided.session,
-    )
+    fundamental_data_repository = providers.Factory(FundamentalDataRepository)
 
     fundamental_data_service = providers.Factory(
         FundamentalDataService,
-        fundamental_data_repository=fundamnetal_data_repository,
+        fundamental_data_repository=fundamental_data_repository,
     )

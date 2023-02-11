@@ -1,8 +1,10 @@
-from typing import Callable
 from sqlalchemy import create_engine, MetaData, orm
 from sqlalchemy.orm import Session
 from sqlalchemy.schema import CreateSchema, DropSchema
-from contextlib import contextmanager, AbstractContextManager
+from contextvars import ContextVar
+from contextlib import contextmanager
+
+context = ContextVar("session")
 
 
 class Database:
@@ -37,13 +39,17 @@ class Database:
         metadata.create_all(self._engine)
 
     @contextmanager
-    def session(self) -> Callable[..., AbstractContextManager[Session]]:
+    def get_session(self):
         session: Session = self._session_factory()
+        context.set(session)
         try:
+            print("opening")
             yield session
         except Exception:
             # logger.exception("Session rollback because of exception")
             session.rollback()
             raise
         finally:
+            print("closing")
             session.close()
+            context.set("")

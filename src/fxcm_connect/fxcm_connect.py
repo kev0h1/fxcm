@@ -7,8 +7,11 @@ from pandas import DataFrame
 from src.classes.trade import Trade
 from sqlalchemy.orm import Session
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum
+from src.container.container import Container
 from src.errors.errors import InvalidTradeParameter, NoStopDefinedException
-
+from src.repositories.trade_repository import TradeRepository
+from dependency_injector.wiring import inject, Provide
+from fastapi import Depends
 
 env = os.path.abspath(os.curdir) + "/src/.env"
 config = dotenv.dotenv_values(env)
@@ -121,11 +124,17 @@ class FXCMConnect:
                     "limit must be less than stop for sell trade"
                 )
 
-    def create_trade_obj(self, session):
+    @inject
+    def create_trade_obj(
+        self,
+        trade_repository: TradeRepository = Depends(
+            Provide[Container.fundamental_data_repository]
+        ),
+    ):
         """Creates the trade object"""
         fxcm_postion = self.get_open_positions()
         trade_id = fxcm_postion.iloc[-1]["tradeId"]
-        if not Trade.get_trade_by_trade_id(session=session, trade_id=trade_id):
+        if not trade_repository.get_trade_by_trade_id(trade_id=trade_id):
             trade = Trade(
                 trade_id=trade_id,
                 position_size=fxcm_postion["amountK"],
@@ -133,7 +142,7 @@ class FXCMConnect:
                 limit=fxcm_postion["limit"],
                 is_buy=fxcm_postion["isBuy"],
             )
-            session.add(trade)
+            trade_repository.add(trade)
 
     def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""

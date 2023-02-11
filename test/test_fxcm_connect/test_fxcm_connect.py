@@ -19,6 +19,8 @@ from mock import MagicMock
 import pandas as pd
 import os
 
+from src.repositories.trade_repository import TradeRepository
+
 with mock.patch.object(fxcmpy, "__init__", return_value=None):
     fxcm = FXCMConnect(conf=config)
 
@@ -171,31 +173,39 @@ class TestFXCMConnect:
         """Test the creation of a trade object"""
         file = os.path.abspath(os.curdir) + "/test/open_positions.csv"
         df = pd.read_csv(file)
+        repo = TradeRepository()
         with mock.patch.object(
             fxcmpy, "get_open_positions", return_value=df
         ) as con, mock.patch.object(
-            Trade, "get_trade_by_trade_id", return_value=None
+            TradeRepository, "get_trade_by_trade_id", return_value=None
         ) as get_trade, mock.patch.object(
             Trade, "__init__", return_value=None
-        ) as create:
-            fxcm.create_trade_obj(MagicMock())
+        ) as create, mock.patch.object(
+            TradeRepository, "add", return_value=None
+        ) as add:
+            fxcm.create_trade_obj(trade_repository=repo)
             con.assert_called_once()
             get_trade.assert_called_once()
             create.assert_called_once()
+            add.assert_called_once()
 
     @given(from_type(Trade))
     def test_create_trade_obj_for_existing(self, trade):
         """Test the creation of a trade object"""
         file = os.path.abspath(os.curdir) + "/test/open_positions.csv"
         df = pd.read_csv(file)
+        repo = TradeRepository()
         with mock.patch.object(
             fxcmpy, "get_open_positions", return_value=df
         ) as con, mock.patch.object(
-            Trade, "get_trade_by_trade_id", return_value=trade
+            TradeRepository, "get_trade_by_trade_id", return_value=trade
         ) as get_trade, mock.patch.object(
             Trade, "__init__", return_value=None
-        ) as create:
-            fxcm.create_trade_obj(MagicMock())
+        ) as create, mock.patch.object(
+            TradeRepository, "add", return_value=None
+        ) as add:
+            fxcm.create_trade_obj(repo)
             con.assert_called_once()
             get_trade.assert_called_once()
             create.assert_not_called()
+            add.assert_not_called()
