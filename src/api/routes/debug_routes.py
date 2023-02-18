@@ -19,7 +19,7 @@ class DebugResource(Resource):
     @set_responses(str, 200)
     def delete(self):
         """Deletes the database"""
-        self.db.reset_db(metadata_obj)
+        self.db.reset_db()
         return "done"
 
     @set_responses(str, 200)

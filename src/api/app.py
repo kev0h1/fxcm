@@ -4,13 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_restful import Api
 from src.api.routes.debug_routes import DebugResource
 from src.api.routes.fundamental_routes import FundamentalResource
-from src.models.model import create_mappers
 from src.scheduler.scheduler import scheduler
 
 
 def create_app():
     container = Container()
-    create_mappers()
     app = FastAPI()
     app.container = container
     api = Api(app)

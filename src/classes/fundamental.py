@@ -1,37 +1,43 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from src.config import CurrencyEnum, SentimentEnum, CalendarEventEnum
-from datetime import datetime
-from sqlalchemy.orm import Session
+from mongoengine import *
 
 
 @dataclass
-class FundamentalData:
-    currency: CurrencyEnum
-    last_updated: datetime
-    calendar_event: CalendarEventEnum
-    forecast: float = field(default=None)
-    actual: float = field(default=None)
-    previous: float = field(default=None)
-    sentiment: SentimentEnum = field(default=SentimentEnum.FLAT)
-
-
-@dataclass
-class FundamentalTrend:
-    last_updated: datetime
-    currency: CurrencyEnum
-
-    @classmethod
-    def get_trend_data(cls, session: Session, **kwargs):
-        """Get trades"""
-        return session.query(cls).filter_by(**kwargs).all()
-
-    @classmethod
-    def get_trend_data_for_currency(
-        cls, session: Session, currency: CurrencyEnum
+class FundamentalData(Document):
+    def __init__(
+        self,
+        currency,
+        last_updated,
+        forecast,
+        actual,
+        previous,
+        calendar_event,
+        sentiment,
+        *args,
+        **values
     ):
-        """Get trend data for currency"""
-        return session.query(cls).filter_by(currency=currency).one_or_none()
+        super().__init__(*args, **values)
+        self.currency = currency
+        self.last_updated = last_updated
+        self.calendar_event = calendar_event
+        self.forecast = forecast
+        self.actual = actual
+        self.previous = previous
+        self.sentiment = sentiment
+        self._id = {"currency": currency.value, "last_updated": last_updated}
 
-    def update_sentiment(self):
-        if self.fundamental_data:
-            pass
+    currency = EnumField(CurrencyEnum)
+    last_updated = DateTimeField()
+    calendar_event = EnumField(CalendarEventEnum)
+    forecast = FloatField()
+    actual = FloatField()
+    previous = FloatField()
+    sentiment = EnumField(SentimentEnum)
+    _id = DictField(primary_key=True)
+
+
+@dataclass
+class FundamentalTrend(Document):
+    last_updated = DateTimeField()
+    currency = StringField()

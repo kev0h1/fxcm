@@ -10,9 +10,11 @@ from hypothesis.strategies import (
     text,
     none,
     from_type,
+    builds,
+    sampled_from,
 )
 from src.classes.trade import Trade
-from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum
+from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum, SignalTypeEnum
 from src.errors.errors import InvalidTradeParameter
 from src.fxcm_connect.fxcm_connect import FXCMConnect, config
 from mock import MagicMock
@@ -189,7 +191,17 @@ class TestFXCMConnect:
             create.assert_called_once()
             add.assert_called_once()
 
-    @given(from_type(Trade))
+    @given(
+        builds(
+            Trade,
+            trade_id=integers(),
+            position_size=integers(),
+            stop=floats(),
+            limit=floats(),
+            is_buy=booleans(),
+            signal=sampled_from(SignalTypeEnum),
+        )
+    )
     def test_create_trade_obj_for_existing(self, trade):
         """Test the creation of a trade object"""
         file = os.path.abspath(os.curdir) + "/test/open_positions.csv"

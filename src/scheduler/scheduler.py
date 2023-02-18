@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.container.container import Container
-from src.models.db_connect import Database, context
+from src.models.mongo_connect import Database
 
 from src.repositories.fundamental_repository import FundamentalDataRepository
 
@@ -16,7 +16,7 @@ from src.indicators.forex_factory_scraper import ForexFactoryScraper
 
 # @scheduler.scheduled_job("interval")
 def get_fundamental_trend_data():
-    date_: datetime = datetime(2022, 12, 2)
+    date_: datetime = datetime(2023, 1, 31)
     url = ForexFactoryScraper.get_url_for_today(date_=date_)
     scraper = ForexFactoryScraper(url=url)
     objects = scraper.get_fundamental_items()

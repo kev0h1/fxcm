@@ -1,5 +1,5 @@
 from dependency_injector import containers, providers
-from src.models.db_connect import Database
+from src.models.mongo_connect import Database
 from src.repositories.fundamental_repository import FundamentalDataRepository
 from src.services.fundamental_service import FundamentalDataService
 
