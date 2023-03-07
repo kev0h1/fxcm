@@ -142,7 +142,7 @@ class FXCMConnect:
                 limit=fxcm_postion["limit"],
                 is_buy=fxcm_postion["isBuy"],
             )
-            trade_repository.add(trade)
+            trade_repository.save(trade)
 
     def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""

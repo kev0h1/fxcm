@@ -54,6 +54,12 @@ class SentimentEnum(Enum):
     FLAT = "FLAT"
 
 
+class ImpactEnum(Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+
+
 class CalendarEventEnum(Enum):
     CPI_Q = "CPI q/q"
     CPI_M = "CPI m/m"
@@ -68,3 +74,4 @@ class CalendarEventEnum(Enum):
     ESMI = "Empire State Manufacturing Index"  # fine
     FLASH_PMI = "Flash Services PMI"  # fine
     ISM = "ISM Manufacturing PMI"
+    Test = "Employment Change q/q"

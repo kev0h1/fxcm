@@ -183,7 +183,7 @@ class TestFXCMConnect:
         ) as get_trade, mock.patch.object(
             Trade, "__init__", return_value=None
         ) as create, mock.patch.object(
-            TradeRepository, "add", return_value=None
+            TradeRepository, "save", return_value=None
         ) as add:
             fxcm.create_trade_obj(trade_repository=repo)
             con.assert_called_once()
@@ -214,7 +214,7 @@ class TestFXCMConnect:
         ) as get_trade, mock.patch.object(
             Trade, "__init__", return_value=None
         ) as create, mock.patch.object(
-            TradeRepository, "add", return_value=None
+            TradeRepository, "save", return_value=None
         ) as add:
             fxcm.create_trade_obj(repo)
             con.assert_called_once()

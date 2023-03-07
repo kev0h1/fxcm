@@ -1,10 +1,15 @@
 import itertools
 from typing import Tuple, Union
 from bs4 import BeautifulSoup, element
-from src.classes.fundamental import FundamentalData
+from src.classes.fundamental import CalendarEvent, FundamentalData
 import requests
 from datetime import datetime, time, date
-from src.config import CalendarEventEnum, CurrencyEnum, SentimentEnum
+from src.config import (
+    CalendarEventEnum,
+    CurrencyEnum,
+    ImpactEnum,
+    SentimentEnum,
+)
 import re
 from src.errors.errors import (
     InvalidEventTypeException,
@@ -83,7 +88,7 @@ class ForexFactoryScraper:
             raise NoEconomicImpactDefined("Cannot determine impact")
         impact_value = self.get_impact_value(impact)
         if impact_value in impact_values:
-            return impact_value
+            return ImpactEnum(impact_value)
         raise NoEconomicImpactDefined("Undefined impact")
 
     def get_impact_value(self, impact):
@@ -153,30 +158,34 @@ class ForexFactoryScraper:
         date = datetime.strptime(value, "%a%b %d").date()
         return datetime(datetime.today().year, date.month, date.day)
 
-    def get_event_type(self, value: str) -> CalendarEventEnum:
-        """Get the required event"""
-        for val in CalendarEventEnum:
-            if val.value == value:
-                return CalendarEventEnum(val)
-
-        raise InvalidEventTypeException()
-
-    def create_fundamental_data_object(
+    def create_fundamental_object(
         self, date_: date, tag: element.Tag, time: time
-    ) -> Union[None, FundamentalData]:
-        """Create fundamental data object"""
-        calendar_event = self.get_event_values(
-            element=tag, class_name=CALENDAR_EVENT
-        )
-        try:
-            calendar_event = self.get_event_type(calendar_event)
-        except InvalidEventTypeException:
-            return None
-
+    ):
+        """create fundamental object"""
         if not time:
             return None
         time_ = time
         date_time = datetime.combine(date_, time_)
+
+        currency = self.get_event_values(
+            element=tag, class_name=CALENDAR_CURRENCY
+        )
+        currency = CurrencyEnum(currency)
+        return FundamentalData(currency=currency, last_updated=date_time)
+
+    def create_calendar_event(
+        self,
+        tag: element.Tag,
+    ) -> Union[None, FundamentalData]:
+        """Create calendar object"""
+        calendar_event = self.get_event_values(
+            element=tag, class_name=CALENDAR_EVENT
+        )
+
+        impact = self.get_impact(element=tag)
+
+        if impact != ImpactEnum.high:
+            return None
 
         actual, sentiment = self.get_actual_value(
             element=tag, class_name=CALENDAR_ACTUAL
@@ -193,17 +202,10 @@ class ForexFactoryScraper:
         )
         previous = self.get_absolute_value(previous)
 
-        currency = self.get_event_values(
-            element=tag, class_name=CALENDAR_CURRENCY
-        )
-        currency = CurrencyEnum(currency)
-
-        return FundamentalData(
-            currency=currency,
-            last_updated=date_time,
+        return CalendarEvent(
             forecast=forecast,
             actual=actual,
             previous=previous,
-            calendar_event=CalendarEventEnum(calendar_event),
+            calendar_event=calendar_event,
             sentiment=sentiment,
         )

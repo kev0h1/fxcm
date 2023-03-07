@@ -35,7 +35,7 @@ class TestTradeOrm:
         repo = TradeRepository()
         trade_id = trade.trade_id
         with get_db.get_session():
-            repo.add(trade)
+            repo.save(trade)
 
         with get_db.get_session():
             trades = repo.get_all()

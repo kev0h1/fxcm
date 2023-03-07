@@ -1,5 +1,5 @@
 class BaseRepository:
-    def add(self, obj):
+    def save(self, obj):
         """Add an object"""
         obj.save()
         return obj

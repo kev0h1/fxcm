@@ -34,4 +34,4 @@ class FundamentalDataService:
         self, fundamental_data: FundamentalData
     ) -> FundamentalData:
         """Create a fundamental data object"""
-        return self._repository.add(fundamental_data=fundamental_data)
+        return self._repository.save(fundamental_data=fundamental_data)

@@ -1,5 +1,6 @@
 import os
-from src.config import SentimentEnum
+from src.classes.fundamental import CalendarEvent
+from src.config import ImpactEnum, SentimentEnum
 from src.indicators.forex_factory_scraper import (
     ForexFactoryScraper,
     requests,
@@ -13,8 +14,6 @@ from src.indicators.forex_factory_scraper import (
     CALENDAR_ACTUAL,
     datetime,
     FundamentalData,
-    InvalidEventTypeException,
-    CalendarEventEnum,
     URL,
 )
 import re
@@ -62,7 +61,7 @@ class TestForexFactoryScraper:
             grouped_data = scraper.get_fundamental_items()
             data = grouped_data[-1][-1]
             impact = scraper.get_impact(data)
-            assert impact == "low"
+            assert impact == ImpactEnum.low
 
         def test_get_impact_fails(self):
             grouped_data = scraper.get_fundamental_items()
@@ -144,46 +143,18 @@ class TestForexFactoryScraper:
             assert date_.month == 12
             assert date_.year == datetime.today().year
 
-    class TestGetEventType:
-        def test_get_event_type_raises_exception(self):
-            """Test raised exception for invalid event"""
-            value = "boo y/y"
-            with pytest.raises(InvalidEventTypeException):
-                val = scraper.get_event_type(value)
-
-        def test_get_event_type(self):
-            """Test the retrival of an event"""
-            value = "CPI y/y"
-            val = scraper.get_event_type(value)
-            assert isinstance(val, CalendarEventEnum)
-
     class TestCreateFundamentalDataObject:
-        def test_create_fundamental_data_object_with_invalid_event(self):
+        def test_create_fundamental_data_object(self):
             """Test the creation of the fundamental object"""
             grouped_data = scraper.get_fundamental_items()
             data = grouped_data[-1][-1]
-            day_break = grouped_data[0][0]
-
-            obj = scraper.create_fundamental_data_object(day_break, data)
-            assert obj is None
-
-        def test_create_fundamental_data_object_with_valid_event(self):
-            """Test the creation of the fundamental object"""
-            grouped_data = scraper.get_fundamental_items()
-            data = grouped_data[-1][-1]
-
-            day_break = grouped_data[0][0]
             with mock.patch.object(
-                ForexFactoryScraper,
-                "get_event_type",
-                return_value=CalendarEventEnum.CPI_M,
-            ), mock.patch.object(
                 ForexFactoryScraper,
                 "get_time_value",
                 return_value=datetime.today().time(),
             ):
                 time_ = scraper.get_time_value(grouped_data, -1, -4)
-                obj = scraper.create_fundamental_data_object(
+                obj = scraper.create_fundamental_object(
                     datetime.today(), data, time_
                 )
             assert isinstance(obj, FundamentalData)
@@ -192,32 +163,59 @@ class TestForexFactoryScraper:
             """Test the creation of the fundamental object"""
             grouped_data = scraper.get_fundamental_items()
             data = grouped_data[-1][-1]
-
-            day_break = grouped_data[0][0]
             with mock.patch.object(
-                ForexFactoryScraper,
-                "get_event_type",
-                return_value=CalendarEventEnum.CPI_M,
-            ), mock.patch.object(
                 ForexFactoryScraper,
                 "get_time_value",
                 return_value=None,
             ):
                 time_ = scraper.get_time_value(grouped_data, -1, -4)
-                obj = scraper.create_fundamental_data_object(
-                    day_break, data, time_
+                obj = scraper.create_fundamental_object(
+                    datetime.today(), data, time_
                 )
+            assert obj is None
+
+    class TestCreateCalendarEventObject:
+        def test_create_calendar_object_with_invalid_event(self):
+            """Test the creation of the fundamental object"""
+            grouped_data = scraper.get_fundamental_items()
+            data = grouped_data[-1][-1]
+
+            obj = scraper.create_calendar_event(data)
+            assert obj is None
+
+        def test_create_calendar_object_with_high_impact_event(self):
+            """Test the creation of the fundamental object"""
+            grouped_data = scraper.get_fundamental_items()
+            data = grouped_data[-1][-1]
+            with mock.patch.object(
+                ForexFactoryScraper,
+                "get_time_value",
+                return_value=datetime.today().time(),
+            ), mock.patch.object(
+                ForexFactoryScraper, "get_impact", return_value=ImpactEnum.high
+            ):
+                obj = scraper.create_calendar_event(data)
+            assert isinstance(obj, CalendarEvent)
+
+        def test_create_calendar_object_with_non_high_impact_event(self):
+            """Test the creation of the fundamental object"""
+            grouped_data = scraper.get_fundamental_items()
+            data = grouped_data[-1][-1]
+            with mock.patch.object(
+                ForexFactoryScraper,
+                "get_time_value",
+                return_value=datetime.today().time(),
+            ), mock.patch.object(
+                ForexFactoryScraper, "get_impact", return_value=ImpactEnum.low
+            ):
+                obj = scraper.create_calendar_event(data)
             assert obj is None
 
         def test_create_fundamental_data_object_with_invalid_event(self):
             """Test the creation of the fundamental object"""
             grouped_data = scraper.get_fundamental_items()
             data = grouped_data[-1][-1]
-            time_ = scraper.get_time_value(grouped_data, -1, -4)
-            day_break = grouped_data[0][0]
-            obj = scraper.create_fundamental_data_object(
-                day_break, data, time_
-            )
+            obj = scraper.create_calendar_event(data)
             assert obj is None
 
     class TestGetCorrectDateFormat:
