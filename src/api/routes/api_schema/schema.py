@@ -1,3 +1,4 @@
+from typing import List
 from fastapi_camelcase import CamelModel
 from datetime import datetime
 from pydantic import Field
@@ -16,11 +17,16 @@ class Base(CamelModel):
         arbitraty_types_allowed = True
 
 
-class FundamentalSchema(Base):
-    currency: CurrencyEnum
-    last_updated: datetime
-    calendar_event: CalendarEventEnum
+class CalendarEventSchema(Base):
+    calendar_event: str
     forecast: float = Field(default=None)
     actual: float = Field(default=None)
     previous: float = Field(default=None)
-    sentiment: SentimentEnum = Field(default=SentimentEnum.FLAT)
+    sentiment: SentimentEnum
+
+
+class FundamentalSchema(Base):
+    currency: CurrencyEnum
+    last_updated: datetime
+    aggregate_sentiment: SentimentEnum
+    calendar_events: List[CalendarEventSchema]

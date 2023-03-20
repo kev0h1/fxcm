@@ -5,6 +5,7 @@ from src.container.container import Container
 from src.models.mongo_connect import Database
 
 from src.repositories.fundamental_repository import FundamentalDataRepository
+from src.services.fundamental_service import FundamentalDataService
 
 scheduler = AsyncIOScheduler()
 from src.classes.fundamental import FundamentalData
@@ -17,14 +18,17 @@ from src.indicators.forex_factory_scraper import (
     ForexFactoryScraper,
 )
 
-# @scheduler.scheduled_job("interval")
+
+@scheduler.scheduled_job("interval", seconds=300)
 def get_fundamental_trend_data():
-    date_: datetime = datetime(2023, 2, 1)
-    url = ForexFactoryScraper.get_url_for_today(date_=date_)
-    scraper = ForexFactoryScraper(url=url)
-    objects = scraper.get_fundamental_items()
-    scraped_data = objects[-1]
-    process_data(scraper, objects, date_, scraped_data)
+    date_: datetime = datetime.today()
+    # if date_.weekday
+    if date_.weekday() < 5:
+        url = ForexFactoryScraper.get_url_for_today(date_=date_)
+        scraper = ForexFactoryScraper(url=url)
+        objects = scraper.get_fundamental_items()
+        scraped_data = objects[-1]
+        process_data(scraper, objects, date_, scraped_data)
 
 
 @inject
@@ -38,6 +42,9 @@ def process_data(
     ),
     db: Database = Depends(
         Provide[Container.db],
+    ),
+    fundamental_data_service: FundamentalDataService = Depends(
+        Provide[Container.fundamental_data_service]
     ),
 ) -> List[FundamentalData]:
     """Converts the fundamental data into objects we can manipulate"""
@@ -89,4 +96,7 @@ def process_data(
                     fundamental_data.sentiment = (
                         scraped_calendar_event.sentiment
                     )
+                fundamental_data_service.calculate_aggregate_score(
+                    fundamental_data=fundamental_data
+                )
                 fundamental_data_repository.save(fundamental_data)

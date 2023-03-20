@@ -89,7 +89,7 @@ class ForexFactoryScraper:
         impact_value = self.get_impact_value(impact)
         if impact_value in impact_values:
             return ImpactEnum(impact_value)
-        raise NoEconomicImpactDefined("Undefined impact")
+        return None
 
     def get_impact_value(self, impact):
         """Returns impact value"""

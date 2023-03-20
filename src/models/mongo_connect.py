@@ -2,17 +2,26 @@ from contextlib import contextmanager
 
 from mongoengine import connect, disconnect
 import pymongo
+import os
 
 
 class Database:
+    def __init__(self) -> None:
+        is_dev = os.environ.get("DOCKER", False)
+        if is_dev:
+            self.env = "mongo"
+        else:
+            self.env = "localhost"
+
     def reset_db(self):
         """Drop database"""
-        client = pymongo.MongoClient("localhost", 27017)
+
+        client = pymongo.MongoClient(self.env, 27017)
         client.drop_database("my_db")
 
     @contextmanager
     def get_session(self):
-        session = connect(host="mongodb://127.0.0.1:27017/my_db")
+        session = connect(host=f"mongodb://{self.env}/my_db")
         try:
             print("opening")
             yield session

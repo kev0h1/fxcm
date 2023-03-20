@@ -10,7 +10,7 @@ from sqlalchemy import (
 )
 from src.config import CurrencyEnum, CalendarEventEnum, SentimentEnum
 from sqlalchemy.orm import registry, relationship
-from src.classes.fundamental import FundamentalData, FundamentalTrend
+from src.classes.fundamental import FundamentalData
 
 
 def create_fundamental_data_table(metadata_obj: MetaData):
@@ -29,46 +29,13 @@ def create_fundamental_data_table(metadata_obj: MetaData):
     )
 
 
-def create_fundamental_trend_table(metadata_obj: MetaData):
-    """Create the fundamental data table"""
-    return Table(
-        "fundamental_trend",
-        metadata_obj,
-        Column("currency", Enum(CurrencyEnum)),
-        Column("last_updated", DateTime),
-        PrimaryKeyConstraint(
-            "currency", "last_updated", name="trend_primary_key"
-        ),
-        ForeignKeyConstraint(
-            ["currency", "last_updated"],
-            ["fundamental_data.currency", "fundamental_data.last_updated"],
-            onupdate="CASCADE",
-            ondelete="CASCADE",
-        ),
-    )
-
-
 def create_fundamental_mapper(metadata_obj: MetaData):
     mapper_registry = registry(metadata=metadata_obj)
     fundamental_data_table = create_fundamental_data_table(
-        metadata_obj=metadata_obj
-    )
-    fundamental_trend_table = create_fundamental_trend_table(
         metadata_obj=metadata_obj
     )
 
     mapper_registry.map_imperatively(
         FundamentalData,
         fundamental_data_table,
-        properties={
-            "fundamental_data": relationship(
-                FundamentalTrend,
-                backref="fundamental_data",
-            )
-        },
-    )
-
-    mapper_registry.map_imperatively(
-        FundamentalTrend,
-        fundamental_trend_table,
     )
