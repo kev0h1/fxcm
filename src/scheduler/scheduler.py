@@ -100,3 +100,29 @@ def process_data(
                     fundamental_data=fundamental_data
                 )
                 fundamental_data_repository.save(fundamental_data)
+
+
+@inject
+def check_for_trades(
+    fundamental_data_repository: FundamentalDataRepository = Depends(
+        Provide[Container.fundamental_data_repository]
+    ),
+):
+    """Checks for trades"""
+    for currency in CurrencyEnum.__members__:
+        currency = CurrencyEnum(currency)
+        fundamental_data = fundamental_data_repository.get_fundamental_data(
+            currency=currency
+        )
+        if fundamental_data:
+            if fundamental_data.aggregate_sentiment == SendimentEnum.BULLISH:
+                open_trades()
+            else:
+                close_trades()
+    pass
+
+
+@inject
+def close_trades():
+    """Closes trades"""
+    pass
