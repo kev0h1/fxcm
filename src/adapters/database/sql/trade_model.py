@@ -9,7 +9,7 @@ from sqlalchemy import (
     Enum,
 )
 
-from src.classes.trade import Trade
+from src.domain.trade import Trade
 from sqlalchemy.orm import registry
 from src.config import SignalTypeEnum
 

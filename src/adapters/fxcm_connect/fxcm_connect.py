@@ -4,12 +4,15 @@ import os
 import dotenv
 from fxcmpy import fxcmpy
 from pandas import DataFrame
-from src.classes.trade import Trade
+from src.domain.trade import Trade
 from sqlalchemy.orm import Session
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum
 from src.container.container import Container
-from src.errors.errors import InvalidTradeParameter, NoStopDefinedException
-from src.repositories.trade_repository import TradeRepository
+from src.domain.errors.errors import (
+    InvalidTradeParameter,
+    NoStopDefinedException,
+)
+from src.adapters.database.repositories.trade_repository import TradeRepository
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 
@@ -26,11 +29,11 @@ class FXCMConnect:
             raise ValueError("No config defined")
         self.open_connection()
 
-    def get_connection_status(self) -> None:
+    async def get_connection_status(self) -> None:
         """Get the connection status"""
         return self.con.is_connected()
 
-    def close_connection(self) -> None:
+    async def close_connection(self) -> None:
         """Closes the connection"""
         self.con.close()
 
@@ -42,7 +45,7 @@ class FXCMConnect:
             log_level="error",
         )
 
-    def get_candle_data(
+    async def get_candle_data(
         self, instrument: ForexPairEnum, period: PeriodEnum, number: int = 100
     ) -> DataFrame:
         """get the candle data for an instrument"""
@@ -50,11 +53,11 @@ class FXCMConnect:
             instrument=instrument.value, period=period.value, number=number
         )
 
-    def get_open_positions(self, **kwargs):
+    async def get_open_positions(self, **kwargs):
         """returns the open positions"""
         return self.con.get_open_positions()
 
-    def open_trade(
+    async def open_trade(
         self,
         session: Session,
         instrument: ForexPairEnum,
@@ -70,14 +73,15 @@ class FXCMConnect:
         Opens a trade postion.
 
         open_trade(symbol, is_buy, amount, time_in_force, order_type, rate=0, is_in_pips=True,
-        limit=None, at_market=0, stop=None, trailing_step=None, account_id=None)"""
+        limit=None, at_market=0, stop=None, trailing_step=None, account_id=None)
+        """
         stops = {}
         if limit is not None:
             stops["limit"] = limit
         if stop is not None:
             stops["stop"] = stop
 
-        self.validate_stops(is_buy, is_pips, stop, limit)
+        await self.validate_stops(is_buy, is_pips, stop, limit)
 
         self.con.open_trade(
             symbol=instrument.value,
@@ -88,9 +92,9 @@ class FXCMConnect:
             order_type=order_type.value,
             **stops
         )
-        self.create_trade_obj(session)
+        await self.create_trade_obj(session)
 
-    def validate_stops(self, is_buy, is_pips, stop, limit):
+    async def validate_stops(self, is_buy, is_pips, stop, limit):
         """Validates the stops and limits"""
         if not stop:
             raise InvalidTradeParameter("no stop defined")
@@ -125,16 +129,16 @@ class FXCMConnect:
                 )
 
     @inject
-    def create_trade_obj(
+    async def create_trade_obj(
         self,
         trade_repository: TradeRepository = Depends(
             Provide[Container.fundamental_data_repository]
         ),
     ):
         """Creates the trade object"""
-        fxcm_postion = self.get_open_positions()
+        fxcm_postion = await self.get_open_positions()
         trade_id = fxcm_postion.iloc[-1]["tradeId"]
-        if not trade_repository.get_trade_by_trade_id(trade_id=trade_id):
+        if not await trade_repository.get_trade_by_trade_id(trade_id=trade_id):
             trade = Trade(
                 trade_id=trade_id,
                 position_size=fxcm_postion["amountK"],
@@ -144,6 +148,6 @@ class FXCMConnect:
             )
             trade_repository.save(trade)
 
-    def close_trade(self, trade_id: str, amount: int):
+    async def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""
         self.con.close_trade(trade_id=trade_id, amount=amount)

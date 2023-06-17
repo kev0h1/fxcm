@@ -13,15 +13,16 @@ from hypothesis.strategies import (
     builds,
     sampled_from,
 )
-from src.classes.trade import Trade
+from src.domain.trade import Trade
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum, SignalTypeEnum
-from src.errors.errors import InvalidTradeParameter
-from src.fxcm_connect.fxcm_connect import FXCMConnect, config
+from src.domain.errors.errors import InvalidTradeParameter
+from src.adapters.fxcm_connect.fxcm_connect import FXCMConnect, config
 from mock import MagicMock
 import pandas as pd
 import os
+import pytest
 
-from src.repositories.trade_repository import TradeRepository
+from src.adapters.database.repositories.trade_repository import TradeRepository
 
 with mock.patch.object(fxcmpy, "__init__", return_value=None):
     fxcm = FXCMConnect(conf=config)
@@ -36,19 +37,21 @@ class TestFXCMConnect:
             FXCMConnect(conf=config)
             open.assert_called_once()
 
-    def test_init_raises_value_error(self):
+    @pytest.mark.asyncio
+    async def test_init_raises_value_error(self):
         """Init raises value error"""
         with mock.patch.object(
             fxcmpy, "__init__", return_value=None
         ), pytest.raises(ValueError):
             FXCMConnect(conf={})
 
-    def test_get_candles(self):
+    @pytest.mark.asyncio
+    async def test_get_candles(self):
         """test the get candles call"""
         with mock.patch.object(
             fxcmpy, "get_candles", return_value=None
         ) as mock_get:
-            fxcm.get_candle_data(
+            await fxcm.get_candle_data(
                 instrument=ForexPairEnum.USDCAD, period=PeriodEnum.MINUTE_1
             )
             mock_get.assert_called_once_with(
@@ -57,21 +60,24 @@ class TestFXCMConnect:
                 number=100,
             )
 
-    def test_get_connection_status(self):
+    @pytest.mark.asyncio
+    async def test_get_connection_status(self):
         """Test the connection to fxcm"""
         with mock.patch.object(
             fxcmpy, "is_connected", return_value=None
         ) as con:
-            fxcm.get_connection_status()
+            await fxcm.get_connection_status()
             con.assert_called_once()
 
-    def test_close_connection(self):
+    @pytest.mark.asyncio
+    async def test_close_connection(self):
         """Close the connection to fxcm"""
         with mock.patch.object(fxcmpy, "close", return_value=None) as con:
-            fxcm.close_connection()
+            await fxcm.close_connection()
             con.assert_called_once()
 
-    def test_open_connection(self):
+    @pytest.mark.asyncio
+    async def test_open_connection(self):
         """Test the opening of the connection"""
         with mock.patch.object(fxcmpy, "__init__", return_value=None) as con:
             fxcm.open_connection()
@@ -79,12 +85,14 @@ class TestFXCMConnect:
                 access_token=fxcm.token, log_level="error"
             )
 
-    def test_get_open_positions(self):
+    @pytest.mark.asyncio
+    async def test_get_open_positions(self):
         """Close the connection to fxcm"""
         with mock.patch.object(fxcmpy, "get_open_positions") as con:
-            fxcm.get_open_positions()
+            await fxcm.get_open_positions()
             con.assert_called_once()
 
+    @pytest.mark.asyncio
     @given(
         booleans(),
         booleans(),
@@ -92,7 +100,7 @@ class TestFXCMConnect:
         floats(min_value=-1, max_value=1, allow_nan=False),
         floats(min_value=-1, max_value=1, allow_nan=False),
     )
-    def test_open_trade(self, is_buy, is_pips, amount, stop, limit):
+    async def test_open_trade(self, is_buy, is_pips, amount, stop, limit):
         """Test the opening of a trade"""
         session = MagicMock()
         instrument = ForexPairEnum.USDCAD
@@ -109,7 +117,7 @@ class TestFXCMConnect:
         ) as v_stop, mock.patch.object(
             FXCMConnect, "create_trade_obj"
         ) as create:
-            fxcm.open_trade(
+            await fxcm.open_trade(
                 session=session,
                 instrument=instrument,
                 is_buy=is_buy,
@@ -130,48 +138,62 @@ class TestFXCMConnect:
                 **stops
             )
 
+    @pytest.mark.asyncio
     @given(booleans(), booleans(), none(), floats())
-    def test_validate_stops_when_stop_none(self, is_buy, is_pips, stop, limit):
+    async def test_validate_stops_when_stop_none(
+        self, is_buy, is_pips, stop, limit
+    ):
         """Test the validation of stops on a trade, error raise when stop is none"""
         with pytest.raises(InvalidTradeParameter):
-            fxcm.validate_stops(is_buy, is_pips, stop, limit)
+            await fxcm.validate_stops(is_buy, is_pips, stop, limit)
 
+    @pytest.mark.asyncio
     @given(booleans(), booleans(), floats(), floats(max_value=-1))
-    def test_validate_stops_for_invalid_limit(self, is_buy, _, stop, limit):
+    async def test_validate_stops_for_invalid_limit(
+        self, is_buy, _, stop, limit
+    ):
         """Test the validation of stops on a trade, error raise when limit is less than 0"""
         with pytest.raises(InvalidTradeParameter):
-            fxcm.validate_stops(is_buy, True, stop, limit)
+            await fxcm.validate_stops(is_buy, True, stop, limit)
 
+    @pytest.mark.asyncio
     @given(booleans(), booleans(), floats(min_value=1), floats())
-    def test_validate_stops_for_invalid_stop(self, is_buy, _, stop, limit):
+    async def test_validate_stops_for_invalid_stop(
+        self, is_buy, _, stop, limit
+    ):
         """Test the validation of stops on a trade, error raise when stop is greater than 0"""
         with pytest.raises(InvalidTradeParameter):
-            fxcm.validate_stops(is_buy, True, stop, limit)
+            await fxcm.validate_stops(is_buy, True, stop, limit)
 
+    @pytest.mark.asyncio
     @given(
         floats(min_value=10, max_value=20), floats(min_value=0, max_value=9)
     )
-    def test_validate_stops_for_invalid_buy(self, stop, limit):
+    @pytest.mark.asyncio
+    async def test_validate_stops_for_invalid_buy(self, stop, limit):
         """Test the validation of stops on a trade, error raise for invalid buy stops"""
         with pytest.raises(InvalidTradeParameter):
-            fxcm.validate_stops(True, False, stop, limit)
+            await fxcm.validate_stops(True, False, stop, limit)
 
+    @pytest.mark.asyncio
     @given(
         floats(min_value=0, max_value=9), floats(min_value=10, max_value=20)
     )
-    def test_validate_stops_for_invalid_sell(self, stop, limit):
+    async def test_validate_stops_for_invalid_sell(self, stop, limit):
         """Test the validation of stops on a trade, error raise for invalid buy stops"""
         with pytest.raises(InvalidTradeParameter):
-            fxcm.validate_stops(False, False, stop, limit)
+            await fxcm.validate_stops(False, False, stop, limit)
 
+    @pytest.mark.asyncio
     @given(text(), integers())
-    def test_close_trade(self, trade_id, amount):
+    async def test_close_trade(self, trade_id, amount):
         """Test closing a trade"""
         with mock.patch.object(fxcmpy, "close_trade") as con:
-            fxcm.close_trade(trade_id=trade_id, amount=amount)
+            await fxcm.close_trade(trade_id=trade_id, amount=amount)
             con.assert_called_once_with(trade_id=trade_id, amount=amount)
 
-    def test_create_trade_obj(self):
+    @pytest.mark.asyncio
+    async def test_create_trade_obj(self):
         """Test the creation of a trade object"""
         file = os.path.abspath(os.curdir) + "/test/open_positions.csv"
         df = pd.read_csv(file)
@@ -185,12 +207,13 @@ class TestFXCMConnect:
         ) as create, mock.patch.object(
             TradeRepository, "save", return_value=None
         ) as add:
-            fxcm.create_trade_obj(trade_repository=repo)
+            await fxcm.create_trade_obj(trade_repository=repo)
             con.assert_called_once()
             get_trade.assert_called_once()
             create.assert_called_once()
             add.assert_called_once()
 
+    @pytest.mark.asyncio
     @given(
         builds(
             Trade,
@@ -202,7 +225,7 @@ class TestFXCMConnect:
             signal=sampled_from(SignalTypeEnum),
         )
     )
-    def test_create_trade_obj_for_existing(self, trade):
+    async def test_create_trade_obj_for_existing(self, trade):
         """Test the creation of a trade object"""
         file = os.path.abspath(os.curdir) + "/test/open_positions.csv"
         df = pd.read_csv(file)
@@ -216,7 +239,7 @@ class TestFXCMConnect:
         ) as create, mock.patch.object(
             TradeRepository, "save", return_value=None
         ) as add:
-            fxcm.create_trade_obj(repo)
+            await fxcm.create_trade_obj(repo)
             con.assert_called_once()
             get_trade.assert_called_once()
             create.assert_not_called()

@@ -10,7 +10,7 @@ from sqlalchemy import (
 )
 from src.config import CurrencyEnum, CalendarEventEnum, SentimentEnum
 from sqlalchemy.orm import registry, relationship
-from src.classes.fundamental import FundamentalData
+from src.domain.fundamental import FundamentalData
 
 
 def create_fundamental_data_table(metadata_obj: MetaData):

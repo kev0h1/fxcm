@@ -1,4 +1,4 @@
-from src.models.mongo_connect import Database
+from src.adapters.database.mongo.mongo_connect import Database
 import pytest
 
 

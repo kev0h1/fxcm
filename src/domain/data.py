@@ -2,7 +2,7 @@ class Data:
     def __init__(self, data) -> None:
         self.data = data
 
-    def get_refined_data(self):
+    async def get_refined_data(self):
         """Refine the data that we get from FXCM"""
         data = self.data
         data.drop(

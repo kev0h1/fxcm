@@ -6,21 +6,21 @@ class Indicators:
     def __init__(self) -> None:
         """Initialise the data to add indicators"""
 
-    def get_simple_moving_average(
+    async def get_simple_moving_average(
         self, data: DataFrame, period: int, col: str
     ) -> DataFrame:
         """Calculate the moving average"""
         data["SMA" + str(period)] = data[col].rolling(period).mean()
         return data
 
-    def get_exponential_moving_average(
+    async def get_exponential_moving_average(
         self, data: DataFrame, period: int, col: str
     ):
         """Calculate the moving average"""
         data["EMA" + str(period)] = data[col].ewm(period).mean()
         return data
 
-    def get_macd(
+    async def get_macd(
         self,
         data: DataFrame,
         col: str,
@@ -40,7 +40,7 @@ class Indicators:
         data["macd_s"] = data.index.map(macd_s)
         return data
 
-    def get_stocastic(
+    async def get_stocastic(
         self,
         data: DataFrame,
         period: int = 14,
@@ -56,7 +56,7 @@ class Indicators:
         data["%D"] = data["%K"].rolling(d_cal_period).mean()
         return data
 
-    def get_rsi(
+    async def get_rsi(
         self, data: DataFrame, period: int = 14, ema: bool = True
     ) -> DataFrame:
         """Calculate the rsi"""
@@ -84,11 +84,13 @@ class Indicators:
         data["rsi"] = rsi
         return data
 
-    def get_bollinger(
+    async def get_bollinger(
         self, data: DataFrame, period: int = 20, col: str = "close"
     ) -> DataFrame:
         """get the bollinger bands"""
-        sma = self.get_simple_moving_average(data=data, period=period, col=col)
+        sma = await self.get_simple_moving_average(
+            data=data, period=period, col=col
+        )
         std = data[col].rolling(period).std()
         bollinger_up = sma[col] + std * 2  # Calculate top band
         bollinger_down = sma[col] - std * 2  # Calculate bottom band
@@ -96,7 +98,7 @@ class Indicators:
         data["bollinger_down"] = bollinger_down
         return data
 
-    def get_adx(
+    async def get_adx(
         self,
         data: DataFrame,
         period: int = 20,
@@ -127,7 +129,7 @@ class Indicators:
         data["adx"] = adx_smooth
         return data
 
-    def get_atr(
+    async def get_atr(
         self,
         data: DataFrame,
         period: int = 14,
@@ -145,7 +147,7 @@ class Indicators:
         data["atr"] = atr
         return data
 
-    def get_obv(
+    async def get_obv(
         self, data: DataFrame, close: str = "close", volume: str = "volume"
     ):
         """Get the obv"""
@@ -153,7 +155,7 @@ class Indicators:
         data["obv"] = obv
         return data
 
-    def get_accumulation_distribution(
+    async def get_accumulation_distribution(
         self,
         data: DataFrame,
         high: str = "high",

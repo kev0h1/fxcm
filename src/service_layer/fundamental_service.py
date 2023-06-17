@@ -1,13 +1,15 @@
 from datetime import datetime
 from typing import Iterator
-from src.classes.fundamental import FundamentalData
+from src.domain.fundamental import FundamentalData
 from src.config import CurrencyEnum, SentimentEnum
 
-from src.repositories.fundamental_repository import FundamentalDataRepository
+from src.adapters.database.repositories.fundamental_repository import (
+    FundamentalDataRepository,
+)
 from contextlib import AbstractContextManager
 from typing import Callable, Iterator
 from sqlalchemy.orm import Session
-from src.models.db_connect import context
+from src.adapters.database.sql.db_connect import context
 
 
 class FundamentalDataService:
@@ -18,7 +20,9 @@ class FundamentalDataService:
             fundamental_data_repository
         )
 
-    def get_all_fundamental_data(self, **kwargs) -> Iterator[FundamentalData]:
+    async def get_all_fundamental_data(
+        self, **kwargs
+    ) -> Iterator[FundamentalData]:
         """Get the fundamental data"""
         return self._repository.get_all(**kwargs)
 

@@ -1,21 +1,21 @@
 import datetime
 from typing import Iterator
-from src.classes.fundamental import FundamentalTrend
+from src.domain.fundamental import FundamentalTrend
 
 from sqlalchemy.orm import Session
 
 from src.config import CurrencyEnum
-from src.models.db_connect import context
-from src.repositories.base_repository import BaseRepository
+from src.adapters.database.sql.db_connect import context
+from src.adapters.database.repositories.base_repository import BaseRepository
 
 
 class FundamentalTrendRepository(BaseRepository):
-    def get_all(self) -> Iterator[FundamentalTrend]:
+    async def get_all(self) -> Iterator[FundamentalTrend]:
         session: Session = context.get("session")
         print(session)
         return session.query(FundamentalTrend).all()
 
-    def get_fundamental_trend(
+    async def get_fundamental_trend(
         self,
         currency: CurrencyEnum,
     ) -> FundamentalTrend:

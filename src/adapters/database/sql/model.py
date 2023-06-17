@@ -1,6 +1,6 @@
-from src.models.trade_model import create_trading_mapper
+from src.adapters.database.sql.trade_model import create_trading_mapper
 from sqlalchemy import MetaData
-from src.models.fundamental_model import (
+from src.adapters.database.sql.fundamental_model import (
     create_fundamental_mapper,
 )
 

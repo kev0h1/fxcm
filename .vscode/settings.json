@@ -22,10 +22,13 @@
   "python.testing.pytestArgs": ["test"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "python.formatting.provider": "black",
+  "python.formatting.provider": "none",
   "python.formatting.blackArgs": ["--line-length", "79"],
   "python.linting.enabled": true,
   "python.radon.executable": "radon",
   "python.defaultInterpreterPath": "./venv/Scripts/python.exe",
-  "python.analysis.typeCheckingMode": "off"
+  "python.analysis.typeCheckingMode": "off",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
 }

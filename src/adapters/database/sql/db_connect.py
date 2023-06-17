@@ -22,7 +22,7 @@ class Database:
             ),
         )
 
-    def reset_db(self, metadata: MetaData) -> None:
+    async def reset_db(self, metadata: MetaData) -> None:
         """Reset the database"""
         with self._engine.connect() as conn:
             for schema in metadata._schemas:
@@ -39,7 +39,7 @@ class Database:
         metadata.create_all(self._engine)
 
     @contextmanager
-    def get_session(self):
+    async def get_session(self):
         session: Session = self._session_factory()
         context.set(session)
         try:

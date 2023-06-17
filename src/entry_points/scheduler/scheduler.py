@@ -2,25 +2,25 @@ from datetime import datetime
 from typing import List
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.container.container import Container
-from src.models.mongo_connect import Database
+from src.adapters.database.mongo.mongo_connect import Database
 
-from src.repositories.fundamental_repository import FundamentalDataRepository
-from src.services.fundamental_service import FundamentalDataService
+from src.adapters.database.repositories.fundamental_repository import FundamentalDataRepository
+from src.service_layer.fundamental_service import FundamentalDataService
 
 scheduler = AsyncIOScheduler()
-from src.classes.fundamental import FundamentalData
+from src.domain.fundamental import FundamentalData
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.config import CurrencyEnum
 
-from src.indicators.forex_factory_scraper import (
+from src.service_layer.forex_factory_scraper import (
     CALENDAR_CURRENCY,
     ForexFactoryScraper,
 )
 
 
 @scheduler.scheduled_job("interval", seconds=300)
-def get_fundamental_trend_data():
+async def get_fundamental_trend_data():
     date_: datetime = datetime.today()
     # if date_.weekday
     if date_.weekday() < 5:
@@ -28,11 +28,11 @@ def get_fundamental_trend_data():
         scraper = ForexFactoryScraper(url=url)
         objects = scraper.get_fundamental_items()
         scraped_data = objects[-1]
-        process_data(scraper, objects, date_, scraped_data)
+        await process_data(scraper, objects, date_, scraped_data)
 
 
 @inject
-def process_data(
+async def process_data(
     scraper: ForexFactoryScraper,
     objects,
     date_,

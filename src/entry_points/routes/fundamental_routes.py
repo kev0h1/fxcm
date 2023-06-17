@@ -3,12 +3,12 @@ from typing import List
 from fastapi_restful import set_responses, Resource
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
-from src.classes.fundamental import FundamentalData
+from src.domain.fundamental import FundamentalData
 from src.config import CurrencyEnum
-from src.models.mongo_connect import Database
-from src.services.fundamental_service import FundamentalDataService
+from src.adapters.database.mongo.mongo_connect import Database
+from src.service_layer.fundamental_service import FundamentalDataService
 from src.container.container import Container
-from src.api.routes.api_schema.schema import FundamentalSchema
+from src.entry_points.routes.api_schema.schema import FundamentalSchema
 
 
 class FundamentalResource(Resource):
@@ -25,7 +25,7 @@ class FundamentalResource(Resource):
         self._db = db
 
     @set_responses(List[FundamentalSchema], 200)
-    def get(self, date: date = None, currency: CurrencyEnum = None):
+    async def get(self, date: date = None, currency: CurrencyEnum = None):
         """Deletes the database"""
         api_data = []
         kwargs = {}

@@ -2,9 +2,9 @@ from src.container.container import Container
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_restful import Api
-from src.api.routes.debug_routes import DebugResource
-from src.api.routes.fundamental_routes import FundamentalResource
-from src.scheduler.scheduler import scheduler
+from src.entry_points.routes.debug_routes import DebugResource
+from src.entry_points.routes.fundamental_routes import FundamentalResource
+from src.entry_points.scheduler.scheduler import scheduler
 
 
 def create_app():

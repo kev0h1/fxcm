@@ -1,7 +1,7 @@
 from fastapi_restful import set_responses, Resource
-from src.models.db_connect import Database
-from src.models.model import metadata_obj
-from src.scheduler.scheduler import get_fundamental_trend_data
+from src.adapters.database.sql.db_connect import Database
+from src.adapters.database.sql.model import metadata_obj
+from src.entry_points.scheduler.scheduler import get_fundamental_trend_data
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.container.container import Container
@@ -17,13 +17,13 @@ class DebugResource(Resource):
         self.db = db
 
     @set_responses(str, 200)
-    def delete(self):
+    async def delete(self):
         """Deletes the database"""
-        self.db.reset_db()
+        await self.db.reset_db()
         return "done"
 
     @set_responses(str, 200)
-    def put(self):
+    async def put(self):
         """Deletes the database"""
-        get_fundamental_trend_data()
+        await get_fundamental_trend_data()
         return "done"
