@@ -1,7 +1,7 @@
 from dependency_injector import containers, providers
 from src.adapters.database.mongo.mongo_connect import Database
-from src.adapters.database.repositories.fundamental_repository import FundamentalDataRepository
 from src.service_layer.fundamental_service import FundamentalDataService
+from src.service_layer.uow import MongoUnitOfWork
 
 
 class Container(containers.DeclarativeContainer):
@@ -14,10 +14,9 @@ class Container(containers.DeclarativeContainer):
         ]
     )
     db = providers.Singleton(Database)
-
-    fundamental_data_repository = providers.Factory(FundamentalDataRepository)
+    uow = providers.Singleton(MongoUnitOfWork)
 
     fundamental_data_service = providers.Factory(
         FundamentalDataService,
-        fundamental_data_repository=fundamental_data_repository,
+        uow=uow,
     )

@@ -16,6 +16,8 @@ from src.adapters.database.repositories.trade_repository import TradeRepository
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 
+from src.service_layer.uow import MongoUnitOfWork
+
 env = os.path.abspath(os.curdir) + "/src/.env"
 config = dotenv.dotenv_values(env)
 
@@ -131,14 +133,14 @@ class FXCMConnect:
     @inject
     async def create_trade_obj(
         self,
-        trade_repository: TradeRepository = Depends(
-            Provide[Container.fundamental_data_repository]
-        ),
+        uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
     ):
         """Creates the trade object"""
         fxcm_postion = await self.get_open_positions()
         trade_id = fxcm_postion.iloc[-1]["tradeId"]
-        if not await trade_repository.get_trade_by_trade_id(trade_id=trade_id):
+        if not await uow.trade_repository.get_trade_by_trade_id(
+            trade_id=trade_id
+        ):
             trade = Trade(
                 trade_id=trade_id,
                 position_size=fxcm_postion["amountK"],
@@ -146,7 +148,7 @@ class FXCMConnect:
                 limit=fxcm_postion["limit"],
                 is_buy=fxcm_postion["isBuy"],
             )
-            trade_repository.save(trade)
+            await uow.trade_repository.save(trade)
 
     async def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""

@@ -180,7 +180,7 @@ class ForexFactoryScraper:
         tag: element.Tag,
     ) -> Union[None, FundamentalData]:
         """Create calendar object"""
-        calendar_event = self.get_event_values(
+        calendar_event = await self.get_event_values(
             element=tag, class_name=CALENDAR_EVENT
         )
 

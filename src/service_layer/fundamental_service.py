@@ -2,49 +2,43 @@ from datetime import datetime
 from typing import Iterator
 from src.domain.fundamental import FundamentalData
 from src.config import CurrencyEnum, SentimentEnum
-
-from src.adapters.database.repositories.fundamental_repository import (
-    FundamentalDataRepository,
-)
-from contextlib import AbstractContextManager
-from typing import Callable, Iterator
-from sqlalchemy.orm import Session
-from src.adapters.database.sql.db_connect import context
+from typing import Iterator
+from src.service_layer.uow import MongoUnitOfWork
 
 
 class FundamentalDataService:
-    def __init__(
-        self, fundamental_data_repository: FundamentalDataRepository
-    ) -> None:
-        self._repository: FundamentalDataRepository = (
-            fundamental_data_repository
-        )
+    def __init__(self, uow: MongoUnitOfWork) -> None:
+        self._uow: MongoUnitOfWork = uow
 
     async def get_all_fundamental_data(
         self, **kwargs
     ) -> Iterator[FundamentalData]:
         """Get the fundamental data"""
-        return await self._repository.get_all(**kwargs)
+        return await self._uow.fundamental_data_repository.get_all(**kwargs)
 
     async def get_fundamental_data_by_currency_datetime(
         self, currency: CurrencyEnum, last_updated: datetime
     ) -> FundamentalData:
         """Get the fundamental data for a currency"""
-        return await self._repository.get_fundamental_data(
-            currency=currency, last_updated=last_updated
+        return (
+            await self._uow.fundamental_data_repository.get_fundamental_data(
+                currency=currency, last_updated=last_updated
+            )
         )
 
     async def create_fundamental_data(
         self, fundamental_data: FundamentalData
     ) -> FundamentalData:
         """Create a fundamental data object"""
-        return await self._repository.save(fundamental_data=fundamental_data)
+        return await self._uow.fundamental_data_repository.save(
+            fundamental_data=fundamental_data
+        )
 
     async def get_latest_fundamental_data_for_currency(
         self, currency: CurrencyEnum
     ):
         """Return the latest data for a particular currency"""
-        return await self._repository.get_latest_fundamental_data(
+        return await self._uow.fundamental_data_repository.get_latest_fundamental_data(
             currency=currency
         )
 

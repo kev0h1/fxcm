@@ -9,6 +9,7 @@ from src.adapters.database.mongo.mongo_connect import Database
 from src.service_layer.fundamental_service import FundamentalDataService
 from src.container.container import Container
 from src.entry_points.routes.api_schema.schema import FundamentalSchema
+from src.service_layer.uow import MongoUnitOfWork
 
 
 class FundamentalResource(Resource):
@@ -18,11 +19,11 @@ class FundamentalResource(Resource):
         fundamental_data_service: FundamentalDataService = Depends(
             Provide[Container.fundamental_data_service],
         ),
-        db: Database = Depends(Provide[Container.db]),
+        uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
     ) -> None:
         super().__init__()
         self.service = fundamental_data_service
-        self._db = db
+        self._uow = uow
 
     @set_responses(List[FundamentalSchema], 200)
     async def get(self, date: date = None, currency: CurrencyEnum = None):
@@ -33,7 +34,7 @@ class FundamentalResource(Resource):
             kwargs["currency"] = currency
         if date:
             kwargs["last_updated"] = date
-        with self._db.get_session():
+        async with self._uow:
             data: List[
                 FundamentalData
             ] = await self.service.get_all_fundamental_data(**kwargs)

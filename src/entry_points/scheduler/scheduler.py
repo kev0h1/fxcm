@@ -1,13 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.container.container import Container
-from src.adapters.database.mongo.mongo_connect import Database
 
-from src.adapters.database.repositories.fundamental_repository import (
-    FundamentalDataRepository,
-)
 from src.service_layer.fundamental_service import FundamentalDataService
+from src.service_layer.uow import MongoUnitOfWork
 
 scheduler = AsyncIOScheduler()
 from src.domain.fundamental import FundamentalData
@@ -23,10 +20,10 @@ from src.service_layer.forex_factory_scraper import (
 
 @scheduler.scheduled_job("interval", seconds=300)
 async def get_fundamental_trend_data():
-    date_: datetime = datetime.today()
+    date_: datetime = datetime.today() - timedelta(days=3)
     # if date_.weekday
     if date_.weekday() < 5:
-        url = ForexFactoryScraper.get_url_for_today(date_=date_)
+        url = await ForexFactoryScraper.get_url_for_today(date_=date_)
         scraper = ForexFactoryScraper(url=url)
         objects = await scraper.get_fundamental_items()
         scraped_data = objects[-1]
@@ -39,18 +36,13 @@ async def process_data(
     objects,
     date_,
     scraped_data,
-    fundamental_data_repository: FundamentalDataRepository = Depends(
-        Provide[Container.fundamental_data_repository]
-    ),
-    db: Database = Depends(
-        Provide[Container.db],
-    ),
+    uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
     fundamental_data_service: FundamentalDataService = Depends(
         Provide[Container.fundamental_data_service]
     ),
 ) -> List[FundamentalData]:
     """Converts the fundamental data into objects we can manipulate"""
-    with db.get_session():
+    async with uow:
         for index, data in enumerate(scraped_data):
             time = await scraper.get_time_value(objects, -1, index)
             if time is None:
@@ -68,7 +60,7 @@ async def process_data(
 
             if scraped_calendar_event:
                 fundamental_data = (
-                    await fundamental_data_repository.get_fundamental_data(
+                    await uow.fundamental_data_repository.get_fundamental_data(
                         currency=currency, last_updated=date_time
                     )
                 )
@@ -76,11 +68,13 @@ async def process_data(
                     fundamental_data = await scraper.create_fundamental_object(
                         date_, data, time
                     )
-                    fundamental_data = await fundamental_data_repository.save(
-                        fundamental_data
+                    fundamental_data = (
+                        await uow.fundamental_data_repository.save(
+                            fundamental_data
+                        )
                     )
                 calender_event = (
-                    await fundamental_data_repository.get_calendar_event(
+                    await uow.fundamental_data_repository.get_calendar_event(
                         fundamental_data=fundamental_data,
                         calendar_event=scraped_calendar_event.calendar_event,
                     )
@@ -103,30 +97,4 @@ async def process_data(
                 await fundamental_data_service.calculate_aggregate_score(
                     fundamental_data=fundamental_data
                 )
-                await fundamental_data_repository.save(fundamental_data)
-
-
-@inject
-def check_for_trades(
-    fundamental_data_repository: FundamentalDataRepository = Depends(
-        Provide[Container.fundamental_data_repository]
-    ),
-):
-    """Checks for trades"""
-    for currency in CurrencyEnum.__members__:
-        currency = CurrencyEnum(currency)
-        fundamental_data = fundamental_data_repository.get_fundamental_data(
-            currency=currency
-        )
-        if fundamental_data:
-            if fundamental_data.aggregate_sentiment == SendimentEnum.BULLISH:
-                open_trades()
-            else:
-                close_trades()
-    pass
-
-
-@inject
-def close_trades():
-    """Closes trades"""
-    pass
+                await uow.fundamental_data_repository.save(fundamental_data)

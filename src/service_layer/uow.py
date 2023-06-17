@@ -1,26 +1,48 @@
+import os
+from mongoengine import connect, disconnect
+
+from src.adapters.database.repositories.fundamental_repository import (
+    FundamentalDataRepository,
+)
+from src.adapters.database.repositories.trade_repository import TradeRepository
+
+
 class AbstractUnitOfWork:
-    def __enter__(self):
+    async def __aenter__(self):
         raise NotImplementedError
 
-    def __exit__(self, *args):
-        self.rollback()
+    async def __aexit__(self, *args):
+        await self.rollback()
 
-    def commit(self):
+    async def commit(self):
         raise NotImplementedError
 
-    def rollback(self):
+    async def rollback(self):
         raise NotImplementedError
 
 
 class MongoUnitOfWork(AbstractUnitOfWork):
-    def __init__(self, session):
-        self.session = session
+    fundamental_data_repository: FundamentalDataRepository
+    trade_repository = TradeRepository
 
-    def __enter__(self):
-        return self
+    def __init__(self, event_bus=None):
+        is_dev = os.environ.get("DOCKER", False)
+        if is_dev:
+            self.env = "mongo"
+        else:
+            self.env = "localhost"
+        self.event_bus = event_bus
+        self.fundamental_data_repository = FundamentalDataRepository()
+        self.trade_repository = TradeRepository()
 
-    def commit(self):
+    async def __aenter__(self):
+        _ = connect(host=f"mongodb://{self.env}/my_db")
+
+    async def __aexit__(self, *args):
+        disconnect()
+
+    async def commit(self):
         self.session.commit()
 
-    def rollback(self):
+    async def rollback(self):
         self.session.rollback()
