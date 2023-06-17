@@ -36,7 +36,7 @@ class FundamentalResource(Resource):
         with self._db.get_session():
             data: List[
                 FundamentalData
-            ] = self.service.get_all_fundamental_data(**kwargs)
+            ] = await self.service.get_all_fundamental_data(**kwargs)
             for value in data:
                 api_data.append(FundamentalSchema(**value.to_mongo()))
             return api_data

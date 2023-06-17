@@ -1,6 +1,5 @@
 from fastapi_restful import set_responses, Resource
-from src.adapters.database.sql.db_connect import Database
-from src.adapters.database.sql.model import metadata_obj
+from src.adapters.database.mongo.mongo_connect import Database
 from src.entry_points.scheduler.scheduler import get_fundamental_trend_data
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends

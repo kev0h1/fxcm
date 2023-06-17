@@ -13,7 +13,7 @@ class Database:
         else:
             self.env = "localhost"
 
-    def reset_db(self):
+    async def reset_db(self):
         """Drop database"""
 
         client = pymongo.MongoClient(self.env, 27017)

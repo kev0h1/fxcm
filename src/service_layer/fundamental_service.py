@@ -24,27 +24,33 @@ class FundamentalDataService:
         self, **kwargs
     ) -> Iterator[FundamentalData]:
         """Get the fundamental data"""
-        return self._repository.get_all(**kwargs)
+        return await self._repository.get_all(**kwargs)
 
-    def get_fundamental_data_by_currency_datetime(
+    async def get_fundamental_data_by_currency_datetime(
         self, currency: CurrencyEnum, last_updated: datetime
     ) -> FundamentalData:
         """Get the fundamental data for a currency"""
-        return self._repository.get_fundamental_data(
+        return await self._repository.get_fundamental_data(
             currency=currency, last_updated=last_updated
         )
 
-    def create_fundamental_data(
+    async def create_fundamental_data(
         self, fundamental_data: FundamentalData
     ) -> FundamentalData:
         """Create a fundamental data object"""
-        return self._repository.save(fundamental_data=fundamental_data)
+        return await self._repository.save(fundamental_data=fundamental_data)
 
-    def get_latest_fundamental_data_for_currency(self, currency: CurrencyEnum):
+    async def get_latest_fundamental_data_for_currency(
+        self, currency: CurrencyEnum
+    ):
         """Return the latest data for a particular currency"""
-        return self._repository.get_latest_fundamental_data(currency=currency)
+        return await self._repository.get_latest_fundamental_data(
+            currency=currency
+        )
 
-    def calculate_aggregate_score(self, fundamental_data: FundamentalData):
+    async def calculate_aggregate_score(
+        self, fundamental_data: FundamentalData
+    ):
         """Calculate the aggregate score of a fundmental data"""
         score = 0
         for calendar_event in fundamental_data.calendar_events:
