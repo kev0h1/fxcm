@@ -16,6 +16,7 @@ from src.service_layer.forex_factory_scraper import (
     CALENDAR_CURRENCY,
     ForexFactoryScraper,
 )
+from src.domain.events import CloseTradeEvent
 
 
 @scheduler.scheduled_job("interval", seconds=300)
@@ -98,3 +99,4 @@ async def process_data(
                     fundamental_data=fundamental_data
                 )
                 await uow.fundamental_data_repository.save(fundamental_data)
+                await uow.event_bus.publish(CloseTradeEvent(currency=currency))

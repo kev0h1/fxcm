@@ -5,14 +5,12 @@ from src.domain.fundamental import CalendarEvent, FundamentalData
 import requests
 from datetime import datetime, time, date
 from src.config import (
-    CalendarEventEnum,
     CurrencyEnum,
     ImpactEnum,
     SentimentEnum,
 )
 import re
 from src.domain.errors.errors import (
-    InvalidEventTypeException,
     NoEconomicImpactDefined,
 )
 from pytz import timezone
