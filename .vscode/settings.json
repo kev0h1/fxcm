@@ -1,31 +1,34 @@
 {
-  "workbench.colorCustomizations": {
-    "activityBar.activeBackground": "#65c89b",
-    "activityBar.background": "#65c89b",
-    "activityBar.foreground": "#15202b",
-    "activityBar.inactiveForeground": "#15202b99",
-    "activityBarBadge.background": "#945bc4",
-    "activityBarBadge.foreground": "#e7e7e7",
-    "commandCenter.border": "#15202b99",
-    "sash.hoverBorder": "#65c89b",
-    "statusBar.background": "#42b883",
-    "statusBar.foreground": "#15202b",
-    "statusBarItem.hoverBackground": "#359268",
-    "statusBarItem.remoteBackground": "#42b883",
-    "statusBarItem.remoteForeground": "#15202b",
-    "titleBar.activeBackground": "#42b883",
-    "titleBar.activeForeground": "#15202b",
-    "titleBar.inactiveBackground": "#42b88399",
-    "titleBar.inactiveForeground": "#15202b99"
-  },
-  "peacock.color": "#42b883",
   "python.testing.pytestArgs": ["test"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "python.formatting.provider": "black",
+  "python.formatting.provider": "none",
   "python.formatting.blackArgs": ["--line-length", "79"],
   "python.linting.enabled": true,
   "python.radon.executable": "radon",
   "python.defaultInterpreterPath": "./venv/Scripts/python.exe",
-  "python.analysis.typeCheckingMode": "off"
+  "python.analysis.typeCheckingMode": "off",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#2f9266",
+    "activityBar.background": "#2f9266",
+    "activityBar.foreground": "#e7e7e7",
+    "activityBar.inactiveForeground": "#e7e7e799",
+    "activityBarBadge.background": "#d2b7e8",
+    "activityBarBadge.foreground": "#15202b",
+    "commandCenter.border": "#e7e7e799",
+    "sash.hoverBorder": "#2f9266",
+    "statusBar.background": "#236c4b",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#2f9266",
+    "statusBarItem.remoteBackground": "#236c4b",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#236c4b",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#236c4b99",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.color": "#236c4b"
 }

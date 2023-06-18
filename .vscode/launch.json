@@ -6,7 +6,7 @@
       "type": "python",
       "request": "launch",
       "module": "uvicorn",
-      "args": ["src.api.app:create_app", "--reload"],
+      "args": ["src.entry_points.app:create_app", "--reload"],
       "jinja": true,
       "justMyCode": true
     },
@@ -27,6 +27,21 @@
       "request": "launch",
       "program": "${file}",
       "justMyCode": true
+    },
+    {
+      "name": "Docker: Python - Fastapi",
+      "type": "docker",
+      "request": "launch",
+      "preLaunchTask": "docker-run: debug",
+      "python": {
+        "pathMappings": [
+          {
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/app"
+          }
+        ],
+        "projectType": "fastapi"
+      }
     }
   ]
 }

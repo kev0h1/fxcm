@@ -1,62 +1,74 @@
-import datetime
-from src.config import CalendarEventEnum, CurrencyEnum
-from src.models.db_connect import Database, context
-from src.classes.fundamental import FundamentalData, FundamentalTrend
-from hypothesis.strategies import from_type
+from src.config import CalendarEventEnum, CurrencyEnum, SentimentEnum
+from src.domain.fundamental import CalendarEvent, FundamentalData
+from hypothesis.strategies import builds, datetimes, floats, sampled_from, text
 from hypothesis import given, settings, HealthCheck
-from src.repositories.fundamental_repository import FundamentalDataRepository
-from src.repositories.fundamental_trend_repository import (
-    FundamentalTrendRepository,
+from src.adapters.database.repositories.fundamental_repository import (
+    FundamentalDataRepository,
 )
+import pytest
 
 
 class TestFundamentalOrm:
-    @given(from_type(FundamentalData))
+    @pytest.mark.asyncio
+    @given(
+        builds(
+            FundamentalData,
+            currency=sampled_from(CurrencyEnum),
+            last_updated=datetimes(),
+        )
+    )
     @settings(
         max_examples=1,
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
-    def test_add_fundamental_data_to_db(self, get_db, data):
+    async def test_add_fundamental_data_to_db(self, get_db, data):
         repo = FundamentalDataRepository()
         currency = data.currency
         last_updated = data.last_updated
-        with get_db.session() as session:
-            context.set(session)
-            repo.add(data)
-
-        with get_db.session() as session:
-            context.set(session)
-            objs = repo.get_all()
+        with get_db.get_session():
+            await repo.save(data)
+        with get_db.get_session():
+            objs = await repo.get_all()
             assert len(objs) > 0
-            fundamental_data = repo.get_fundamental_data(
+        with get_db.get_session():
+            fundamental_data = await repo.get_fundamental_data(
                 currency, last_updated
             )
             assert fundamental_data is not None
 
-
-class TestTrendOrm:
-    @given(from_type(FundamentalData))
+    @pytest.mark.asyncio
+    @given(
+        builds(
+            FundamentalData,
+            currency=sampled_from(CurrencyEnum),
+            last_updated=datetimes(),
+        ),
+        builds(
+            CalendarEvent,
+            forecast=floats(),
+            actual=floats(),
+            previous=floats(),
+            calendar_event=text(),
+            sentiment=sampled_from(SentimentEnum),
+        ),
+    )
     @settings(
         max_examples=1,
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
-    def test_add_trend_data_to_db(self, get_db, data):
-        """Test adding trend to the db"""
+    async def test_add_calendar_events(self, get_db, data, calendar_event):
+        repo = FundamentalDataRepository()
         currency = data.currency
         last_updated = data.last_updated
-        repo = FundamentalTrendRepository()
-        with get_db.session() as session:
-            context.set(session)
-            repo.add(data)
-        with get_db.session() as session:
-            context.set(session)
-            trend = FundamentalTrend(
-                last_updated=last_updated, currency=currency
+        data.calendar_events.append(calendar_event)
+        calendar_event_name = calendar_event.calendar_event
+        with get_db.get_session():
+            await repo.save(data)
+        with get_db.get_session():
+            fundamental_data = await repo.get_fundamental_data(
+                currency, last_updated
             )
-            repo.add(trend)
-
-        with get_db.session() as session:
-            context.set(session)
-            trend = repo.get_all()
-            assert len(trend) > 0
-            assert isinstance(trend[-1].fundamental_data, FundamentalData)
+            calendar_event = await repo.get_calendar_event(
+                fundamental_data, calendar_event=calendar_event_name
+            )
+            assert calendar_event is not None
