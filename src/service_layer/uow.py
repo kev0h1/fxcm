@@ -16,10 +16,7 @@ class AbstractUnitOfWork:
     async def __aexit__(self, *args):
         await self.rollback()
 
-    async def commit(self):
-        raise NotImplementedError
-
-    async def rollback(self):
+    async def publish(self):
         raise NotImplementedError
 
 
@@ -45,8 +42,5 @@ class MongoUnitOfWork(AbstractUnitOfWork):
     async def __aexit__(self, *args):
         disconnect()
 
-    async def commit(self, event):
-        self.event_bus.publish_events()
-
-    async def rollback(self):
-        self.session.rollback()
+    async def publish(self, event):
+        self.event_bus.publish_events(event)
