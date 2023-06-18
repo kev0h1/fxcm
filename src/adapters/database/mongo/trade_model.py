@@ -44,6 +44,8 @@ def map_to_db_model(trade: TradeDomain):
     Returns:
         Trade: database model
     """
+    if not trade:
+        return None
     return Trade(
         trade_id=trade.trade_id,
         position_size=trade.position_size,
@@ -63,6 +65,8 @@ def map_to_domain_model(trade: Trade):
     Returns:
         Trade: domain model
     """
+    if not trade:
+        return None
     return TradeDomain(
         trade_id=trade.trade_id,
         position_size=trade.position_size,

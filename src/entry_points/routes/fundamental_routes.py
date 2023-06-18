@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from datetime import date
 from typing import List
 from fastapi_restful import set_responses, Resource
@@ -28,7 +29,6 @@ class FundamentalResource(Resource):
     @set_responses(List[FundamentalSchema], 200)
     async def get(self, date: date = None, currency: CurrencyEnum = None):
         """Deletes the database"""
-        api_data = []
         kwargs = {}
         if currency:
             kwargs["currency"] = currency
@@ -38,6 +38,4 @@ class FundamentalResource(Resource):
             data: List[
                 FundamentalData
             ] = await self.service.get_all_fundamental_data(**kwargs)
-            for value in data:
-                api_data.append(FundamentalSchema(**value.to_mongo()))
-            return api_data
+            return data

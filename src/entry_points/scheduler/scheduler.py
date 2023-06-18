@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Union
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.container.container import Container
 
@@ -7,7 +7,7 @@ from src.service_layer.fundamental_service import FundamentalDataService
 from src.service_layer.uow import MongoUnitOfWork
 
 scheduler = AsyncIOScheduler()
-from src.domain.fundamental import FundamentalData
+from src.domain.fundamental import CalendarEvent, FundamentalData
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.config import CurrencyEnum
@@ -74,11 +74,8 @@ async def process_data(
                             fundamental_data
                         )
                     )
-                calender_event = (
-                    await uow.fundamental_data_repository.get_calendar_event(
-                        fundamental_data=fundamental_data,
-                        calendar_event=scraped_calendar_event.calendar_event,
-                    )
+                calender_event = await get_calendar_event(
+                    fundamental_data, scraped_calendar_event
                 )
                 if not calender_event:
                     fundamental_data.calendar_events.append(
@@ -100,3 +97,21 @@ async def process_data(
                 )
                 await uow.fundamental_data_repository.save(fundamental_data)
                 await uow.event_bus.publish(CloseTradeEvent(currency=currency))
+
+
+async def get_calendar_event(
+    fundamental_data: FundamentalData,
+    calendar_event: CalendarEvent,
+) -> Union[CalendarEvent, None]:
+    """Retrieves a calendar event from a fundamental data object
+
+    Returns:
+        Union[CalendarEvent, None]: _description_
+    """
+    return next(
+        filter(
+            lambda x: x.calendar_event == calendar_event,
+            fundamental_data.calendar_events,
+        ),
+        None,
+    )

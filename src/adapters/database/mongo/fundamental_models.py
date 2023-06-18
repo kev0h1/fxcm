@@ -63,6 +63,9 @@ def map_to_db_model(fundamental_data: FundamentalDataDomain):
     Returns:
         _type_: _description_
     """
+    if not fundamental_data:
+        return None
+
     calendar_events = [
         CalendarEvent(
             calendar_event=calendar_event.calendar_event,
@@ -87,6 +90,9 @@ def map_to_domain_model(fundamental_data: FundamentalData):
     Args:
         fundamental_data (FundamentalData): _description_
     """
+    if not fundamental_data:
+        return None
+
     calendar_events = [
         CalendarEventDomain(
             calendar_event=calendar_event.calendar_event,

@@ -18,5 +18,5 @@ class CalendarEvent:
 class FundamentalData:
     currency: CurrencyEnum
     last_updated: datetime
-    aggregate_sentiment: SentimentEnum
-    calendar_events: list[CalendarEvent]
+    aggregate_sentiment: SentimentEnum = field(default=SentimentEnum.FLAT)
+    calendar_events: list[CalendarEvent] = field(default_factory=list)
