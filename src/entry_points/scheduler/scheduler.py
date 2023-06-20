@@ -60,6 +60,7 @@ async def process_data(
             )
 
             if scraped_calendar_event:
+                intiate_close_trade_event = False
                 fundamental_data = (
                     await uow.fundamental_data_repository.get_fundamental_data(
                         currency=currency, last_updated=date_time
@@ -92,11 +93,19 @@ async def process_data(
                     fundamental_data.sentiment = (
                         scraped_calendar_event.sentiment
                     )
+                    intiate_close_trade_event = True
+
                 await fundamental_data_service.calculate_aggregate_score(
                     fundamental_data=fundamental_data
                 )
                 await uow.fundamental_data_repository.save(fundamental_data)
-                await uow.event_bus.publish(CloseTradeEvent(currency=currency))
+                if intiate_close_trade_event:
+                    await uow.event_bus.publish(
+                        CloseTradeEvent(
+                            currency=currency,
+                            sentiment=fundamental_data.sentiment,
+                        )
+                    )
 
 
 async def get_calendar_event(

@@ -17,6 +17,11 @@ class PeriodEnum(Enum):
     MONTH = "M1"
 
 
+class PositionEnum(Enum):
+    OPEN = "open"
+    CLOSED = "closed"
+
+
 class ForexPairEnum(Enum):
     EURUSD = "EUR/USD"
     USDJPY = "USD/JPY"  # DO NOT TRADE TOO MUCH UNCERTAINTY
