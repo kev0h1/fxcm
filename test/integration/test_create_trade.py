@@ -1,6 +1,7 @@
+import mock
 from src.config import SignalTypeEnum
 from src.adapters.database.sql.db_connect import Database
-from src.domain.trade import Trade
+from src.adapters.database.mongo.trade_model import Trade
 from hypothesis.strategies import (
     from_type,
     builds,
@@ -14,6 +15,8 @@ from src.adapters.database.sql.db_connect import context
 from src.adapters.database.repositories.trade_repository import TradeRepository
 
 import pytest
+
+from src.service_layer.uow import MongoUnitOfWork
 
 
 class TestTradeOrm:
@@ -35,12 +38,13 @@ class TestTradeOrm:
     )
     async def test_add_trade_to_db(self, get_db, trade):
         """Test adding a trade to the db"""
+        uow = MongoUnitOfWork(event_bus=mock.MagicMock())
         repo = TradeRepository()
         trade_id = trade.trade_id
-        with get_db.get_session():
+        async with uow:
             await repo.save(trade)
 
-        with get_db.get_session():
+        async with uow:
             trades = await repo.get_all()
             assert len(trades) > 0
             trade = await repo.get_trade_by_trade_id(trade_id=trade_id)

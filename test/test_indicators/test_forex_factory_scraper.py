@@ -1,7 +1,7 @@
 import os
 from src.domain.fundamental import CalendarEvent
 from src.config import ImpactEnum, SentimentEnum
-from src.service_layer.forex_factory_scraper import (
+from src.adapters.scraper.forex_factory_scraper import (
     ForexFactoryScraper,
     requests,
     BeautifulSoup,

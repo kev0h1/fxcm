@@ -23,6 +23,7 @@ import os
 import pytest
 
 from src.adapters.database.repositories.trade_repository import TradeRepository
+from src.service_layer.uow import MongoUnitOfWork
 
 with mock.patch.object(fxcmpy, "__init__", return_value=None):
     fxcm = FXCMConnect(conf=config)
@@ -207,7 +208,8 @@ class TestFXCMConnect:
         ) as create, mock.patch.object(
             TradeRepository, "save", return_value=None
         ) as add:
-            await fxcm.create_trade_obj(trade_repository=repo)
+            uow = MongoUnitOfWork(event_bus=mock.MagicMock())
+            await fxcm.create_trade_obj(uow=uow)
             con.assert_called_once()
             get_trade.assert_called_once()
             create.assert_called_once()
@@ -239,7 +241,8 @@ class TestFXCMConnect:
         ) as create, mock.patch.object(
             TradeRepository, "save", return_value=None
         ) as add:
-            await fxcm.create_trade_obj(repo)
+            uow = MongoUnitOfWork(event_bus=mock.MagicMock())
+            await fxcm.create_trade_obj(uow=uow)
             con.assert_called_once()
             get_trade.assert_called_once()
             create.assert_not_called()

@@ -12,7 +12,7 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.config import CurrencyEnum
 
-from src.service_layer.forex_factory_scraper import (
+from src.adapters.scraper.forex_factory_scraper import (
     CALENDAR_CURRENCY,
     ForexFactoryScraper,
 )
