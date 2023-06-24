@@ -12,7 +12,8 @@ from src.adapters.database.mongo.fundamental_models import (
 class FundamentalDataRepository:
     async def save(self, obj: FundamentalDataDomain):
         """Add an object"""
-        map_to_db_model(fundamental_data=obj).save()
+        model = await map_to_db_model(fundamental_data=obj)
+        model.save()
         return obj
 
     async def get_all(self, **kwargs) -> Iterator[FundamentalDataDomain]:
@@ -22,15 +23,15 @@ class FundamentalDataRepository:
         objs = FundamentalData.objects(**kwargs)
         if date:
             return [
-                map_to_domain_model(obj)
+                await map_to_domain_model(obj)
                 for obj in objs.filter(last_updated__gte=date)
             ]
-        return [map_to_domain_model(obj) for obj in objs]
+        return [await map_to_domain_model(obj) for obj in objs]
 
     async def get_fundamental_data(
         self, currency: CurrencyEnum, last_updated: datetime
     ) -> FundamentalDataDomain:
-        return map_to_domain_model(
+        return await map_to_domain_model(
             FundamentalData.objects(
                 currency=currency, last_updated=last_updated
             ).first()
@@ -40,7 +41,7 @@ class FundamentalDataRepository:
         self, currency: CurrencyEnum
     ) -> FundamentalDataDomain:
         """Gets the latest fundamental data for a currency"""
-        return map_to_domain_model(
+        return await map_to_domain_model(
             (
                 FundamentalData.objects(
                     currency=currency,

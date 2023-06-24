@@ -52,7 +52,7 @@ class Trade(Document):
     position = EnumField(PositionEnum)
 
 
-def map_to_db_model(trade: TradeDomain):
+async def map_to_db_model(trade: TradeDomain):
     """Maps trade domain model to database model
 
     Args:
@@ -73,10 +73,11 @@ def map_to_db_model(trade: TradeDomain):
         base_currency=trade.base_currency,
         quote_currency=trade.quote_currency,
         forex_currency_pair=trade.forex_currency_pair,
+        position=trade.position,
     )
 
 
-def map_to_domain_model(trade: Trade):
+async def map_to_domain_model(trade: Trade):
     """Maps trade database model to domain model
 
     Args:

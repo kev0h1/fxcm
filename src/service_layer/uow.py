@@ -5,9 +5,9 @@ from src.adapters.database.repositories.fundamental_repository import (
     FundamentalDataRepository,
 )
 from src.adapters.database.repositories.trade_repository import TradeRepository
+from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
 from src.service_layer.event_bus import TradingEventBus
 from src.service_layer.handlers import handlers
-from src.adapters.fxcm_connect.fxcm_connect import FXCMConnect, config
 
 
 class AbstractUnitOfWork:
@@ -24,9 +24,11 @@ class AbstractUnitOfWork:
 class MongoUnitOfWork(AbstractUnitOfWork):
     fundamental_data_repository: FundamentalDataRepository
     trade_repository = TradeRepository
-    fxcm_connection = FXCMConnect
+    fxcm_connection = BaseTradeConnect
 
-    def __init__(self, event_bus: TradingEventBus):
+    def __init__(
+        self, event_bus: TradingEventBus, fxcm_connection: BaseTradeConnect
+    ):
         is_dev = os.environ.get("DOCKER", False)
         if is_dev:
             self.env = "mongo"
@@ -35,7 +37,7 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         self.event_bus = event_bus
         self.fundamental_data_repository = FundamentalDataRepository()
         self.trade_repository = TradeRepository()
-        self.fxcm_connection = FXCMConnect(conf=config)
+        self.fxcm_connection = fxcm_connection
 
         for event, handler in handlers.items():
             self.event_bus.subscribe(event, handler)

@@ -1,8 +1,11 @@
+from __future__ import annotations
 from datetime import datetime
 from typing import Iterator
 from src.domain.fundamental import FundamentalData
 from src.config import CurrencyEnum, SentimentEnum
 from typing import Iterator
+
+
 from src.service_layer.uow import MongoUnitOfWork
 
 

@@ -1,7 +1,12 @@
+from __future__ import annotations
 import mock
-from src.config import SignalTypeEnum
-from src.adapters.database.sql.db_connect import Database
-from src.adapters.database.mongo.trade_model import Trade
+from src.config import (
+    PositionEnum,
+    SignalTypeEnum,
+    ForexPairEnum,
+    CurrencyEnum,
+)
+
 from hypothesis.strategies import (
     from_type,
     builds,
@@ -11,10 +16,12 @@ from hypothesis.strategies import (
     sampled_from,
 )
 from hypothesis import given, settings, HealthCheck
-from src.adapters.database.sql.db_connect import context
 from src.adapters.database.repositories.trade_repository import TradeRepository
 
 import pytest
+
+from src.domain.trade import Trade
+from src.adapters.fxcm_connect.mock_trade_connect import MockTradeConnect
 
 from src.service_layer.uow import MongoUnitOfWork
 
@@ -30,6 +37,10 @@ class TestTradeOrm:
             limit=floats(),
             is_buy=booleans(),
             signal=sampled_from(SignalTypeEnum),
+            base_currency=sampled_from(CurrencyEnum),
+            quote_currency=sampled_from(CurrencyEnum),
+            forex_currency_pair=sampled_from(ForexPairEnum),
+            position=sampled_from(PositionEnum),
         )
     )
     @settings(
@@ -38,7 +49,9 @@ class TestTradeOrm:
     )
     async def test_add_trade_to_db(self, get_db, trade):
         """Test adding a trade to the db"""
-        uow = MongoUnitOfWork(event_bus=mock.MagicMock())
+        uow = MongoUnitOfWork(
+            event_bus=mock.MagicMock(), fxcm_connection=MockTradeConnect()
+        )
         repo = TradeRepository()
         trade_id = trade.trade_id
         async with uow:

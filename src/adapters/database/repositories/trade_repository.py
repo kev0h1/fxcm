@@ -12,16 +12,17 @@ from mongoengine import Q
 class TradeRepository:
     async def save(self, obj: TradeDomain):
         """Add an object"""
-        map_to_db_model(obj.save())
+        trade_model = await map_to_db_model(obj)
+        trade_model.save()
         return obj
 
     async def get_all(self) -> Iterator[TradeDomain]:
         """Get all trade objects"""
-        return [map_to_domain_model(obj) for obj in TradeModel.objects()]
+        return [await map_to_domain_model(obj) for obj in TradeModel.objects()]
 
     async def get_trade_by_trade_id(self, trade_id: str) -> TradeDomain:
         """Get a single trade"""
-        return map_to_domain_model(
+        return await map_to_domain_model(
             TradeModel.objects(trade_id=trade_id).first()
         )
 
@@ -30,7 +31,7 @@ class TradeRepository:
     ) -> Iterator[TradeDomain]:
         """Get all bullish trades"""
         return [
-            map_to_domain_model(obj)
+            await map_to_domain_model(obj)
             for obj in TradeModel.objects(
                 Q(is_buy=True) & Q(base_currency=currency)
                 | Q(is_buy=False) & Q(quote_currency=currency)
@@ -42,7 +43,7 @@ class TradeRepository:
     ) -> Iterator[TradeDomain]:
         """Get all bearish trades"""
         return [
-            map_to_domain_model(obj)
+            await map_to_domain_model(obj)
             for obj in TradeModel.objects(
                 Q(is_buy=False) & Q(base_currency=currency)
                 | Q(is_buy=True) & Q(quote_currency=currency)

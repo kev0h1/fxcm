@@ -1,6 +1,10 @@
+from __future__ import annotations
 from src.config import PositionEnum, SentimentEnum
 from src.domain import events
-from src.service_layer.uow import MongoUnitOfWork
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.service_layer.uow import MongoUnitOfWork
 
 
 async def close_trade_handler(

@@ -54,7 +54,7 @@ class FundamentalData(Document):
     _id = DictField(primary_key=True)
 
 
-def map_to_db_model(fundamental_data: FundamentalDataDomain):
+async def map_to_db_model(fundamental_data: FundamentalDataDomain):
     """Maps fundamental data domain model to database model
 
     Args:
@@ -84,7 +84,7 @@ def map_to_db_model(fundamental_data: FundamentalDataDomain):
     )
 
 
-def map_to_domain_model(fundamental_data: FundamentalData):
+async def map_to_domain_model(fundamental_data: FundamentalData):
     """Map from database model to domain model
 
     Args:
