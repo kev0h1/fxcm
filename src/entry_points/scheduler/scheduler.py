@@ -6,7 +6,6 @@ from src.container.container import Container
 from src.service_layer.fundamental_service import FundamentalDataService
 from src.service_layer.uow import MongoUnitOfWork
 
-scheduler = AsyncIOScheduler()
 from src.domain.fundamental import CalendarEvent, FundamentalData
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
@@ -17,6 +16,11 @@ from src.adapters.scraper.forex_factory_scraper import (
     ForexFactoryScraper,
 )
 from src.domain.events import CloseTradeEvent
+from src.logger import get_logger
+
+logger = get_logger(__name__)
+
+scheduler = AsyncIOScheduler()
 
 
 @scheduler.scheduled_job("interval", seconds=300)
@@ -24,6 +28,7 @@ async def get_fundamental_trend_data():
     date_: datetime = datetime.today() - timedelta(days=3)
     # if date_.weekday
     if date_.weekday() < 5:
+        logger.info(f"Getting fundamental data for {date_}")
         url = await ForexFactoryScraper.get_url_for_today(date_=date_)
         scraper = ForexFactoryScraper(url=url)
         objects = await scraper.get_fundamental_items()
@@ -87,19 +92,26 @@ async def process_data(
                     or not calender_event.forecast
                     or not calender_event.previous
                 ):
+                    logger.info("Updating calendar event")
                     fundamental_data.actual = scraped_calendar_event.actual
                     fundamental_data.previous = scraped_calendar_event.previous
                     fundamental_data.forecast = scraped_calendar_event.forecast
+
                     fundamental_data.sentiment = (
                         scraped_calendar_event.sentiment
                     )
+                    logger.info(
+                        "Sentiment updated for currency: {currency} to {sentiment}"
+                    )
                     intiate_close_trade_event = True
 
+                logger.info("Calculating aggregate score")
                 await fundamental_data_service.calculate_aggregate_score(
                     fundamental_data=fundamental_data
                 )
                 await uow.fundamental_data_repository.save(fundamental_data)
                 if intiate_close_trade_event:
+                    logger.info("Initiating close trade event")
                     await uow.event_bus.publish(
                         CloseTradeEvent(
                             currency=currency,

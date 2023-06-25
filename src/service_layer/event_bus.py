@@ -32,8 +32,9 @@ class TradingEventBus(EventBus):
             for handler in self.handlers[event_type]:
                 handler(event)
 
-    async def subscribe(self, event_type, handler):
-        """Subscribe to an event"""
+    def subscribe(self, event_type, handler):
+        """Subscribe to an event -
+        do not make async"""
         if event_type not in self.handlers:
             self.handlers[event_type] = []
         self.handlers[event_type].append(handler)

@@ -4,6 +4,9 @@ from src.entry_points.scheduler.scheduler import get_fundamental_trend_data
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.container.container import Container
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class DebugResource(Resource):
@@ -18,11 +21,13 @@ class DebugResource(Resource):
     @set_responses(str, 200)
     async def delete(self):
         """Deletes the database"""
+        logger.info("Deleting database")
         await self.db.reset_db()
         return "done"
 
     @set_responses(str, 200)
     async def put(self):
         """Deletes the database"""
+        logger.info("Manually retrieve fundamental data")
         await get_fundamental_trend_data()
         return "done"

@@ -11,6 +11,9 @@ from src.service_layer.fundamental_service import FundamentalDataService
 from src.container.container import Container
 from src.entry_points.routes.api_schema.schema import FundamentalSchema
 from src.service_layer.uow import MongoUnitOfWork
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class FundamentalResource(Resource):
@@ -35,6 +38,7 @@ class FundamentalResource(Resource):
         if date:
             kwargs["last_updated"] = date
         async with self._uow:
+            logger.info(f"Getting fundamental data with kwargs: {kwargs}")
             data: List[
                 FundamentalData
             ] = await self.service.get_all_fundamental_data(**kwargs)

@@ -20,11 +20,14 @@ class FundamentalDataRepository:
         date = None
         if "last_updated" in kwargs:
             date = kwargs.pop("last_updated")
+            next_day = date + datetime.timedelta(days=1)
         objs = FundamentalData.objects(**kwargs)
         if date:
             return [
                 await map_to_domain_model(obj)
-                for obj in objs.filter(last_updated__gte=date)
+                for obj in objs.filter(
+                    last_updated__gte=date, last_updated__lte=next_day
+                )
             ]
         return [await map_to_domain_model(obj) for obj in objs]
 

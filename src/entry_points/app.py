@@ -5,9 +5,13 @@ from fastapi_restful import Api
 from src.entry_points.routes.debug_routes import DebugResource
 from src.entry_points.routes.fundamental_routes import FundamentalResource
 from src.entry_points.scheduler.scheduler import scheduler
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def create_app():
+    logger.info("Creating app")
     container = Container()
     app = FastAPI()
     app.container = container
