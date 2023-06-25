@@ -96,6 +96,7 @@ async def map_to_domain_model(trade: Trade):
         is_buy=trade.is_buy,
         signal=trade.signal,
         is_winner=trade.is_winner,
+        position=trade.position,
         initiated_date=trade.initiated_date,
         base_currency=trade.base_currency,
         quote_currency=trade.quote_currency,

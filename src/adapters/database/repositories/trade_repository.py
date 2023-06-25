@@ -14,7 +14,7 @@ class TradeRepository:
         """Add an object"""
         trade_model = await map_to_db_model(obj)
         trade_model.save()
-        return obj
+        return await map_to_domain_model(trade_model)
 
     async def get_all(self) -> Iterator[TradeDomain]:
         """Get all trade objects"""

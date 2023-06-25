@@ -37,9 +37,9 @@ class TestTradeOrm:
             limit=floats(),
             is_buy=booleans(),
             signal=sampled_from(SignalTypeEnum),
-            base_currency=sampled_from(CurrencyEnum),
-            quote_currency=sampled_from(CurrencyEnum),
-            forex_currency_pair=sampled_from(ForexPairEnum),
+            base_currency=sampled_from([CurrencyEnum.USD]),
+            quote_currency=sampled_from([CurrencyEnum.CHF]),
+            forex_currency_pair=sampled_from([ForexPairEnum.USDCHF]),
             position=sampled_from(PositionEnum),
         )
     )

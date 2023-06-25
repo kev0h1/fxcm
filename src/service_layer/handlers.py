@@ -3,6 +3,8 @@ from src.config import PositionEnum, SentimentEnum
 from src.domain import events
 from typing import TYPE_CHECKING
 
+from src.domain.trade import Trade
+
 if TYPE_CHECKING:
     from src.service_layer.uow import MongoUnitOfWork
 
@@ -12,6 +14,7 @@ async def close_trade_handler(
 ):
     """Handles a close trade event"""
     print(f"Close trade event: {event.currency}")
+    trades: list[Trade] = []
     if event.sentiment == SentimentEnum.BULLISH:
         trades = await uow.trade_repository.get_bearish_trades(event.currency)
     elif event.sentiment == SentimentEnum.BEARISH:
@@ -19,9 +22,10 @@ async def close_trade_handler(
 
     for trade in trades:
         await uow.fxcm_connection.close_trade(
-            trade_id=trade.trade_id, amount=trade.amount
+            trade_id=trade.trade_id, amount=trade.position_size
         )
         trade.position = PositionEnum.CLOSED
+        await uow.trade_repository.save(trade)
 
 
 async def open_trade_handler(
