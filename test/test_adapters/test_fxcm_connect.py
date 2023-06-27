@@ -9,7 +9,6 @@ from hypothesis.strategies import (
     integers,
     text,
     none,
-    from_type,
     builds,
     sampled_from,
 )
@@ -54,7 +53,9 @@ class TestFXCMConnect:
             fxcmpy, "get_candles", return_value=None
         ) as mock_get:
             await fxcm.get_candle_data(
-                instrument=ForexPairEnum.USDCAD, period=PeriodEnum.MINUTE_1
+                instrument=ForexPairEnum.USDCAD,
+                period=PeriodEnum.MINUTE_1,
+                get_refined_data=False,
             )
             mock_get.assert_called_once_with(
                 instrument=ForexPairEnum.USDCAD.value,
@@ -255,3 +256,14 @@ class TestFXCMConnect:
             get_trade.assert_called_once()
             create.assert_not_called()
             add.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_get_refined_data(self):
+        file = os.path.abspath(os.curdir) + "/test/data.csv"
+        df = pd.read_csv(file)
+        data = await fxcm.get_refined_data(df)
+        columns = ["open", "close", "high", "low", "volume"]
+        for col in columns:
+            assert col in data
+
+        assert len(data.columns) == 6

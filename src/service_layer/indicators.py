@@ -7,10 +7,14 @@ class Indicators:
         """Initialise the data to add indicators"""
 
     async def get_simple_moving_average(
-        self, data: DataFrame, period: int, col: str
+        self, data: DataFrame, period: int, col: str, column_name: str = None
     ) -> DataFrame:
         """Calculate the moving average"""
-        data["SMA" + str(period)] = data[col].rolling(period).mean()
+        if column_name:
+            name = column_name
+        else:
+            name = "SMA" + str(period)
+        data[name] = data[col].rolling(period).mean()
         return data
 
     async def get_exponential_moving_average(

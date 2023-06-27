@@ -1,4 +1,4 @@
-from src.config import CurrencyEnum, SentimentEnum
+from src.config import CurrencyEnum, ForexPairEnum, SentimentEnum
 from dataclasses import dataclass
 
 
@@ -15,6 +15,12 @@ class FundamentalEvent(Event):
 @dataclass
 class CloseTradeEvent(Event):
     currency: CurrencyEnum
+    sentiment: SentimentEnum
+
+
+@dataclass
+class CloseForexPairEvent(Event):
+    forex_pair: ForexPairEnum
     sentiment: SentimentEnum
 
 

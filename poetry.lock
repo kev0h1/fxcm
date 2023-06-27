@@ -2243,6 +2243,17 @@ files = [
 ]
 
 [[package]]
+name = "oandapyv20"
+version = "0.7.2"
+description = "Python wrapper for the OANDA REST-V20 API"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "oandapyV20-0.7.2.tar.gz", hash = "sha256:5ca3990f824d0b16afd49d8e08f7403862d2b3c5a583470f777db7f76f04d073"},
+]
+
+[[package]]
 name = "packaging"
 version = "21.3"
 description = "Core utilities for Python packages"
@@ -3918,4 +3929,4 @@ requests = ">=2.0,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "0dcd0fa0f8f8af7f424dc6f336808768f9f1d6d4349eade6c9e1957251d76636"
+content-hash = "be1488d3ab6d5e416850b67dcef937608c6622122d7f04259e626deee061fa33"

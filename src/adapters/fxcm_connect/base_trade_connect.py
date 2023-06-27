@@ -24,7 +24,11 @@ class BaseTradeConnect(ABC):
 
     @abstractmethod
     async def get_candle_data(
-        self, instrument: ForexPairEnum, period: PeriodEnum, number: int = 100
+        self,
+        instrument: ForexPairEnum,
+        period: PeriodEnum,
+        number: int = 100,
+        get_refined_data: bool = True,
     ) -> DataFrame:
         """get the candle data for an instrument"""
         raise NotImplementedError
@@ -72,3 +76,7 @@ class BaseTradeConnect(ABC):
     async def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""
         raise NotImplementedError
+
+    @abstractmethod
+    async def get_refined_data(self, data):
+        """Refine the data that we get from FXCM"""

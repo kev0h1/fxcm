@@ -6,10 +6,7 @@ from fxcmpy import fxcmpy
 from pandas import DataFrame
 from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum
-from src.domain.errors.errors import (
-    InvalidTradeParameter,
-)
-
+import pandas as pd
 
 env = os.path.abspath(os.curdir) + "/src/.env"
 config = dotenv.dotenv_values(env)
@@ -29,10 +26,36 @@ class MockTradeConnect(BaseTradeConnect):
     def open_connection(self) -> None:
         """Open the connection"""
 
+    async def get_refined_data(self, data):
+        """Refine the data that we get from FXCM"""
+
     async def get_candle_data(
-        self, instrument: ForexPairEnum, period: PeriodEnum, number: int = 100
+        self,
+        instrument: ForexPairEnum = None,
+        period: PeriodEnum = None,
+        number: int = 100,
     ) -> DataFrame:
         """get the candle data for an instrument"""
+
+        file = os.path.abspath(os.curdir) + "/test/data.csv"
+        return await self.get_refined_data(pd.read_csv(file))
+
+    async def get_refined_data(self, data):
+        """Refine the data that we get from FXCM"""
+        data.drop(
+            ["bidopen", "bidclose", "bidhigh", "bidlow"], inplace=True, axis=1
+        )
+        data.rename(
+            columns={
+                "askopen": "open",
+                "askclose": "close",
+                "askhigh": "high",
+                "asklow": "low",
+                "tickqty": "volume",
+            },
+            inplace=True,
+        )
+        return data
 
     async def get_open_positions(self, **kwargs):
         """returns the open positions"""

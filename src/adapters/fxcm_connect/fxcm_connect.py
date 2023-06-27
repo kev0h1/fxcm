@@ -41,12 +41,36 @@ class FXCMConnect(BaseTradeConnect):
         )
 
     async def get_candle_data(
-        self, instrument: ForexPairEnum, period: PeriodEnum, number: int = 100
+        self,
+        instrument: ForexPairEnum,
+        period: PeriodEnum,
+        number: int = 100,
+        get_refined_data: bool = True,
     ) -> DataFrame:
         """get the candle data for an instrument"""
-        return self.con.get_candles(
+        data = self.con.get_candles(
             instrument=instrument.value, period=period.value, number=number
         )
+        if get_refined_data:
+            return await self.get_refined_data(data)
+        return data
+
+    async def get_refined_data(self, data):
+        """Refine the data that we get from FXCM"""
+        data.drop(
+            ["bidopen", "bidclose", "bidhigh", "bidlow"], inplace=True, axis=1
+        )
+        data.rename(
+            columns={
+                "askopen": "open",
+                "askclose": "close",
+                "askhigh": "high",
+                "asklow": "low",
+                "tickqty": "volume",
+            },
+            inplace=True,
+        )
+        return data
 
     async def get_open_positions(self, **kwargs):
         """returns the open positions"""

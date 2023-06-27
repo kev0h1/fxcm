@@ -5,6 +5,7 @@ from src.service_layer.trade_service import TradeService
 from src.service_layer.uow import MongoUnitOfWork
 from src.service_layer.event_bus import TradingEventBus
 from src.adapters.fxcm_connect.mock_trade_connect import MockTradeConnect
+from src.service_layer.indicators import Indicators
 
 
 class Container(containers.DeclarativeContainer):
@@ -27,3 +28,5 @@ class Container(containers.DeclarativeContainer):
     )
 
     trade_service = providers.Factory(TradeService, uow=uow)
+
+    indicator_service = providers.Factory(Indicators)
