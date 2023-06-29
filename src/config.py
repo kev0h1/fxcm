@@ -35,6 +35,7 @@ class ForexPairEnum(str, Enum):
 class OrderTypeEnum(str, Enum):
     AT_MARKET = "AtMarket"
     MARKET_RANGE = "MarketRange"
+    MARKET = "MARKET"
 
 
 class SignalTypeEnum(str, Enum):

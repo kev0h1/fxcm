@@ -1,4 +1,5 @@
 from decimal import Decimal
+import json
 import os
 
 import dotenv
@@ -37,25 +38,27 @@ class MockTradeConnect(BaseTradeConnect):
     ) -> DataFrame:
         """get the candle data for an instrument"""
 
-        file = os.path.abspath(os.curdir) + "/test/data.csv"
-        return await self.get_refined_data(pd.read_csv(file))
+        file = os.path.abspath(os.curdir) + "/test/data.json"
+        with open(file, "r") as f:
+            data_loaded = json.load(f)
+        return await self.get_refined_data(data_loaded)
 
     async def get_refined_data(self, data):
         """Refine the data that we get from FXCM"""
-        data.drop(
-            ["bidopen", "bidclose", "bidhigh", "bidlow"], inplace=True, axis=1
-        )
-        data.rename(
-            columns={
-                "askopen": "open",
-                "askclose": "close",
-                "askhigh": "high",
-                "asklow": "low",
-                "tickqty": "volume",
-            },
-            inplace=True,
-        )
-        return data
+        list_of_candles = []
+        for i in data["candles"]:
+            list_of_candles.append(
+                {
+                    "date": i["time"],
+                    "open": float(i["mid"]["o"]),
+                    "high": float(i["mid"]["h"]),
+                    "low": float(i["mid"]["l"]),
+                    "close": float(i["mid"]["c"]),
+                    "volume": float(i["volume"]),
+                }
+            )
+
+        return pd.DataFrame(list_of_candles)
 
     async def get_open_positions(self, **kwargs):
         """returns the open positions"""

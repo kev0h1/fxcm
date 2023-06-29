@@ -21,7 +21,7 @@ from mock import MagicMock
 import pandas as pd
 import os
 import pytest
-
+import pandas as pd
 from src.adapters.database.repositories.trade_repository import TradeRepository
 from src.service_layer.uow import MongoUnitOfWork
 
