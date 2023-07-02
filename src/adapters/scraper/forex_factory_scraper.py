@@ -93,9 +93,6 @@ class ForexFactoryScraper:
         """Returns impact value"""
         return impact.attrs["class"][-1].split("--")[-1]
 
-    async def get_fundamental_performance(self, element: element.Tag):
-        """Get the performance of a news item"""
-
     async def get_event_values(
         self, element: element.Tag, class_name: str
     ) -> str:
@@ -176,7 +173,7 @@ class ForexFactoryScraper:
     async def create_calendar_event(
         self,
         tag: element.Tag,
-    ) -> Union[None, FundamentalData]:
+    ) -> Union[None, CalendarEvent]:
         """Create calendar object"""
         calendar_event = await self.get_event_values(
             element=tag, class_name=CALENDAR_EVENT

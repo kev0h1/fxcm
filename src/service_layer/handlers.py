@@ -1,5 +1,5 @@
 from __future__ import annotations
-from src.config import PositionEnum, SentimentEnum
+from src.config import CurrencyEnum, PositionEnum, SentimentEnum
 from src.domain import events
 from typing import TYPE_CHECKING
 
@@ -34,7 +34,26 @@ async def open_trade_handler(
     ...
 
 
+async def create_trade_handler(
+    event: events.CreateTradeEvent, uow: MongoUnitOfWork
+):
+    """Create a trade after initiated by forex partner"""
+    forex_pair = event.forex_pair.value.split("/")
+    trade = Trade(
+        trade_id=event.trade_id,
+        position_size=event.position_size,
+        stop=event.stop,
+        limit=event.limit,
+        is_buy=event.is_buy,
+        forex_currency_pair=event.forex_pair,
+        base_currency=CurrencyEnum(forex_pair[0]),
+        quote_currency=CurrencyEnum(forex_pair[1]),
+    )
+    uow.trade_repository.save(trade)
+
+
 handlers = {
     events.CloseTradeEvent: close_trade_handler,
     events.OpenTradeEvent: open_trade_handler,
+    events.CreateTradeEvent: create_trade_handler,
 }

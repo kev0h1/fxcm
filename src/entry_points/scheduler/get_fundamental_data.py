@@ -45,22 +45,24 @@ async def process_data(
             if currency not in CurrencyEnum.__members__:
                 continue
             currency = CurrencyEnum(currency)
-            scraped_calendar_event = await scraper.create_calendar_event(
-                tag=data
+            scraped_calendar_event: CalendarEvent = (
+                await scraper.create_calendar_event(tag=data)
             )
 
             if scraped_calendar_event:
                 intiate_close_trade_event = False
-                fundamental_data = (
+                fundamental_data: FundamentalData = (
                     await uow.fundamental_data_repository.get_fundamental_data(
                         currency=currency, last_updated=date_time
                     )
                 )
                 if not fundamental_data:
-                    fundamental_data = await scraper.create_fundamental_object(
-                        date_, data, time
+                    fundamental_data: FundamentalData = (
+                        await scraper.create_fundamental_object(
+                            date_, data, time
+                        )
                     )
-                    fundamental_data = (
+                    fundamental_data: FundamentalData = (
                         await uow.fundamental_data_repository.save(
                             fundamental_data
                         )
@@ -78,13 +80,11 @@ async def process_data(
                     or not calender_event.previous
                 ):
                     logger.info("Updating calendar event")
-                    fundamental_data.actual = scraped_calendar_event.actual
-                    fundamental_data.previous = scraped_calendar_event.previous
-                    fundamental_data.forecast = scraped_calendar_event.forecast
+                    calender_event.actual = scraped_calendar_event.actual
+                    calender_event.previous = scraped_calendar_event.previous
+                    calender_event.forecast = scraped_calendar_event.forecast
 
-                    fundamental_data.sentiment = (
-                        scraped_calendar_event.sentiment
-                    )
+                    calender_event.sentiment = scraped_calendar_event.sentiment
                     logger.info(
                         "Sentiment updated for currency: {currency} to {sentiment}"
                     )
@@ -100,7 +100,7 @@ async def process_data(
                     await uow.event_bus.publish(
                         CloseTradeEvent(
                             currency=currency,
-                            sentiment=fundamental_data.sentiment,
+                            sentiment=calender_event.sentiment,
                         )
                     )
 

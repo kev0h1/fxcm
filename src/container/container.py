@@ -1,7 +1,6 @@
 from dependency_injector import containers, providers
 from src.adapters.database.mongo.mongo_connect import Database
 from src.service_layer.fundamental_service import FundamentalDataService
-from src.service_layer.trade_service import TradeService
 from src.service_layer.uow import MongoUnitOfWork
 from src.service_layer.event_bus import TradingEventBus
 from src.adapters.fxcm_connect.mock_trade_connect import MockTradeConnect
@@ -26,7 +25,5 @@ class Container(containers.DeclarativeContainer):
         FundamentalDataService,
         uow=uow,
     )
-
-    trade_service = providers.Factory(TradeService, uow=uow)
 
     indicator_service = providers.Factory(Indicators)

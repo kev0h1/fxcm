@@ -47,7 +47,7 @@ class TestTradeOrm:
         max_examples=1,
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
-    async def test_add_trade_to_db(self, get_db, trade):
+    async def test_add_trade_to_db(self, get_db, trade: Trade):
         """Test adding a trade to the db"""
         uow = MongoUnitOfWork(
             event_bus=mock.MagicMock(), fxcm_connection=MockTradeConnect()

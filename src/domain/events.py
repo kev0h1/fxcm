@@ -1,3 +1,4 @@
+from decimal import Decimal
 from src.config import CurrencyEnum, ForexPairEnum, SentimentEnum
 from dataclasses import dataclass
 
@@ -27,6 +28,17 @@ class CloseForexPairEvent(Event):
 @dataclass
 class OpenTradeEvent(Event):
     currency: CurrencyEnum
+
+
+@dataclass
+class CreateTradeEvent(Event):
+    currency: CurrencyEnum
+    forex_pair: ForexPairEnum
+    trade_id: str
+    postion_size: int
+    stop: Decimal
+    limit: Decimal
+    is_buy: bool
 
 
 @dataclass

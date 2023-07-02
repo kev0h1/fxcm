@@ -32,5 +32,5 @@ class DebugResource(Resource):
     async def put(self):
         """Deletes the database"""
         logger.info("Manually retrieve fundamental data")
-        await get_technical_signal()
+        await get_fundamental_trend_data()
         return "done"

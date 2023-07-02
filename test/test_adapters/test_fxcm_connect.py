@@ -261,7 +261,7 @@ class TestFXCMConnect:
     async def test_get_refined_data(self):
         file = os.path.abspath(os.curdir) + "/test/data.csv"
         df = pd.read_csv(file)
-        data = await fxcm.get_refined_data(df)
+        data: pd.DataFrame = await fxcm.get_refined_data(df)
         columns = ["open", "close", "high", "low", "volume"]
         for col in columns:
             assert col in data

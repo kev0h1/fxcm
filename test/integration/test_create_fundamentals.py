@@ -24,7 +24,9 @@ class TestFundamentalMapper:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
         deadline=None,
     )
-    async def test_add_fundamental_data_to_db(self, get_db, data):
+    async def test_add_fundamental_data_to_db(
+        self, get_db, data: FundamentalData
+    ):
         uow = MongoUnitOfWork(
             event_bus=mock.MagicMock(), fxcm_connection=MockTradeConnect()
         )
