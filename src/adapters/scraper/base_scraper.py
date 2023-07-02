@@ -10,7 +10,7 @@ class BaseScraper:
         """Return fundamental data to iterate"""
 
     @staticmethod
-    async def get_url_for_today(date_: datetime = datetime.today()):
+    async def get_url_for_today(date_: datetime = datetime.datetime.today()):
         """Get the url to search for today"""
         return "%s?day=%s" % ("127.0.0.1/", date_.strftime("%b%d.%Y"))
 

@@ -1,5 +1,6 @@
 from dependency_injector import containers, providers
 from src.adapters.database.mongo.mongo_connect import Database
+from src.adapters.scraper.forex_factory_scraper import ForexFactoryScraper
 from src.service_layer.fundamental_service import FundamentalDataService
 from src.service_layer.uow import MongoUnitOfWork
 from src.service_layer.event_bus import TradingEventBus
@@ -18,8 +19,11 @@ class Container(containers.DeclarativeContainer):
     db = providers.Singleton(Database)
     event_bus = providers.Singleton(TradingEventBus)
     fxcm_connection = providers.Singleton(MockTradeConnect, {})
+    scraper = providers.Singleton(ForexFactoryScraper)
 
-    uow = providers.Singleton(MongoUnitOfWork, event_bus, fxcm_connection)
+    uow = providers.Singleton(
+        MongoUnitOfWork, event_bus, fxcm_connection, scraper
+    )
 
     fundamental_data_service = providers.Factory(
         FundamentalDataService,

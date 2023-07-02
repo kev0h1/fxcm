@@ -7,6 +7,7 @@ from src.adapters.scraper.forex_factory_scraper import (
     ForexFactoryScraper,
 )
 from src.logger import get_logger
+from dependency_injector.wiring import inject, Provide
 
 logger = get_logger(__name__)
 
@@ -19,8 +20,4 @@ async def get_fundamental_trend_data():
     # if date_.weekday
     if date_.weekday() < 5:
         logger.info(f"Getting fundamental data for {date_}")
-        url = await ForexFactoryScraper.get_url_for_today(date_=date_)
-        scraper = ForexFactoryScraper(url=url)
-        objects = await scraper.get_fundamental_items()
-        scraped_data = objects[-1]
-        await process_data(scraper, objects, date_, scraped_data)
+        await process_data(date_=date_)

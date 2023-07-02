@@ -6,6 +6,7 @@ from src.adapters.database.repositories.fundamental_repository import (
 )
 from src.adapters.database.repositories.trade_repository import TradeRepository
 from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
+from src.adapters.scraper.base_scraper import BaseScraper
 from src.service_layer.event_bus import TradingEventBus
 from src.service_layer.handlers import handlers
 
@@ -23,11 +24,15 @@ class AbstractUnitOfWork:
 
 class MongoUnitOfWork(AbstractUnitOfWork):
     fundamental_data_repository: FundamentalDataRepository
-    trade_repository = TradeRepository
-    fxcm_connection = BaseTradeConnect
+    trade_repository: TradeRepository
+    fxcm_connection: BaseTradeConnect
+    scraper: BaseScraper
 
     def __init__(
-        self, event_bus: TradingEventBus, fxcm_connection: BaseTradeConnect
+        self,
+        event_bus: TradingEventBus,
+        fxcm_connection: BaseTradeConnect,
+        scraper: BaseScraper,
     ):
         is_dev = os.environ.get("DOCKER", False)
         if is_dev:
@@ -38,6 +43,7 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         self.fundamental_data_repository = FundamentalDataRepository()
         self.trade_repository = TradeRepository()
         self.fxcm_connection = fxcm_connection
+        self.scraper = scraper
 
         for event, handler in handlers.items():
             self.event_bus.subscribe(event, handler)

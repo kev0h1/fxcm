@@ -15,6 +15,8 @@ from src.domain.errors.errors import (
 )
 from pytz import timezone
 
+from src.service_layer.uow import MongoUnitOfWork
+
 URL = "https://www.forexfactory.com/calendar"
 CALENDAR_ACTUAL = "calendar__actual"
 CALENDAR_FORECAST = "calendar__forecast"
@@ -26,12 +28,60 @@ CALENDAR_CURRENCY = "calendar__currency"
 
 
 class ForexFactoryScraper:
-    def __init__(self, url: str):
-        headers = {
+    def __init__(self):
+        self.headers = {
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0"
         }
-        page = requests.get(url, headers=headers, verify=False)
+
+    async def set_scraper_params(self, date_: datetime = datetime.today()):
+        self.date_ = date_
+        self.url = await self.get_url_for_today(date_=self.date_)
+
+    async def make_request(self):
+        page = requests.get(self.url, headers=self.headers, verify=False)
         self.soup = BeautifulSoup(page.content, "html.parser")
+
+    async def get_scraped_calendar_items(
+        self, uow: MongoUnitOfWork
+    ) -> list[Tuple[CalendarEvent, CurrencyEnum, datetime]]:
+        fundamental_items = await self.get_fundamental_items()
+        scraped_data = fundamental_items[-1]
+        scraped_items = []
+        for index, data in enumerate(scraped_data):
+            time = await self.get_time_value(fundamental_items, -1, index)
+            if time is None:
+                continue
+            date_time = datetime.combine(self.date_, time)
+            currency = await self.get_event_values(
+                element=data, class_name=CALENDAR_CURRENCY
+            )
+            if currency not in CurrencyEnum.__members__:
+                continue
+            currency = CurrencyEnum(currency)
+            scraped_calendar_event: CalendarEvent = (
+                await self.create_calendar_event(tag=data)
+            )
+            if scraped_calendar_event:
+                scraped_items.append(
+                    (scraped_calendar_event, currency, date_time)
+                )
+                fundamental_data: FundamentalData = (
+                    await uow.fundamental_data_repository.get_fundamental_data(
+                        currency=currency, last_updated=date_time
+                    )
+                )
+                if not fundamental_data:
+                    fundamental_data: FundamentalData = (
+                        await self.create_fundamental_object(
+                            data, date_time=date_time
+                        )
+                    )
+                    fundamental_data: FundamentalData = (
+                        await uow.fundamental_data_repository.save(
+                            fundamental_data
+                        )
+                    )
+        return scraped_items
 
     @staticmethod
     async def get_correct_date_format(date_: datetime = datetime.today()):
@@ -39,7 +89,7 @@ class ForexFactoryScraper:
         return date_.strftime("%b%d.%Y")
 
     @staticmethod
-    async def get_url_for_today(date_: datetime = datetime.today()):
+    async def get_url_for_today(date_: datetime):
         """Get the url to search for today"""
         today = await ForexFactoryScraper.get_correct_date_format(date_=date_)
         return "%s?day=%s" % (URL, today)
@@ -156,14 +206,9 @@ class ForexFactoryScraper:
         return datetime(datetime.today().year, date.month, date.day)
 
     async def create_fundamental_object(
-        self, date_: date, tag: element.Tag, time: time
+        self, tag: element.Tag, date_time: datetime
     ):
         """create fundamental object"""
-        if not time:
-            return None
-        time_ = time
-        date_time = datetime.combine(date_, time_)
-
         currency = await self.get_event_values(
             element=tag, class_name=CALENDAR_CURRENCY
         )
@@ -206,3 +251,29 @@ class ForexFactoryScraper:
             calendar_event=calendar_event,
             sentiment=sentiment,
         )
+
+    async def get_scraped_event(
+        self, grouped_data: list[element.Tag], day_index
+    ):
+        """Get scraped event"""
+        # tag_index = len(grouped_data[day_index]) - 1
+        # time = await self.get_time_value(
+        #     grouped_data=grouped_data, day_index=day_index, tag_index=tag_index
+        # )
+        # calendar_event = await self.create_calendar_event(
+        #     tag=grouped_data[day_index][tag_index]
+        # )
+        # fundamental_data = await self.create_fundamental_object(
+        #     date_=await self.get_date_value(
+        #         await self.get_event_values(
+        #             grouped_data[day_index][tag_index], CALENDAR_DATE
+        #         )
+        #     ),
+        #     tag=grouped_data[day_index][tag_index],
+        #     time=time,
+        # )
+        # return CalendarEvent(
+        #     fundamental_data=fundamental_data,
+        #     calendar_event=calendar_event,
+        #     time=time,
+        # )

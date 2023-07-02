@@ -1,6 +1,8 @@
 from datetime import datetime
-from typing import List, Union
+from typing import List, Tuple, Union
+from xml.dom import NotFoundErr
 from src.container.container import Container
+from src.domain.errors.errors import NotFound
 
 from src.service_layer.fundamental_service import FundamentalDataService
 from src.service_layer.uow import MongoUnitOfWork
@@ -23,10 +25,7 @@ logger = get_logger(__name__)
 
 @inject
 async def process_data(
-    scraper: ForexFactoryScraper,
-    objects,
-    date_,
-    scraped_data,
+    date_: datetime,
     uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
     fundamental_data_service: FundamentalDataService = Depends(
         Provide[Container.fundamental_data_service]
@@ -34,21 +33,12 @@ async def process_data(
 ) -> List[FundamentalData]:
     """Converts the fundamental data into objects we can manipulate"""
     async with uow:
-        for index, data in enumerate(scraped_data):
-            time = await scraper.get_time_value(objects, -1, index)
-            if time is None:
-                continue
-            date_time = datetime.combine(date_, time)
-            currency = await scraper.get_event_values(
-                element=data, class_name=CALENDAR_CURRENCY
-            )
-            if currency not in CurrencyEnum.__members__:
-                continue
-            currency = CurrencyEnum(currency)
-            scraped_calendar_event: CalendarEvent = (
-                await scraper.create_calendar_event(tag=data)
-            )
-
+        await uow.scraper.set_scraper_params(date_=date_)
+        await uow.scraper.make_request()
+        scraped_items: list[
+            Tuple[CalendarEvent, CurrencyEnum, datetime]
+        ] = await uow.scraper.get_scraped_calendar_items(uow=uow)
+        for scraped_calendar_event, currency, date_time in scraped_items:
             if scraped_calendar_event:
                 intiate_close_trade_event = False
                 fundamental_data: FundamentalData = (
@@ -57,15 +47,9 @@ async def process_data(
                     )
                 )
                 if not fundamental_data:
-                    fundamental_data: FundamentalData = (
-                        await scraper.create_fundamental_object(
-                            date_, data, time
-                        )
-                    )
-                    fundamental_data: FundamentalData = (
-                        await uow.fundamental_data_repository.save(
-                            fundamental_data
-                        )
+                    raise NotFound(
+                        "expected fundamental data for currency %s and last_updated %s"
+                        % (currency, date_time)
                     )
                 calender_event = await get_calendar_event(
                     fundamental_data, scraped_calendar_event
