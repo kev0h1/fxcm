@@ -12,10 +12,6 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.config import CurrencyEnum
 
-from src.adapters.scraper.forex_factory_scraper import (
-    CALENDAR_CURRENCY,
-    ForexFactoryScraper,
-)
 from src.domain.events import CloseTradeEvent
 from src.logger import get_logger
 
@@ -47,6 +43,10 @@ async def process_data(
                     )
                 )
                 if not fundamental_data:
+                    logger.error(
+                        "expected fundamental data for currency %s and last_updated %s"
+                        % (currency, date_time)
+                    )
                     raise NotFound(
                         "expected fundamental data for currency %s and last_updated %s"
                         % (currency, date_time)
@@ -63,7 +63,10 @@ async def process_data(
                     or not calender_event.forecast
                     or not calender_event.previous
                 ):
-                    logger.info("Updating calendar event")
+                    logger.info(
+                        "Updating calendar event for event %s and currency %s"
+                        % (scraped_calendar_event.calendar_event, currency)
+                    )
                     calender_event.actual = scraped_calendar_event.actual
                     calender_event.previous = scraped_calendar_event.previous
                     calender_event.forecast = scraped_calendar_event.forecast
@@ -80,7 +83,10 @@ async def process_data(
                 )
                 await uow.fundamental_data_repository.save(fundamental_data)
                 if intiate_close_trade_event:
-                    logger.info("Initiating close trade event")
+                    logger.info(
+                        "Initiating close trade event for currency %s and sentiments that are not %s"
+                        % (currency, scraped_calendar_event.sentiment)
+                    )
                     await uow.event_bus.publish(
                         CloseTradeEvent(
                             currency=currency,

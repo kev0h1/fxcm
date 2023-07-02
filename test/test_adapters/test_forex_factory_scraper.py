@@ -22,34 +22,15 @@ import mock
 import pytest
 from requests import Response
 
-file = os.path.abspath(os.curdir) + "/test/context_1_day.txt"
-with open(file, "rb") as f:
-    page = f.read()
 
-
-class MockResponse(Response):
-    def __init__(self) -> None:
-        super().__init__()
-        self._content = page
-
-
-with mock.patch.object(requests, "get", return_value=MockResponse()) as get:
-    scraper = ForexFactoryScraper(url="test.com")
+with open("test/context_1_day.txt", "r") as f:
+    contents = f.read()
+    soup = BeautifulSoup(contents, "html.parser")
+    scraper = ForexFactoryScraper()
+    scraper.soup = soup
 
 
 class TestForexFactoryScraper:
-    class TestInit:
-        def test_init(self):
-            """Test the init method"""
-            with mock.patch.object(
-                requests, "get", return_value=MockResponse()
-            ) as get, mock.patch.object(
-                BeautifulSoup, "__init__", return_value=None
-            ) as soup:
-                ForexFactoryScraper(url="test.com")
-                get.assert_called_once()
-                soup.assert_called_once()
-
     class TestGetFundamentalItems:
         @pytest.mark.asyncio
         async def test_get_fundamental_items(self):
@@ -175,25 +156,9 @@ class TestForexFactoryScraper:
             ):
                 time_ = await scraper.get_time_value(grouped_data, -1, -4)
                 obj = await scraper.create_fundamental_object(
-                    datetime.today(), data, time_
+                    data, datetime.today()
                 )
             assert isinstance(obj, FundamentalData)
-
-        @pytest.mark.asyncio
-        async def test_create_fundamental_data_object_for_bank_holiday(self):
-            """Test the creation of the fundamental object"""
-            grouped_data = await scraper.get_fundamental_items()
-            data = grouped_data[-1][-1]
-            with mock.patch.object(
-                ForexFactoryScraper,
-                "get_time_value",
-                return_value=None,
-            ):
-                time_ = await scraper.get_time_value(grouped_data, -1, -4)
-                obj = await scraper.create_fundamental_object(
-                    datetime.today(), data, time_
-                )
-            assert obj is None
 
     class TestCreateCalendarEventObject:
         @pytest.mark.asyncio
@@ -254,6 +219,6 @@ class TestForexFactoryScraper:
         @pytest.mark.asyncio
         async def test_get_url_for_today(self):
             """Test getting the url for today"""
-            url = await ForexFactoryScraper.get_url_for_today()
+            url = await ForexFactoryScraper.get_url_for_today(datetime.today())
             assert len(re.findall("[a-zA-Z]{3}[0-9]{2}[.][0-9]{4}", url)) > 0
             assert URL in url

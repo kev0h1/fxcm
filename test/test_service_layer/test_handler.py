@@ -1,4 +1,5 @@
 from hypothesis import settings, given, HealthCheck
+import mock
 from src.adapters.database.mongo.trade_model import Trade
 from src.adapters.fxcm_connect.mock_trade_connect import MockTradeConnect
 from src.domain.events import CloseTradeEvent
@@ -46,7 +47,9 @@ class TestCloseEventHandler:
             currency=CurrencyEnum.USD, sentiment=SentimentEnum.BULLISH
         )
 
-        uow = MongoUnitOfWork(TradingEventBus(), MockTradeConnect())
+        uow = MongoUnitOfWork(
+            TradingEventBus(), MockTradeConnect(), scraper=mock.MagicMock()
+        )
         async with uow:
             await uow.trade_repository.save(trade)
             await close_trade_handler(event, uow)
@@ -84,7 +87,11 @@ class TestCloseEventHandler:
             currency=CurrencyEnum.USD, sentiment=SentimentEnum.BEARISH
         )
 
-        uow = MongoUnitOfWork(TradingEventBus(), MockTradeConnect())
+        uow = MongoUnitOfWork(
+            TradingEventBus(),
+            MockTradeConnect(),
+            scraper=mock.MagicMock(),
+        )
         async with uow:
             await uow.trade_repository.save(trade)
             await close_trade_handler(event, uow)
@@ -122,7 +129,11 @@ class TestCloseEventHandler:
             currency=CurrencyEnum.USD, sentiment=SentimentEnum.BULLISH
         )
 
-        uow = MongoUnitOfWork(TradingEventBus(), MockTradeConnect())
+        uow = MongoUnitOfWork(
+            TradingEventBus(),
+            MockTradeConnect(),
+            scraper=mock.MagicMock(),
+        )
         async with uow:
             await uow.trade_repository.save(trade)
             await close_trade_handler(event, uow)
@@ -160,7 +171,11 @@ class TestCloseEventHandler:
             currency=CurrencyEnum.USD, sentiment=SentimentEnum.BEARISH
         )
 
-        uow = MongoUnitOfWork(TradingEventBus(), MockTradeConnect())
+        uow = MongoUnitOfWork(
+            TradingEventBus(),
+            MockTradeConnect(),
+            scraper=mock.MagicMock(),
+        )
         async with uow:
             await uow.trade_repository.save(trade)
             await close_trade_handler(event, uow)

@@ -28,7 +28,9 @@ class TestFundamentalMapper:
         self, get_db, data: FundamentalData
     ):
         uow = MongoUnitOfWork(
-            event_bus=mock.MagicMock(), fxcm_connection=MockTradeConnect()
+            event_bus=mock.MagicMock(),
+            fxcm_connection=MockTradeConnect(),
+            scraper=mock.MagicMock(),
         )
         currency = data.currency
         last_updated = data.last_updated

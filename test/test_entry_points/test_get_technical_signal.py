@@ -50,7 +50,9 @@ class TestGetTechnicalSignal:
         ) as mock_get_signal:
             mock_get_signal.return_value = data_frame
             uow = MongoUnitOfWork(
-                event_bus=mock.MagicMock(), fxcm_connection=MockTradeConnect()
+                event_bus=mock.MagicMock(),
+                fxcm_connection=MockTradeConnect(),
+                scraper=mock.MagicMock(),
             )
             event = await get_technical_signal(uow=uow, indicator=Indicators())
             assert event.sentiment == SentimentEnum.BULLISH
@@ -92,7 +94,9 @@ class TestGetTechnicalSignal:
         ) as mock_get_signal:
             mock_get_signal.return_value = data_frame
             uow = MongoUnitOfWork(
-                event_bus=mock.MagicMock(), fxcm_connection=MockTradeConnect()
+                event_bus=mock.MagicMock(),
+                fxcm_connection=MockTradeConnect(),
+                scraper=mock.MagicMock(),
             )
             event = await get_technical_signal(uow=uow, indicator=Indicators())
             assert event.sentiment == SentimentEnum.BEARISH
