@@ -1,6 +1,7 @@
 import itertools
 from typing import Tuple, Union
 from bs4 import BeautifulSoup, element
+import pytz
 from src.domain.fundamental import CalendarEvent, FundamentalData
 import requests
 from datetime import datetime, time, date
@@ -16,6 +17,7 @@ from src.domain.errors.errors import (
 from pytz import timezone
 
 from src.service_layer.uow import MongoUnitOfWork
+from tzlocal import get_localzone
 
 URL = "https://www.forexfactory.com/calendar"
 CALENDAR_ACTUAL = "calendar__actual"
@@ -179,18 +181,21 @@ class ForexFactoryScraper:
         while not time:
             data = grouped_data[day_index][tag_index]
             value = await self.get_event_values(data, CALENDAR_TIME)
-            if value is not "":
+            if value != "":
                 time = value
             tag_index -= 1
 
-        if time != "All Day":
-            eastern = timezone("US/Eastern")
+        try:
+            # Get the local timezone
+            local_timezone = get_localzone()
+            local = timezone(local_timezone.zone)
             return (
-                datetime.strptime(time, "%H:%M%p")
+                datetime.strptime(time, "%I:%M%p")
                 .time()
-                .replace(tzinfo=eastern.localize(datetime.now()).tzinfo)
+                .replace(tzinfo=local.localize(datetime.now()).tzinfo)
             )
-        return None
+        except ValueError:
+            return None
 
     async def get_absolute_value(self, value: str) -> float:
         """Get the absolute value of percentage value"""

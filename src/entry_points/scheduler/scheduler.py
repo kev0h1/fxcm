@@ -2,12 +2,7 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.entry_points.scheduler.get_fundamental_data import process_data
 
-
-from src.adapters.scraper.forex_factory_scraper import (
-    ForexFactoryScraper,
-)
 from src.logger import get_logger
-from dependency_injector.wiring import inject, Provide
 
 logger = get_logger(__name__)
 

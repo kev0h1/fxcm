@@ -28,5 +28,6 @@ class CalendarEventSchema(Base):
 class FundamentalSchema(Base):
     currency: CurrencyEnum
     last_updated: datetime
+    processed: bool
     aggregate_sentiment: SentimentEnum
     calendar_events: List[CalendarEventSchema]

@@ -81,3 +81,9 @@ class CalendarEventEnum(Enum):
     FLASH_PMI = "Flash Services PMI"  # fine
     ISM = "ISM Manufacturing PMI"
     Test = "Employment Change q/q"
+
+
+class DebugEnum(Enum):
+    RunFundamentalEvent = "Run Fundamental Event"
+    PublishEvent = "Publish Event"
+    RunIndicatorEvent = "Run Indicator Event"

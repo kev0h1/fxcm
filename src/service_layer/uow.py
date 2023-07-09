@@ -23,14 +23,8 @@ class AbstractUnitOfWork:
 
 
 class MongoUnitOfWork(AbstractUnitOfWork):
-    fundamental_data_repository: FundamentalDataRepository
-    trade_repository: TradeRepository
-    fxcm_connection: BaseTradeConnect
-    scraper: BaseScraper
-
     def __init__(
         self,
-        event_bus: TradingEventBus,
         fxcm_connection: BaseTradeConnect,
         scraper: BaseScraper,
     ):
@@ -39,11 +33,14 @@ class MongoUnitOfWork(AbstractUnitOfWork):
             self.env = "mongo"
         else:
             self.env = "localhost"
-        self.event_bus = event_bus
-        self.fundamental_data_repository = FundamentalDataRepository()
-        self.trade_repository = TradeRepository()
-        self.fxcm_connection = fxcm_connection
-        self.scraper = scraper
+        self.event_bus = TradingEventBus(uow=self)
+        # self.event_bus.start
+        self.fundamental_data_repository: FundamentalDataRepository = (
+            FundamentalDataRepository()
+        )
+        self.trade_repository: TradeRepository = TradeRepository()
+        self.fxcm_connection: BaseTradeConnect = fxcm_connection
+        self.scraper: BaseScraper = scraper
 
         for event, handler in handlers.items():
             self.event_bus.subscribe(event, handler)
@@ -55,4 +52,4 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         disconnect()
 
     async def publish(self, event):
-        self.event_bus.publish_events(event)
+        await self.event_bus.publish(event)

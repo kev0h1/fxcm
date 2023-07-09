@@ -1,5 +1,5 @@
 from typing import Iterator
-from src.config import CurrencyEnum
+from src.config import CurrencyEnum, PositionEnum
 from src.domain.trade import Trade as TradeDomain
 from src.adapters.database.mongo.trade_model import (
     Trade as TradeModel,
@@ -33,8 +33,11 @@ class TradeRepository:
         return [
             await map_to_domain_model(obj)
             for obj in TradeModel.objects(
-                Q(is_buy=True) & Q(base_currency=currency)
-                | Q(is_buy=False) & Q(quote_currency=currency)
+                (
+                    Q(is_buy=True) & Q(base_currency=currency)
+                    | Q(is_buy=False) & Q(quote_currency=currency)
+                )
+                & Q(position=PositionEnum.OPEN)
             )
         ]
 
@@ -45,7 +48,10 @@ class TradeRepository:
         return [
             await map_to_domain_model(obj)
             for obj in TradeModel.objects(
-                Q(is_buy=False) & Q(base_currency=currency)
-                | Q(is_buy=True) & Q(quote_currency=currency)
+                (
+                    Q(is_buy=False) & Q(base_currency=currency)
+                    | Q(is_buy=True) & Q(quote_currency=currency)
+                )
+                & Q(position=PositionEnum.OPEN)
             )
         ]

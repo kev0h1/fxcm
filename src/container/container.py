@@ -17,13 +17,10 @@ class Container(containers.DeclarativeContainer):
         ]
     )
     db = providers.Singleton(Database)
-    event_bus = providers.Singleton(TradingEventBus)
     fxcm_connection = providers.Singleton(MockTradeConnect, {})
     scraper = providers.Singleton(ForexFactoryScraper)
 
-    uow = providers.Singleton(
-        MongoUnitOfWork, event_bus, fxcm_connection, scraper
-    )
+    uow = providers.Singleton(MongoUnitOfWork, fxcm_connection, scraper)
 
     fundamental_data_service = providers.Factory(
         FundamentalDataService,
