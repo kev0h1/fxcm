@@ -7,18 +7,19 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from src.service_layer.uow import MongoUnitOfWork
 
+from src.domain.events import Event
 
 logger = get_logger(__name__)
 
 
 class EventBus(abc.ABC):
     @abc.abstractmethod
-    def publish(self, event):
-        pass
+    def publish(self, event) -> None:  # type: ignore
+        raise NotImplementedError
 
     @abc.abstractmethod
-    def subscribe(self, event_type, handler):
-        pass
+    def subscribe(self, event_type, handler) -> None:  # type: ignore
+        raise NotImplementedError
 
 
 class TradingEventBus(EventBus):
@@ -32,12 +33,12 @@ class TradingEventBus(EventBus):
         """Unique class used as a sentinel to stop the event loop."""
 
     def __init__(self, uow: "MongoUnitOfWork"):
-        self.handlers = {}
-        self.queue = asyncio.Queue()
+        self.handlers = {}  # type: ignore
+        self.queue = asyncio.Queue()  # type: ignore
         self.running = False
         self.uow = uow
 
-    async def publish(self, event):
+    async def publish(self, event: Event) -> None:  # type: ignore
         """Publish an event to the event bus
 
         Args:
@@ -45,14 +46,14 @@ class TradingEventBus(EventBus):
         """
         await self.queue.put(event)
 
-    def subscribe(self, event_type, handler):
+    def subscribe(self, event_type, handler) -> None:  # type: ignore
         """Subscribe to an event -
         do not make async"""
         if event_type not in self.handlers:
             self.handlers[event_type] = []
         self.handlers[event_type].append(handler)
 
-    async def start(self):
+    async def start(self) -> None:
         """Starts the event loop."""
         if self.running:
             return
@@ -73,6 +74,6 @@ class TradingEventBus(EventBus):
 
         self.running = False
 
-    async def stop(self):
+    async def stop(self) -> None:  # type: ignore
         """Stops the event loop by putting a StopEvent in the queue."""
         await self.queue.put(self.StopEvent())

@@ -1,3 +1,3 @@
 class TestGetFundamentalData:
-    def test_process_data(self):
-        pass
+    def test_process_data(self) -> None:
+        ...

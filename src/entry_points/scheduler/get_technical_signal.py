@@ -1,12 +1,9 @@
-from datetime import datetime
-from typing import List, Union
+from typing import Union
 from src.container.container import Container
 
-from src.service_layer.fundamental_service import FundamentalDataService
 from src.service_layer.indicators import Indicators
 from src.service_layer.uow import MongoUnitOfWork
 
-from src.domain.fundamental import CalendarEvent, FundamentalData
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.config import ForexPairEnum, SentimentEnum
@@ -24,7 +21,7 @@ logger = get_logger(__name__)
 async def get_technical_signal(
     uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
     indicator: Indicators = Depends(Provide[Container.indicator_service]),
-) -> Union[CloseTradeEvent, None]:
+) -> Union[CloseTradeEvent, None]:  # type: ignore
     """Gets the technical signal for the currency"""
     async with uow:
         for forex_pair in ForexPairEnum.__members__:
@@ -71,11 +68,10 @@ async def get_technical_signal(
                 return CloseForexPairEvent(
                     forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
                 )
-            else:
-                return None
+    return None
 
 
-async def get_signal(refined_data):
+async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     refined_data["Buy_Signal"] = (
         (
             refined_data["Prev_ShortTerm_MA"]

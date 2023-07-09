@@ -1,15 +1,20 @@
 import numpy as np
 from pandas import DataFrame, concat
+from typing import Optional
 
 
 class Indicators:
-    def __init__(self) -> None:
-        """Initialise the data to add indicators"""
+    """Class for calculating indicators"""
 
     async def get_simple_moving_average(
-        self, data: DataFrame, period: int, col: str, column_name: str = None  # type: ignore
-    ) -> DataFrame:  # type: ignore
+        self,
+        data: DataFrame,
+        period: int,
+        col: str,
+        column_name: Optional[str] = None,
+    ) -> DataFrame:
         """Calculate the moving average"""
+
         if column_name:
             name = column_name
         else:
