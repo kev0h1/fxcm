@@ -1,11 +1,20 @@
-from mongoengine import *
+from decimal import Decimal
+from typing import Union
+from mongoengine import StringField, DecimalField, Document
 from src.domain.user import User
 
 
 class UserModel(Document):
     def __init__(
-        self, id, name, email, password, position_size, *args, **values
-    ):
+        self,
+        id: str,
+        name: str,
+        email: str,
+        password: str,
+        position_size: Decimal,
+        *args,
+        **values
+    ) -> None:
         super().__init__(*args, **values)
         self.id = id
         self.name = name
@@ -20,7 +29,7 @@ class UserModel(Document):
     position_size = DecimalField()
 
 
-async def map_to_db_model(user: User):
+async def map_to_db_model(user: User) -> Union[UserModel, None]:
     """Maps trade domain model to database model
 
     Args:

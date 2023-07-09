@@ -56,7 +56,7 @@ class OandaConnect(BaseTradeConnect):
         r = instruments.InstrumentsCandles(instrument="EUR_USD", params=params)
         return self.client.request(r)
 
-    async def get_refined_data(self, data):
+    async def get_refined_data(self, data) -> DataFrame:
         """Refine the data that we get from FXCM"""
         list_of_candles = []
         for i in data["candles"]:
@@ -73,7 +73,7 @@ class OandaConnect(BaseTradeConnect):
 
         return pd.DataFrame(list_of_candles)
 
-    async def get_open_positions(self, **kwargs):
+    async def get_open_positions(self, **kwargs) -> TradesResponse:
         """returns the open positions"""
         trades_list_endpoint = TradesList(self.account_id)
         self.client.request(trades_list_endpoint)
@@ -144,7 +144,7 @@ class OandaConnect(BaseTradeConnect):
         for trade in trade_ids:
             await self.close_trade(trade)
 
-    async def get_account_balance(self):
+    async def get_account_balance(self) -> str:
         """returns the account balance"""
         account_details = await self.get_account_details()
 

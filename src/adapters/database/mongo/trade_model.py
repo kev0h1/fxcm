@@ -1,31 +1,40 @@
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
+from typing import Union
 from src.config import (
     CurrencyEnum,
     ForexPairEnum,
     SignalTypeEnum,
     PositionEnum,
 )
-from mongoengine import *
 from src.domain.trade import Trade as TradeDomain
+from mongoengine import (
+    FloatField,
+    IntField,
+    BooleanField,
+    DateTimeField,
+    EnumField,
+    Document,
+)
 
 
 class Trade(Document):
     def __init__(
         self,
-        trade_id,
-        position_size,
-        stop,
-        limit,
-        is_buy,
-        signal,
-        base_currency,
-        quote_currency,
-        forex_currency_pair,
-        position,
+        trade_id: int,
+        position_size: int,
+        stop: Decimal,
+        limit: Decimal,
+        is_buy: bool,
+        signal: SignalTypeEnum,
+        base_currency: CurrencyEnum,
+        quote_currency: CurrencyEnum,
+        forex_currency_pair: ForexPairEnum,
+        position: PositionEnum,
         *args,
         **values
-    ):
+    ) -> None:
         super().__init__(*args, **values)
         self.trade_id = trade_id
         self.position_size = position_size
@@ -52,7 +61,7 @@ class Trade(Document):
     position = EnumField(PositionEnum)
 
 
-async def map_to_db_model(trade: TradeDomain):
+async def map_to_db_model(trade: TradeDomain) -> Union[Trade, None]:
     """Maps trade domain model to database model
 
     Args:
@@ -77,7 +86,7 @@ async def map_to_db_model(trade: TradeDomain):
     )
 
 
-async def map_to_domain_model(trade: Trade):
+async def map_to_domain_model(trade: Trade) -> Union[TradeDomain, None]:
     """Maps trade database model to domain model
 
     Args:

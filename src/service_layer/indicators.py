@@ -7,8 +7,8 @@ class Indicators:
         """Initialise the data to add indicators"""
 
     async def get_simple_moving_average(
-        self, data: DataFrame, period: int, col: str, column_name: str = None
-    ) -> DataFrame:
+        self, data: DataFrame, period: int, col: str, column_name: str = None  # type: ignore
+    ) -> DataFrame:  # type: ignore
         """Calculate the moving average"""
         if column_name:
             name = column_name
@@ -19,7 +19,7 @@ class Indicators:
 
     async def get_exponential_moving_average(
         self, data: DataFrame, period: int, col: str
-    ):
+    ) -> DataFrame:
         """Calculate the moving average"""
         data["EMA" + str(period)] = data[col].ewm(period).mean()
         return data
@@ -109,7 +109,7 @@ class Indicators:
         close: str = "close",
         high: str = "high",
         low: str = "low",
-    ):
+    ) -> DataFrame:
         """Get the adx"""
         plus_dm = data[high].diff()
         minus_dm = data[low].diff()
@@ -140,7 +140,7 @@ class Indicators:
         close: str = "close",
         high: str = "high",
         low: str = "low",
-    ):
+    ) -> DataFrame:
         """Get the atr"""
         high_low = data[high] - data[low]
         high_close = np.abs(data[high] - data[close].shift())
@@ -153,7 +153,7 @@ class Indicators:
 
     async def get_obv(
         self, data: DataFrame, close: str = "close", volume: str = "volume"
-    ):
+    ) -> DataFrame:
         """Get the obv"""
         obv = (np.sign(data[close].diff()) * data[volume]).fillna(0).cumsum()
         data["obv"] = obv
@@ -166,7 +166,7 @@ class Indicators:
         low: str = "low",
         close: str = "close",
         volume: str = "volume",
-    ):
+    ) -> DataFrame:
         """Get the ad"""
         # Current money flow volume
         high_low = data[high] - data[low]

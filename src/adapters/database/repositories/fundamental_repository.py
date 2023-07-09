@@ -10,13 +10,13 @@ from src.adapters.database.mongo.fundamental_models import (
 
 
 class FundamentalDataRepository:
-    async def save(self, obj: FundamentalDataDomain):
+    async def save(self, obj: FundamentalDataDomain) -> FundamentalDataDomain:
         """Add an object"""
-        model = await map_to_db_model(fundamental_data=obj)
+        model: FundamentalData = await map_to_db_model(fundamental_data=obj)
         model.save()
         return obj
 
-    async def get_all(self, **kwargs) -> Iterator[FundamentalDataDomain]:
+    async def get_all(self, **kwargs) -> list[FundamentalDataDomain]:  # type: ignore
         date = None
         if "last_updated" in kwargs:
             date = kwargs.pop("last_updated")
@@ -32,7 +32,7 @@ class FundamentalDataRepository:
         return [await map_to_domain_model(obj) for obj in objs]
 
     async def get_fundamental_data(
-        self, currency: CurrencyEnum, last_updated: datetime
+        self, currency: CurrencyEnum, last_updated: datetime.datetime
     ) -> FundamentalDataDomain:
         return await map_to_domain_model(
             FundamentalData.objects(

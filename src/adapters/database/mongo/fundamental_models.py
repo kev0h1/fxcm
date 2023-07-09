@@ -1,8 +1,18 @@
+from typing import Union
 import pytz
-from tzlocal import get_localzone
 from src.config import CurrencyEnum, SentimentEnum
-from mongoengine import *
-from datetime import datetime, timezone
+from mongoengine import (
+    StringField,
+    Document,
+    EmbeddedDocument,
+    EmbeddedDocumentListField,
+    DateTimeField,
+    BooleanField,
+    DictField,
+    FloatField,
+    EnumField,
+)
+from datetime import datetime
 from src.domain.fundamental import (
     FundamentalData as FundamentalDataDomain,
     CalendarEvent as CalendarEventDomain,
@@ -61,7 +71,9 @@ class FundamentalData(Document):
     processed = BooleanField()
 
 
-async def map_to_db_model(fundamental_data: FundamentalDataDomain):
+async def map_to_db_model(
+    fundamental_data: FundamentalDataDomain,
+) -> Union[None, FundamentalData]:
     """Maps fundamental data domain model to database model
 
     Args:
@@ -92,7 +104,9 @@ async def map_to_db_model(fundamental_data: FundamentalDataDomain):
     )
 
 
-async def map_to_domain_model(fundamental_data: FundamentalData):
+async def map_to_domain_model(
+    fundamental_data: FundamentalData,
+) -> Union[None, FundamentalDataDomain]:
     """Map from database model to domain model
 
     Args:

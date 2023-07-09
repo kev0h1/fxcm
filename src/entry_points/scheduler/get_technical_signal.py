@@ -28,8 +28,10 @@ async def get_technical_signal(
     """Gets the technical signal for the currency"""
     async with uow:
         for forex_pair in ForexPairEnum.__members__:
-            refined_data = await uow.fxcm_connection.get_candle_data(
-                instrument=forex_pair, period="m15", number=250
+            refined_data: pd.DataFrame = (
+                await uow.fxcm_connection.get_candle_data(
+                    instrument=forex_pair, period="m15", number=250
+                )
             )
 
             refined_data = await indicator.get_simple_moving_average(
@@ -60,7 +62,7 @@ async def get_technical_signal(
                 "MediumTerm_MA"
             ].shift(1)
 
-            refined_data: pd.DataFrame = await get_signal(refined_data)
+            refined_data = await get_signal(refined_data)
             if refined_data.iloc[-1]["Signal"] > 0:
                 return CloseForexPairEvent(
                     forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
@@ -69,6 +71,8 @@ async def get_technical_signal(
                 return CloseForexPairEvent(
                     forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
                 )
+            else:
+                return None
 
 
 async def get_signal(refined_data):

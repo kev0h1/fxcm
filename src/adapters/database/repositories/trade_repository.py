@@ -1,4 +1,3 @@
-from typing import Iterator
 from src.config import CurrencyEnum, PositionEnum
 from src.domain.trade import Trade as TradeDomain
 from src.adapters.database.mongo.trade_model import (
@@ -10,13 +9,13 @@ from mongoengine import Q
 
 
 class TradeRepository:
-    async def save(self, obj: TradeDomain):
+    async def save(self, obj: TradeDomain) -> None:
         """Add an object"""
         trade_model = await map_to_db_model(obj)
         trade_model.save()
         return await map_to_domain_model(trade_model)
 
-    async def get_all(self) -> Iterator[TradeDomain]:
+    async def get_all(self) -> list[TradeDomain]:
         """Get all trade objects"""
         return [await map_to_domain_model(obj) for obj in TradeModel.objects()]
 
@@ -28,7 +27,7 @@ class TradeRepository:
 
     async def get_bullish_trades(
         self, currency: CurrencyEnum
-    ) -> Iterator[TradeDomain]:
+    ) -> list[TradeDomain]:
         """Get all bullish trades"""
         return [
             await map_to_domain_model(obj)
@@ -43,7 +42,7 @@ class TradeRepository:
 
     async def get_bearish_trades(
         self, currency: CurrencyEnum
-    ) -> Iterator[TradeDomain]:
+    ) -> list[TradeDomain]:
         """Get all bearish trades"""
         return [
             await map_to_domain_model(obj)

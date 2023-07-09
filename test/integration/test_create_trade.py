@@ -50,7 +50,6 @@ class TestTradeOrm:
     async def test_add_trade_to_db(self, get_db, trade: Trade):
         """Test adding a trade to the db"""
         uow = MongoUnitOfWork(
-            event_bus=mock.MagicMock(),
             fxcm_connection=MockTradeConnect(),
             scraper=mock.MagicMock(),
         )

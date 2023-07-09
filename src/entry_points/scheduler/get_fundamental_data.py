@@ -2,15 +2,12 @@ from datetime import datetime
 from typing import List, Tuple, Union
 from src.container.container import Container
 from src.domain.errors.errors import NotFound
-
-from src.service_layer.fundamental_service import FundamentalDataService
+from src.service_layer.fundamental_service import FundamentalDataService  # type: ignore
 from src.service_layer.uow import MongoUnitOfWork
-
-from src.domain.fundamental import CalendarEvent, FundamentalData
+from src.domain.fundamental import CalendarEvent, FundamentalData  # type: ignore
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.config import CurrencyEnum, SentimentEnum
-
 from src.domain.events import CloseTradeEvent
 from src.logger import get_logger
 
@@ -25,7 +22,7 @@ async def process_data(
     fundamental_data_service: FundamentalDataService = Depends(
         Provide[Container.fundamental_data_service]
     ),
-) -> List[FundamentalData]:
+) -> None:
     """Converts the fundamental data into objects we can manipulate"""
     async with uow:
         await uow.scraper.set_scraper_params(date_=date_)
@@ -71,7 +68,7 @@ async def generate_event(
     uow: MongoUnitOfWork,
     fundamental_data_list: list[FundamentalData],
     currency: CurrencyEnum,
-):
+) -> None:
     for data in fundamental_data_list:
         can_process_close_event = await has_pending_calendar_updates(data)
         data.processed = True

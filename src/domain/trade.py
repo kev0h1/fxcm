@@ -24,7 +24,7 @@ class Trade:
     initiated_date: datetime = field(default=datetime.now())
     position: PositionEnum = field(default=PositionEnum.OPEN)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         currencies = self.forex_currency_pair.value.split("/")
         assert self.base_currency.value == currencies[0]
         assert self.quote_currency.value == currencies[1]

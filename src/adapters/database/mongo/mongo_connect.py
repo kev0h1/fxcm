@@ -3,7 +3,7 @@ import os
 
 
 class Database:
-    def __init__(self):
+    def __init__(self) -> None:
         is_dev = os.environ.get("DOCKER", False)
         if is_dev:
             self.env = "mongo"
@@ -12,6 +12,6 @@ class Database:
 
         self.client = pymongo.MongoClient(self.env, 27017)
 
-    async def reset_db(self):
+    async def reset_db(self) -> None:
         """Drop database"""
         self.client.drop_database("my_db")
