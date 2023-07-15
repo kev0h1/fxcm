@@ -71,10 +71,9 @@ async def generate_event(
 ) -> None:
     for data in fundamental_data_list:
         can_process_close_event = await has_pending_calendar_updates(data)
-        data.processed = True
-        await uow.fundamental_data_repository.save(data)
         if (
-            data.aggregate_sentiment != SentimentEnum.FLAT
+            data.processed is False
+            and data.aggregate_sentiment != SentimentEnum.FLAT
             and can_process_close_event
         ):
             logger.info(
@@ -87,6 +86,8 @@ async def generate_event(
                     sentiment=data.aggregate_sentiment,
                 )
             )
+            data.processed = True
+            uow.fundamental_data_repository.save(data)
 
 
 async def has_pending_calendar_updates(data: FundamentalData) -> bool:

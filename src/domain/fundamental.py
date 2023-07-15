@@ -2,16 +2,15 @@ from dataclasses import dataclass, field
 from src.config import CurrencyEnum, SentimentEnum
 from mongoengine import *
 from datetime import datetime
-from decimal import Decimal
 
 
 @dataclass
 class CalendarEvent:
     calendar_event: str
     sentiment: SentimentEnum
-    forecast: Decimal = field(default=None)
-    actual: Decimal = field(default=None)
-    previous: Decimal = field(default=None)
+    forecast: float = field(default=None)
+    actual: float = field(default=None)
+    previous: float = field(default=None)
 
 
 @dataclass

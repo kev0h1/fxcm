@@ -27,7 +27,8 @@ class CloseForexPairEvent(Event):
 
 @dataclass
 class OpenTradeEvent(Event):
-    currency: CurrencyEnum
+    forex_pair: ForexPairEnum
+    sentiment: SentimentEnum
 
 
 @dataclass

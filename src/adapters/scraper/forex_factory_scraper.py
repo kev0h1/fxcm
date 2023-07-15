@@ -3,6 +3,7 @@ from typing import Tuple, Union
 from bs4 import BeautifulSoup, element
 import pytz
 from pytz import BaseTzInfo
+from src.adapters.scraper.base_scraper import BaseScraper
 from src.domain.fundamental import CalendarEvent, FundamentalData
 import requests
 from datetime import datetime, date
@@ -30,7 +31,7 @@ CALENDAR_DAY = "calendar__cell"
 CALENDAR_CURRENCY = "calendar__currency"
 
 
-class ForexFactoryScraper:
+class ForexFactoryScraper(BaseScraper):
     def __init__(self) -> None:
         self.headers = {
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0"

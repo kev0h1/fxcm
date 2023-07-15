@@ -1,6 +1,7 @@
 import pandas as pd
 from src.adapters.fxcm_connect.mock_trade_connect import MockTradeConnect
 from src.config import SentimentEnum
+from src.domain.events import CloseForexPairEvent, OpenTradeEvent
 from src.entry_points.scheduler.get_technical_signal import (
     get_signal,
     get_technical_signal,
@@ -14,7 +15,7 @@ from src.service_layer.uow import MongoUnitOfWork
 
 class TestGetTechnicalSignal:
     @pytest.mark.asyncio
-    async def test_get_technical_signal_for_buy(self):
+    async def test_get_technical_signal_for_buy(self) -> None:
         data_frame = pd.DataFrame(
             [
                 {
@@ -31,7 +32,7 @@ class TestGetTechnicalSignal:
         assert data_frame.iloc[-1]["Signal"] == 1
 
     @pytest.mark.asyncio
-    async def test_get_technical_signal_for_buy_event(self):
+    async def test_get_technical_signal_for_buy_event(self) -> None:
         data_frame = pd.DataFrame(
             [
                 {
@@ -53,11 +54,17 @@ class TestGetTechnicalSignal:
                 fxcm_connection=MockTradeConnect(),
                 scraper=mock.MagicMock(),
             )
-            event = await get_technical_signal(uow=uow, indicator=Indicators())
+            await get_technical_signal(uow=uow, indicator=Indicators())
+            event = await uow.event_bus.queue.get()
+            assert isinstance(event, CloseForexPairEvent)
+            assert event.sentiment == SentimentEnum.BULLISH
+
+            event = await uow.event_bus.queue.get()
+            assert isinstance(event, OpenTradeEvent)
             assert event.sentiment == SentimentEnum.BULLISH
 
     @pytest.mark.asyncio
-    async def test_get_technical_signal_for_sell(self):
+    async def test_get_technical_signal_for_sell(self) -> None:
         data_frame = pd.DataFrame(
             [
                 {
@@ -74,7 +81,7 @@ class TestGetTechnicalSignal:
         assert data_frame.iloc[-1]["Signal"] == -1
 
     @pytest.mark.asyncio
-    async def test_get_technical_signal_for_sell_event(self):
+    async def test_get_technical_signal_for_sell_event(self) -> None:
         data_frame = pd.DataFrame(
             [
                 {
@@ -96,5 +103,11 @@ class TestGetTechnicalSignal:
                 fxcm_connection=MockTradeConnect(),
                 scraper=mock.MagicMock(),
             )
-            event = await get_technical_signal(uow=uow, indicator=Indicators())
+            await get_technical_signal(uow=uow, indicator=Indicators())
+            event = await uow.event_bus.queue.get()
+            assert isinstance(event, CloseForexPairEvent)
+            assert event.sentiment == SentimentEnum.BEARISH
+
+            event = await uow.event_bus.queue.get()
+            assert isinstance(event, OpenTradeEvent)
             assert event.sentiment == SentimentEnum.BEARISH

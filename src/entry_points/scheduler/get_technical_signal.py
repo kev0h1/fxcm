@@ -1,4 +1,3 @@
-from typing import Union
 from src.container.container import Container
 
 from src.service_layer.indicators import Indicators
@@ -8,7 +7,10 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.config import ForexPairEnum, SentimentEnum
 
-from src.domain.events import CloseForexPairEvent, CloseTradeEvent
+from src.domain.events import (
+    CloseForexPairEvent,
+    OpenTradeEvent,
+)
 from src.logger import get_logger
 import pandas as pd
 
@@ -21,7 +23,7 @@ logger = get_logger(__name__)
 async def get_technical_signal(
     uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
     indicator: Indicators = Depends(Provide[Container.indicator_service]),
-) -> Union[CloseTradeEvent, None]:  # type: ignore
+) -> None:  # type: ignore
     """Gets the technical signal for the currency"""
     async with uow:
         for forex_pair in ForexPairEnum.__members__:
@@ -61,14 +63,27 @@ async def get_technical_signal(
 
             refined_data = await get_signal(refined_data)
             if refined_data.iloc[-1]["Signal"] > 0:
-                return CloseForexPairEvent(
-                    forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
+                await uow.publish(
+                    CloseForexPairEvent(
+                        forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
+                    )
+                )
+                await uow.publish(
+                    OpenTradeEvent(
+                        forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
+                    )
                 )
             elif refined_data.iloc[-1]["Signal"] < 0:
-                return CloseForexPairEvent(
-                    forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
+                await uow.publish(
+                    CloseForexPairEvent(
+                        forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
+                    )
                 )
-    return None
+                await uow.publish(
+                    OpenTradeEvent(
+                        forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
+                    )
+                )
 
 
 async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:

@@ -2,9 +2,9 @@ import logging
 import colorlog
 
 
-def get_logger(logger_name):
+def get_logger(logger_name: str) -> logging.Logger:
     # create logger
-    logger = logging.getLogger(logger_name)
+    logger: logging.Logger = logging.getLogger(logger_name)
     logger.setLevel(logging.INFO)
 
     # create console handler and set level to info
@@ -23,7 +23,7 @@ def get_logger(logger_name):
         },
     )
 
-    handler.setFormatter(formatter)
+    handler.setFormatter(formatter)  # type: ignore
 
     # add handler to logger
     logger.addHandler(handler)
