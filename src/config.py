@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class PeriodEnum(Enum):
+class PeriodEnum(str, Enum):
     MINUTE_1 = "m1"
     MINUTE_5 = "m5"
     MINUTE_15 = "m15"
@@ -17,7 +17,12 @@ class PeriodEnum(Enum):
     MONTH = "M1"
 
 
-class ForexPairEnum(Enum):
+class PositionEnum(str, Enum):
+    OPEN = "open"
+    CLOSED = "closed"
+
+
+class ForexPairEnum(str, Enum):
     EURUSD = "EUR/USD"
     USDJPY = "USD/JPY"  # DO NOT TRADE TOO MUCH UNCERTAINTY
     GBPUSD = "GBP/USD"
@@ -27,17 +32,18 @@ class ForexPairEnum(Enum):
     NZDUSD = "NZD/USD"
 
 
-class OrderTypeEnum(Enum):
+class OrderTypeEnum(str, Enum):
     AT_MARKET = "AtMarket"
     MARKET_RANGE = "MarketRange"
+    MARKET = "MARKET"
 
 
-class SignalTypeEnum(Enum):
+class SignalTypeEnum(str, Enum):
     MOVING_AVERAGE = "Moving Average"
     MACD = "MACD"
 
 
-class CurrencyEnum(Enum):
+class CurrencyEnum(str, Enum):
     USD = "USD"
     GBP = "GBP"
     AUD = "AUD"
@@ -75,3 +81,9 @@ class CalendarEventEnum(Enum):
     FLASH_PMI = "Flash Services PMI"  # fine
     ISM = "ISM Manufacturing PMI"
     Test = "Employment Change q/q"
+
+
+class DebugEnum(Enum):
+    RunFundamentalEvent = "Run Fundamental Event"
+    PublishEvent = "Publish Event"
+    RunIndicatorEvent = "Run Indicator Event"

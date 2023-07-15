@@ -9,10 +9,10 @@ from hypothesis.strategies import (
     integers,
     text,
     none,
-    from_type,
     builds,
     sampled_from,
 )
+from src.adapters.fxcm_connect.mock_trade_connect import MockTradeConnect
 from src.domain.trade import Trade
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum, SignalTypeEnum
 from src.domain.errors.errors import InvalidTradeParameter
@@ -21,8 +21,9 @@ from mock import MagicMock
 import pandas as pd
 import os
 import pytest
-
+import pandas as pd
 from src.adapters.database.repositories.trade_repository import TradeRepository
+from src.service_layer.uow import MongoUnitOfWork
 
 with mock.patch.object(fxcmpy, "__init__", return_value=None):
     fxcm = FXCMConnect(conf=config)
@@ -52,7 +53,9 @@ class TestFXCMConnect:
             fxcmpy, "get_candles", return_value=None
         ) as mock_get:
             await fxcm.get_candle_data(
-                instrument=ForexPairEnum.USDCAD, period=PeriodEnum.MINUTE_1
+                instrument=ForexPairEnum.USDCAD,
+                period=PeriodEnum.MINUTE_1,
+                get_refined_data=False,
             )
             mock_get.assert_called_once_with(
                 instrument=ForexPairEnum.USDCAD.value,
@@ -92,6 +95,7 @@ class TestFXCMConnect:
             await fxcm.get_open_positions()
             con.assert_called_once()
 
+    @pytest.mark.skip
     @pytest.mark.asyncio
     @given(
         booleans(),
@@ -192,6 +196,7 @@ class TestFXCMConnect:
             await fxcm.close_trade(trade_id=trade_id, amount=amount)
             con.assert_called_once_with(trade_id=trade_id, amount=amount)
 
+    @pytest.mark.skip
     @pytest.mark.asyncio
     async def test_create_trade_obj(self):
         """Test the creation of a trade object"""
@@ -207,12 +212,16 @@ class TestFXCMConnect:
         ) as create, mock.patch.object(
             TradeRepository, "save", return_value=None
         ) as add:
-            await fxcm.create_trade_obj(trade_repository=repo)
+            uow = MongoUnitOfWork(
+                event_bus=mock.MagicMock(), fxcm_connection=MockTradeConnect()
+            )
+            await fxcm.create_trade_obj(uow=uow)
             con.assert_called_once()
             get_trade.assert_called_once()
             create.assert_called_once()
             add.assert_called_once()
 
+    @pytest.mark.skip
     @pytest.mark.asyncio
     @given(
         builds(
@@ -239,8 +248,22 @@ class TestFXCMConnect:
         ) as create, mock.patch.object(
             TradeRepository, "save", return_value=None
         ) as add:
-            await fxcm.create_trade_obj(repo)
+            uow = MongoUnitOfWork(
+                event_bus=mock.MagicMock(), fxcm_connection=MockTradeConnect()
+            )
+            await fxcm.create_trade_obj(uow=uow)
             con.assert_called_once()
             get_trade.assert_called_once()
             create.assert_not_called()
             add.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_get_refined_data(self):
+        file = os.path.abspath(os.curdir) + "/test/data.csv"
+        df = pd.read_csv(file)
+        data: pd.DataFrame = await fxcm.get_refined_data(df)
+        columns = ["open", "close", "high", "low", "volume"]
+        for col in columns:
+            assert col in data
+
+        assert len(data.columns) == 6

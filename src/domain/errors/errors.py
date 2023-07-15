@@ -42,3 +42,14 @@ class InvalidEventTypeException(Exception):
     def __init__(self, message: str = "Invalid Event type"):
         self.message = message
         super().__init__(self.message)
+
+
+class NotFound(Exception):
+    """Exception raised for invalid event types.
+
+    message -- explanation of the error
+    """
+
+    def __init__(self, message: str = "Not found"):
+        self.message = message
+        super().__init__(self.message)

@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from datetime import date
 from typing import List
 from fastapi_restful import set_responses, Resource
@@ -10,6 +11,9 @@ from src.service_layer.fundamental_service import FundamentalDataService
 from src.container.container import Container
 from src.entry_points.routes.api_schema.schema import FundamentalSchema
 from src.service_layer.uow import MongoUnitOfWork
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class FundamentalResource(Resource):
@@ -28,16 +32,14 @@ class FundamentalResource(Resource):
     @set_responses(List[FundamentalSchema], 200)
     async def get(self, date: date = None, currency: CurrencyEnum = None):
         """Deletes the database"""
-        api_data = []
         kwargs = {}
         if currency:
             kwargs["currency"] = currency
         if date:
             kwargs["last_updated"] = date
         async with self._uow:
+            logger.info(f"Getting fundamental data with kwargs: {kwargs}")
             data: List[
                 FundamentalData
             ] = await self.service.get_all_fundamental_data(**kwargs)
-            for value in data:
-                api_data.append(FundamentalSchema(**value.to_mongo()))
-            return api_data
+            return data

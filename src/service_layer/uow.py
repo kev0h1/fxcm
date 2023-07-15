@@ -5,8 +5,14 @@ from src.adapters.database.repositories.fundamental_repository import (
     FundamentalDataRepository,
 )
 from src.adapters.database.repositories.trade_repository import TradeRepository
+from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
+
 from src.service_layer.event_bus import TradingEventBus
 from src.service_layer.handlers import handlers
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.adapters.scraper.base_scraper import BaseScraper
 
 
 class AbstractUnitOfWork:
@@ -16,26 +22,29 @@ class AbstractUnitOfWork:
     async def __aexit__(self, *args):
         await self.rollback()
 
-    async def commit(self):
-        raise NotImplementedError
-
-    async def rollback(self):
+    async def publish(self):
         raise NotImplementedError
 
 
 class MongoUnitOfWork(AbstractUnitOfWork):
-    fundamental_data_repository: FundamentalDataRepository
-    trade_repository = TradeRepository
-
-    def __init__(self, event_bus: TradingEventBus):
+    def __init__(
+        self,
+        fxcm_connection: BaseTradeConnect,
+        scraper: "BaseScraper",
+    ):
         is_dev = os.environ.get("DOCKER", False)
         if is_dev:
             self.env = "mongo"
         else:
             self.env = "localhost"
-        self.event_bus = event_bus
-        self.fundamental_data_repository = FundamentalDataRepository()
-        self.trade_repository = TradeRepository()
+        self.event_bus = TradingEventBus(uow=self)
+        self.fundamental_data_repository: FundamentalDataRepository = (
+            FundamentalDataRepository()
+        )
+        self.trade_repository: TradeRepository = TradeRepository()
+        self.fxcm_connection: BaseTradeConnect = fxcm_connection
+        self.scraper: "BaseScraper" = scraper
+
         for event, handler in handlers.items():
             self.event_bus.subscribe(event, handler)
 
@@ -45,8 +54,5 @@ class MongoUnitOfWork(AbstractUnitOfWork):
     async def __aexit__(self, *args):
         disconnect()
 
-    async def commit(self, event):
-        self.event_bus.publish_events()
-
-    async def rollback(self):
-        self.session.rollback()
+    async def publish(self, event):
+        await self.event_bus.publish(event)

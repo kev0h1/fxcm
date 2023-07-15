@@ -1,34 +1,35 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from src.config import SignalTypeEnum
-from mongoengine import *
+from src.config import (
+    CurrencyEnum,
+    PositionEnum,
+    SignalTypeEnum,
+    ForexPairEnum,
+)
+from decimal import Decimal
 
 
-class Trade(Document):
-    def __init__(
-        self,
-        trade_id,
-        position_size,
-        stop,
-        limit,
-        is_buy,
-        signal,
-        *args,
-        **values
-    ):
-        super().__init__(*args, **values)
-        self.trade_id = trade_id
-        self.position_size = position_size
-        self.stop = stop
-        self.limit = limit
-        self.is_buy = is_buy
-        self.signal = signal
+@dataclass
+class Trade:
+    trade_id: int
+    position_size: int
+    stop: Decimal
+    limit: Decimal
+    is_buy: bool
+    signal: SignalTypeEnum
+    base_currency: CurrencyEnum
+    quote_currency: CurrencyEnum
+    forex_currency_pair: ForexPairEnum
+    is_winner: bool = field(default=None)
+    initiated_date: datetime = field(default=datetime.now())
+    position: PositionEnum = field(default=PositionEnum.OPEN)
 
-    trade_id = IntField(primary_key=True)
-    position_size = IntField()
-    stop = FloatField()
-    limit = FloatField()
-    is_buy = BooleanField()
-    signal = EnumField(SignalTypeEnum)
-    is_winner = BooleanField(default=False)
-    initiated_date = DateTimeField(default=datetime.now())
+    def __post_init__(self) -> None:
+        currencies = self.forex_currency_pair.value.split("/")
+        assert self.base_currency.value == currencies[0]
+        assert self.quote_currency.value == currencies[1]
+
+
+# bullish trades would be trades where you are buying the base currency or selling the quote currency
+
+# bearish trades would be trades where you are selling the base currency or buying the quote currency

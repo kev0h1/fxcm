@@ -4,25 +4,18 @@ import os
 import dotenv
 from fxcmpy import fxcmpy
 from pandas import DataFrame
-from src.domain.trade import Trade
-from sqlalchemy.orm import Session
+from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum
-from src.container.container import Container
 from src.domain.errors.errors import (
     InvalidTradeParameter,
-    NoStopDefinedException,
 )
-from src.adapters.database.repositories.trade_repository import TradeRepository
-from dependency_injector.wiring import inject, Provide
-from fastapi import Depends
 
-from src.service_layer.uow import MongoUnitOfWork
 
 env = os.path.abspath(os.curdir) + "/src/.env"
 config = dotenv.dotenv_values(env)
 
 
-class FXCMConnect:
+class FXCMConnect(BaseTradeConnect):
     def __init__(self, conf: dict) -> None:
         """set up the connection to fxcm"""
         self.token = conf["TOKEN"] if "TOKEN" in conf else None
@@ -48,12 +41,36 @@ class FXCMConnect:
         )
 
     async def get_candle_data(
-        self, instrument: ForexPairEnum, period: PeriodEnum, number: int = 100
+        self,
+        instrument: ForexPairEnum,
+        period: PeriodEnum,
+        number: int = 100,
+        get_refined_data: bool = True,
     ) -> DataFrame:
         """get the candle data for an instrument"""
-        return self.con.get_candles(
+        data = self.con.get_candles(
             instrument=instrument.value, period=period.value, number=number
         )
+        if get_refined_data:
+            return await self.get_refined_data(data)
+        return data
+
+    async def get_refined_data(self, data):
+        """Refine the data that we get from FXCM"""
+        data.drop(
+            ["bidopen", "bidclose", "bidhigh", "bidlow"], inplace=True, axis=1
+        )
+        data.rename(
+            columns={
+                "askopen": "open",
+                "askclose": "close",
+                "askhigh": "high",
+                "asklow": "low",
+                "tickqty": "volume",
+            },
+            inplace=True,
+        )
+        return data
 
     async def get_open_positions(self, **kwargs):
         """returns the open positions"""
@@ -61,7 +78,6 @@ class FXCMConnect:
 
     async def open_trade(
         self,
-        session: Session,
         instrument: ForexPairEnum,
         is_buy: bool,
         is_pips: bool,
@@ -94,7 +110,7 @@ class FXCMConnect:
             order_type=order_type.value,
             **stops
         )
-        await self.create_trade_obj(session)
+        # TODO add create trade clean up
 
     async def validate_stops(self, is_buy, is_pips, stop, limit):
         """Validates the stops and limits"""
@@ -129,26 +145,6 @@ class FXCMConnect:
                 raise InvalidTradeParameter(
                     "limit must be less than stop for sell trade"
                 )
-
-    @inject
-    async def create_trade_obj(
-        self,
-        uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
-    ):
-        """Creates the trade object"""
-        fxcm_postion = await self.get_open_positions()
-        trade_id = fxcm_postion.iloc[-1]["tradeId"]
-        if not await uow.trade_repository.get_trade_by_trade_id(
-            trade_id=trade_id
-        ):
-            trade = Trade(
-                trade_id=trade_id,
-                position_size=fxcm_postion["amountK"],
-                stop=fxcm_postion["stop"],
-                limit=fxcm_postion["limit"],
-                is_buy=fxcm_postion["isBuy"],
-            )
-            await uow.trade_repository.save(trade)
 
     async def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""
