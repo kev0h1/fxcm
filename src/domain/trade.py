@@ -6,15 +6,14 @@ from src.config import (
     SignalTypeEnum,
     ForexPairEnum,
 )
-from decimal import Decimal
 
 
 @dataclass
 class Trade:
     trade_id: int
-    position_size: int
-    stop: Decimal
-    limit: Decimal
+    position_size: float
+    stop: float
+    limit: float
     is_buy: bool
     signal: SignalTypeEnum
     base_currency: CurrencyEnum

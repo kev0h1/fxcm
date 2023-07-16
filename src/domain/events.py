@@ -29,6 +29,8 @@ class CloseForexPairEvent(Event):
 class OpenTradeEvent(Event):
     forex_pair: ForexPairEnum
     sentiment: SentimentEnum
+    stop: float
+    close: float
 
 
 @dataclass

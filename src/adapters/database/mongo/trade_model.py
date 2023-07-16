@@ -23,9 +23,9 @@ class Trade(Document):
     def __init__(
         self,
         trade_id: int,
-        position_size: int,
-        stop: Decimal,
-        limit: Decimal,
+        position_size: float,
+        stop: float,
+        limit: float,
         is_buy: bool,
         signal: SignalTypeEnum,
         base_currency: CurrencyEnum,

@@ -65,23 +65,29 @@ async def get_technical_signal(
             if refined_data.iloc[-1]["Signal"] > 0:
                 await uow.publish(
                     CloseForexPairEvent(
-                        forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
+                        forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
                     )
                 )
                 await uow.publish(
                     OpenTradeEvent(
-                        forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
+                        forex_pair=forex_pair,
+                        sentiment=SentimentEnum.BULLISH,
+                        stop=refined_data.iloc[-1]["LongTerm_MA"],
+                        close=refined_data.iloc[-1]["close"],
                     )
                 )
             elif refined_data.iloc[-1]["Signal"] < 0:
                 await uow.publish(
                     CloseForexPairEvent(
-                        forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
+                        forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
                     )
                 )
                 await uow.publish(
                     OpenTradeEvent(
-                        forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
+                        forex_pair=forex_pair,
+                        sentiment=SentimentEnum.BEARISH,
+                        stop=refined_data.iloc[-1]["LongTerm_MA"],
+                        close=refined_data.iloc[-1]["close"],
                     )
                 )
 

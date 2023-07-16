@@ -1,4 +1,4 @@
-from src.config import CurrencyEnum, PositionEnum
+from src.config import CurrencyEnum, ForexPairEnum, PositionEnum
 from src.domain.trade import Trade as TradeDomain
 from src.adapters.database.mongo.trade_model import (
     Trade as TradeModel,
@@ -52,5 +52,18 @@ class TradeRepository:
                     | Q(is_buy=True) & Q(quote_currency=currency)
                 )
                 & Q(position=PositionEnum.OPEN)
+            )
+        ]
+
+    async def get_open_trades_by_forex_pair(
+        self, forex_pair: ForexPairEnum, is_buy: bool
+    ) -> list[TradeDomain]:
+        """Get all open trades by forex pair"""
+        return [
+            await map_to_domain_model(obj)
+            for obj in TradeModel.objects(
+                forex_currency_pair=forex_pair,
+                position=PositionEnum.OPEN,
+                is_buy=is_buy,
             )
         ]

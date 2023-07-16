@@ -57,7 +57,7 @@ class TestGetTechnicalSignal:
             await get_technical_signal(uow=uow, indicator=Indicators())
             event = await uow.event_bus.queue.get()
             assert isinstance(event, CloseForexPairEvent)
-            assert event.sentiment == SentimentEnum.BULLISH
+            assert event.sentiment == SentimentEnum.BEARISH
 
             event = await uow.event_bus.queue.get()
             assert isinstance(event, OpenTradeEvent)
@@ -106,7 +106,7 @@ class TestGetTechnicalSignal:
             await get_technical_signal(uow=uow, indicator=Indicators())
             event = await uow.event_bus.queue.get()
             assert isinstance(event, CloseForexPairEvent)
-            assert event.sentiment == SentimentEnum.BEARISH
+            assert event.sentiment == SentimentEnum.BULLISH
 
             event = await uow.event_bus.queue.get()
             assert isinstance(event, OpenTradeEvent)

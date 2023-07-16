@@ -85,13 +85,13 @@ class OandaConnect(BaseTradeConnect):
         self,
         instrument: ForexPairEnum,
         is_buy: bool,
-        is_pips: bool,
         stop: float,
         limit: float,
         amount: int,
+        is_pips: bool = False,
         order_type: OrderTypeEnum = OrderTypeEnum.MARKET,
         time_in_force: str = "GTC",
-    ):
+    ) -> str:
         """
         Opens a trade postion.
 
