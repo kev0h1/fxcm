@@ -32,7 +32,7 @@ class TestGetTechnicalSignal:
         assert data_frame.iloc[-1]["Signal"] == 1
 
     @pytest.mark.asyncio
-    async def test_get_technical_signal_for_buy_event(self) -> None:
+    async def test_get_technical_signal_for_buy_event(self, get_db) -> None:
         data_frame = pd.DataFrame(
             [
                 {
@@ -54,6 +54,7 @@ class TestGetTechnicalSignal:
             uow = MongoUnitOfWork(
                 fxcm_connection=MockTradeConnect(),
                 scraper=mock.MagicMock(),
+                db_name=get_db,
             )
             await get_technical_signal(uow=uow, indicator=Indicators())
             event = await uow.event_bus.queue.get()
@@ -82,7 +83,7 @@ class TestGetTechnicalSignal:
         assert data_frame.iloc[-1]["Signal"] == -1
 
     @pytest.mark.asyncio
-    async def test_get_technical_signal_for_sell_event(self) -> None:
+    async def test_get_technical_signal_for_sell_event(self, get_db) -> None:
         data_frame = pd.DataFrame(
             [
                 {
@@ -104,6 +105,7 @@ class TestGetTechnicalSignal:
             uow = MongoUnitOfWork(
                 fxcm_connection=MockTradeConnect(),
                 scraper=mock.MagicMock(),
+                db_name=get_db,
             )
             await get_technical_signal(uow=uow, indicator=Indicators())
             event = await uow.event_bus.queue.get()

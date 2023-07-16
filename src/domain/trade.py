@@ -10,7 +10,7 @@ from src.config import (
 
 @dataclass
 class Trade:
-    trade_id: int
+    trade_id: str
     position_size: float
     stop: float
     limit: float

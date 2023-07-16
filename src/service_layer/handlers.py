@@ -37,7 +37,7 @@ async def close_trade_handler(
         await uow.trade_repository.save(trade)
 
 
-async def calculate_combined_techincal_and_funamental_sentiment(
+async def get_combined_techincal_and_fundamental_sentiment(
     event: events.OpenTradeEvent, uow: MongoUnitOfWork, currencies: list[str]
 ) -> SentimentEnum:
     """Calculates the combined technical and fundamental sentiment"""
@@ -121,7 +121,7 @@ async def open_trade_handler(
     trade_id = None
 
     if (
-        await calculate_combined_techincal_and_funamental_sentiment(
+        await get_combined_techincal_and_fundamental_sentiment(
             event=event, uow=uow, currencies=currencies
         )
         == SentimentEnum.BULLISH
@@ -134,7 +134,7 @@ async def open_trade_handler(
             limit=None,
         )
     elif (
-        await calculate_combined_techincal_and_funamental_sentiment(
+        await get_combined_techincal_and_fundamental_sentiment(
             event=event, uow=uow, currencies=currencies
         )
         == SentimentEnum.BEARISH

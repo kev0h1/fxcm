@@ -20,11 +20,12 @@ class TestGetFundamentalData:
         [SentimentEnum.BEARISH, SentimentEnum.BULLISH, SentimentEnum.FLAT],
     )
     async def test_process_data_for_events(
-        self, sentiment: SentimentEnum
+        self, get_db, sentiment: SentimentEnum
     ) -> None:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=MockScraper(sentiment=sentiment),
+            db_name=get_db,
         )
 
         fundamental_service = FundamentalDataService(uow=uow)
@@ -41,12 +42,13 @@ class TestGetFundamentalData:
             assert event.sentiment == sentiment
 
     @pytest.mark.asyncio
-    async def test_process_data_for_processed_events(self) -> None:
+    async def test_process_data_for_processed_events(self, get_db) -> None:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=MockScraper(
                 sentiment=SentimentEnum.BULLISH, is_processed=True
             ),
+            db_name=get_db,
         )
         fundamental_service = FundamentalDataService(uow=uow)
         await process_data(

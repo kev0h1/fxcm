@@ -12,6 +12,6 @@ class Database:
 
         self.client = pymongo.MongoClient(self.env, 27017)
 
-    async def reset_db(self) -> None:
+    async def reset_db(self, db_name="my_db") -> None:
         """Drop database"""
-        self.client.drop_database("my_db")
+        self.client.drop_database(db_name)

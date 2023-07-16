@@ -47,7 +47,11 @@ class TestCloseEventHandler:
             currency=CurrencyEnum.USD, sentiment=SentimentEnum.BULLISH
         )
 
-        uow = MongoUnitOfWork(MockTradeConnect(), scraper=mock.MagicMock())
+        uow = MongoUnitOfWork(
+            MockTradeConnect(),
+            scraper=mock.MagicMock(),
+            db_name=get_db,
+        )
         async with uow:
             await uow.trade_repository.save(trade)
             await close_trade_handler(event, uow)
@@ -88,6 +92,7 @@ class TestCloseEventHandler:
         uow = MongoUnitOfWork(
             MockTradeConnect(),
             scraper=mock.MagicMock(),
+            db_name=get_db,
         )
         async with uow:
             await uow.trade_repository.save(trade)
@@ -129,6 +134,7 @@ class TestCloseEventHandler:
         uow = MongoUnitOfWork(
             MockTradeConnect(),
             scraper=mock.MagicMock(),
+            db_name=get_db,
         )
         async with uow:
             await uow.trade_repository.save(trade)
@@ -170,6 +176,7 @@ class TestCloseEventHandler:
         uow = MongoUnitOfWork(
             MockTradeConnect(),
             scraper=mock.MagicMock(),
+            db_name=get_db,
         )
         async with uow:
             await uow.trade_repository.save(trade)

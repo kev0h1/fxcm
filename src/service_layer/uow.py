@@ -31,12 +31,14 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         self,
         fxcm_connection: BaseTradeConnect,
         scraper: "BaseScraper",
+        db_name: str = "my_db",
     ):
         is_dev = os.environ.get("DOCKER", False)
         if is_dev:
             self.env = "mongo"
         else:
             self.env = "localhost"
+        self.db_name = db_name
         self.event_bus = TradingEventBus(uow=self)
         self.fundamental_data_repository: FundamentalDataRepository = (
             FundamentalDataRepository()
@@ -49,7 +51,7 @@ class MongoUnitOfWork(AbstractUnitOfWork):
             self.event_bus.subscribe(event, handler)
 
     async def __aenter__(self):
-        _ = connect(host=f"mongodb://{self.env}/my_db")
+        _ = connect(host=f"mongodb://{self.env}/{self.db_name}")
 
     async def __aexit__(self, *args):
         disconnect()

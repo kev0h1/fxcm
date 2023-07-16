@@ -52,6 +52,7 @@ class TestTradeOrm:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=mock.MagicMock(),
+            db_name=get_db,
         )
         repo = TradeRepository()
         trade_id = trade.trade_id
