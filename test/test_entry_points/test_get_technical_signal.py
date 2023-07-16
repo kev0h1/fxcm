@@ -42,6 +42,7 @@ class TestGetTechnicalSignal:
                     "Prev_ShortTerm_MA": 0.4,
                     "Prev_MediumTerm_MA": 0.5,
                     "rsi": 51,
+                    "close": 1.2,
                 }
             ]
         )
@@ -91,6 +92,7 @@ class TestGetTechnicalSignal:
                     "Prev_ShortTerm_MA": 0.5,
                     "Prev_MediumTerm_MA": 0.4,
                     "rsi": 45,
+                    "close": 1.2,
                 }
             ]
         )
