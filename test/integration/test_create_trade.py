@@ -2,15 +2,13 @@ from __future__ import annotations
 import mock
 from src.config import (
     PositionEnum,
-    SignalTypeEnum,
     ForexPairEnum,
     CurrencyEnum,
 )
 
 from hypothesis.strategies import (
-    from_type,
     builds,
-    integers,
+    text,
     floats,
     booleans,
     sampled_from,
@@ -31,12 +29,11 @@ class TestTradeOrm:
     @given(
         builds(
             Trade,
-            trade_id=integers(),
-            position_size=integers(),
+            trade_id=text(),
+            units=floats(),
             stop=floats(),
             limit=floats(),
             is_buy=booleans(),
-            signal=sampled_from(SignalTypeEnum),
             base_currency=sampled_from([CurrencyEnum.USD]),
             quote_currency=sampled_from([CurrencyEnum.CHF]),
             forex_currency_pair=sampled_from([ForexPairEnum.USDCHF]),

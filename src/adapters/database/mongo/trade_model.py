@@ -1,21 +1,18 @@
-from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
 from typing import Union
 from src.config import (
     CurrencyEnum,
     ForexPairEnum,
-    SignalTypeEnum,
     PositionEnum,
 )
 from src.domain.trade import Trade as TradeDomain
 from mongoengine import (
     FloatField,
-    IntField,
     BooleanField,
     DateTimeField,
     EnumField,
     Document,
+    StringField,
 )
 
 
@@ -23,38 +20,39 @@ class Trade(Document):
     def __init__(
         self,
         trade_id: int,
-        position_size: float,
+        units: float,
         stop: float,
-        limit: float,
         is_buy: bool,
-        signal: SignalTypeEnum,
         base_currency: CurrencyEnum,
         quote_currency: CurrencyEnum,
         forex_currency_pair: ForexPairEnum,
+        is_winner: bool,
+        initiated_date: datetime,
         position: PositionEnum,
+        limit: float = None,
         *args,
         **values
     ) -> None:
         super().__init__(*args, **values)
         self.trade_id = trade_id
-        self.position_size = position_size
+        self.units = units
         self.stop = stop
         self.limit = limit
         self.is_buy = is_buy
-        self.signal = signal
         self.base_currency = base_currency
         self.quote_currency = quote_currency
         self.forex_currency_pair = forex_currency_pair
+        self.is_winner = is_winner
+        self.initiated_date = initiated_date
         self.position = position
 
-    trade_id = IntField(primary_key=True)
-    position_size = IntField()
+    trade_id = StringField(primary_key=True)
+    units = FloatField()
     stop = FloatField()
-    limit = FloatField()
+    limit = FloatField(allow_none=True)
     is_buy = BooleanField()
-    signal = EnumField(SignalTypeEnum)
-    is_winner = BooleanField(default=False)
-    initiated_date = DateTimeField(default=datetime.now())
+    is_winner = BooleanField()
+    initiated_date = DateTimeField()
     base_currency = EnumField(CurrencyEnum)
     quote_currency = EnumField(CurrencyEnum)
     forex_currency_pair = EnumField(ForexPairEnum)
@@ -74,14 +72,15 @@ async def map_to_db_model(trade: TradeDomain) -> Union[Trade, None]:
         return None
     return Trade(
         trade_id=trade.trade_id,
-        position_size=trade.position_size,
+        units=trade.units,
         stop=trade.stop,
         limit=trade.limit,
         is_buy=trade.is_buy,
-        signal=trade.signal,
         base_currency=trade.base_currency,
         quote_currency=trade.quote_currency,
         forex_currency_pair=trade.forex_currency_pair,
+        is_winner=trade.is_winner,
+        initiated_date=trade.initiated_date,
         position=trade.position,
     )
 
@@ -99,15 +98,14 @@ async def map_to_domain_model(trade: Trade) -> Union[TradeDomain, None]:
         return None
     return TradeDomain(
         trade_id=trade.trade_id,
-        position_size=trade.position_size,
+        units=trade.units,
         stop=trade.stop,
         limit=trade.limit,
         is_buy=trade.is_buy,
-        signal=trade.signal,
-        is_winner=trade.is_winner,
-        position=trade.position,
-        initiated_date=trade.initiated_date,
         base_currency=trade.base_currency,
         quote_currency=trade.quote_currency,
         forex_currency_pair=trade.forex_currency_pair,
+        is_winner=trade.is_winner,
+        initiated_date=trade.initiated_date,
+        position=trade.position,
     )

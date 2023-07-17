@@ -31,6 +31,7 @@ class OpenTradeEvent(Event):
     sentiment: SentimentEnum
     stop: float
     close: float
+    limit: float = None
 
 
 @dataclass

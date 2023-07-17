@@ -3,7 +3,6 @@ from datetime import datetime
 from src.config import (
     CurrencyEnum,
     PositionEnum,
-    SignalTypeEnum,
     ForexPairEnum,
 )
 
@@ -11,15 +10,14 @@ from src.config import (
 @dataclass
 class Trade:
     trade_id: str
-    position_size: float
+    units: float
     stop: float
     limit: float
     is_buy: bool
-    signal: SignalTypeEnum
     base_currency: CurrencyEnum
     quote_currency: CurrencyEnum
     forex_currency_pair: ForexPairEnum
-    is_winner: bool = field(default=None)
+    is_winner: bool = field(default=False)
     initiated_date: datetime = field(default=datetime.now())
     position: PositionEnum = field(default=PositionEnum.OPEN)
 

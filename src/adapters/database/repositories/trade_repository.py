@@ -13,7 +13,7 @@ class TradeRepository:
         """Add an object"""
         trade_model = await map_to_db_model(obj)
         trade_model.save()
-        return await map_to_domain_model(trade_model)
+        return obj
 
     async def get_all(self) -> list[TradeDomain]:
         """Get all trade objects"""
@@ -65,5 +65,14 @@ class TradeRepository:
                 forex_currency_pair=forex_pair,
                 position=PositionEnum.OPEN,
                 is_buy=is_buy,
+            )
+        ]
+
+    async def get_open_trades(self) -> list[TradeDomain]:
+        """Get all open trades"""
+        return [
+            await map_to_domain_model(obj)
+            for obj in TradeModel.objects(
+                position=PositionEnum.OPEN,
             )
         ]

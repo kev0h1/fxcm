@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from src.service_layer.uow import MongoUnitOfWork
 
 from src.logger import get_logger
+from datetime import datetime
 
 
 logger = get_logger(__name__)
@@ -31,7 +32,7 @@ async def close_trade_handler(
 
     for trade in trades:
         await uow.fxcm_connection.close_trade(
-            trade_id=trade.trade_id, amount=trade.position_size
+            trade_id=trade.trade_id, amount=trade.units
         )
         trade.position = PositionEnum.CLOSED
         await uow.trade_repository.save(trade)
@@ -114,7 +115,7 @@ async def open_trade_handler(
         % (event.forex_pair, event.sentiment)
     )
     currencies = event.forex_pair.value.split("/")
-    is_buy, units = get_trade_parameters(
+    is_buy, units = await get_trade_parameters(
         event=event, uow=uow, currencies=currencies
     )
 
@@ -146,16 +147,19 @@ async def open_trade_handler(
             stop=event.stop,
             limit=None,
         )
-    if not trade_id:
+    if trade_id:
         trade = Trade(
             trade_id=trade_id,
-            position_size=units,
+            units=units,
             stop=event.stop,
             limit=event.limit,
-            is_buy=event.is_buy,
-            forex_currency_pair=event.forex_pair,
+            is_buy=True if event.sentiment == SentimentEnum.BULLISH else False,
             base_currency=CurrencyEnum(currencies[0]),
             quote_currency=CurrencyEnum(currencies[1]),
+            forex_currency_pair=event.forex_pair,
+            is_winner=False,
+            initiated_date=datetime.now(),
+            position=PositionEnum.OPEN,
         )
 
         await uow.trade_repository.save(trade)
@@ -176,7 +180,7 @@ async def get_trade_parameters(
 
     stop_loss_pips = abs(event.close - event.stop) / pip_value
 
-    units = (float(uow.fxcm_connection.get_account_balance) * risk) / (
+    units = (float(await uow.fxcm_connection.get_account_balance()) * risk) / (
         stop_loss_pips * pip_value
     )
 
@@ -194,7 +198,7 @@ async def close_forex_pair_handler(
     for trade in trades:
         if trade.forex_currency_pair == event.forex_pair:
             await uow.fxcm_connection.close_trade(
-                trade_id=trade.trade_id, amount=trade.position_size
+                trade_id=trade.trade_id, amount=trade.units
             )
             trade.position = PositionEnum.CLOSED
             await uow.trade_repository.save(trade)
