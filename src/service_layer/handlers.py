@@ -181,7 +181,7 @@ async def get_trade_parameters(
     stop_loss_pips = abs(event.close - event.stop) / pip_value
 
     units = (float(await uow.fxcm_connection.get_account_balance()) * risk) / (
-        stop_loss_pips * pip_value
+        10 * pip_value
     )
 
     return is_buy, units

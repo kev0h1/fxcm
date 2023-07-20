@@ -1,9 +1,11 @@
 import os
 import dotenv
 from pandas import DataFrame
-from pydantic import parse_raw_as
-from src.domain.schema.trades import TradesResponse
-from src.domain.schema.transaction import CloseTradeResponse, OandaResponse
+from pydantic import parse_raw_as, parse_obj_as
+from src.domain.schema.trades import TradeList, TradeInfo
+from src.domain.schema.transaction import (
+    OrderSchema,
+)
 from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
 from src.config import ForexPairEnum, OrderTypeEnum, PeriodEnum, SentimentEnum
 import oandapyV20
@@ -11,7 +13,7 @@ import oandapyV20.endpoints.instruments as instruments
 import pandas as pd
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.endpoints.accounts import AccountDetails
-from src.domain.schema.account import AccountDetails as AccountDetailsSchema
+from src.domain.schema.account import AccountDetailsSchema
 from oandapyV20.endpoints.trades import TradeClose, TradesList
 
 env = os.path.abspath(os.curdir) + "/src/.env"
@@ -44,7 +46,7 @@ class OandaConnect(BaseTradeConnect):
 
     async def get_candle_data(
         self, instrument: ForexPairEnum, period: PeriodEnum, number: int = 100
-    ) -> DataFrame:
+    ) -> dict:
         """get the candle data for an instrument"""
         instrument = instrument.value.replace("/", "_")
         params = {
@@ -53,7 +55,9 @@ class OandaConnect(BaseTradeConnect):
                 period.value
             ),  # Candlestick granularity, M5 means 5 minutes
         }
-        r = instruments.InstrumentsCandles(instrument="EUR_USD", params=params)
+        r = instruments.InstrumentsCandles(
+            instrument=instrument, params=params
+        )
         return self.client.request(r)
 
     async def get_refined_data(self, data) -> DataFrame:
@@ -73,12 +77,14 @@ class OandaConnect(BaseTradeConnect):
 
         return pd.DataFrame(list_of_candles)
 
-    async def get_open_positions(self, **kwargs) -> TradesResponse:
+    async def get_open_positions(self, **kwargs) -> list[TradeInfo]:
         """returns the open positions"""
         trades_list_endpoint = TradesList(self.account_id)
         self.client.request(trades_list_endpoint)
         trades = trades_list_endpoint.response.get("trades", [])
-        trades: TradesResponse = parse_raw_as(TradesResponse, trades)
+        retrieved_trades = []
+        for trade in trades:
+            retrieved_trades.append(parse_obj_as(TradeInfo, trade))
         return trades
 
     async def open_trade(
@@ -118,6 +124,8 @@ class OandaConnect(BaseTradeConnect):
                 "units": str(amount),
                 "type": order_type.value,
                 "positionFill": "DEFAULT",
+                "timeInForce": "FOK",  # added this
+                # "priceBound": "1.12",  # added this
             }
         }
 
@@ -125,19 +133,21 @@ class OandaConnect(BaseTradeConnect):
 
         r = orders.OrderCreate(self.account_id, data)
         response = self.client.request(r)
-        response_model: OandaResponse = parse_raw_as(OandaResponse, response)
-        return response_model.order_fill_transaction.id
+        response_model: OrderSchema = parse_obj_as(OrderSchema, response)
+        if response_model.orderFillTransaction is not None:
+            return response_model.orderFillTransaction.id
+        else:
+            raise NotImplementedError
 
-    async def close_trade(
-        self, trade_id: str, amount: int
-    ) -> CloseTradeResponse:
+    async def close_trade(self, trade_id: str, amount: int):
         """closes a trade position"""
         trade_close_endpoint = TradeClose(self.account_id, trade_id)
         response = self.client.request(trade_close_endpoint)
-        close_model: CloseTradeResponse = parse_raw_as(
-            CloseTradeResponse, response
-        )
-        return close_model
+        response_model: OrderSchema = parse_obj_as(OrderSchema, response)
+        if response_model.orderFillTransaction is not None:
+            return response_model.orderFillTransaction.id
+        else:
+            raise NotImplementedError
 
     async def close_all_trades(self, trade_ids: list[str]):
         """closes all open trades"""
@@ -148,14 +158,14 @@ class OandaConnect(BaseTradeConnect):
         """returns the account balance"""
         account_details = await self.get_account_details()
 
-        return account_details.account.account.balance
+        return account_details.account.balance
 
     async def get_account_details(self) -> AccountDetailsSchema:
         """returns the account details"""
         account_details_endpoint = AccountDetails(self.account_id)
 
         response = self.client.request(account_details_endpoint)
-        response: AccountDetailsSchema = parse_raw_as(
+        response: AccountDetailsSchema = parse_obj_as(
             AccountDetailsSchema, response
         )
         return response

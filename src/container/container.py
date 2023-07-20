@@ -1,5 +1,6 @@
 from dependency_injector import containers, providers
 from src.adapters.database.mongo.mongo_connect import Database
+from src.adapters.fxcm_connect.oanda_connect import OandaConnect, config
 from src.adapters.scraper.forex_factory_scraper import ForexFactoryScraper
 from src.service_layer.fundamental_service import FundamentalDataService
 from src.service_layer.uow import MongoUnitOfWork
@@ -17,7 +18,7 @@ class Container(containers.DeclarativeContainer):
         ]
     )
     db = providers.Singleton(Database)
-    fxcm_connection = providers.Singleton(MockTradeConnect, {})
+    fxcm_connection = providers.Singleton(OandaConnect, config)
     scraper = providers.Singleton(ForexFactoryScraper)
 
     uow = providers.Singleton(MongoUnitOfWork, fxcm_connection, scraper)

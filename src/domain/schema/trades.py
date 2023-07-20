@@ -1,18 +1,35 @@
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from typing import List
+from pydantic import BaseModel
 
 
-class Trade(BaseModel):
+class StopLossOrder(BaseModel):
+    id: str
+    createTime: str
+    type: str
+    tradeID: str
+    price: str
+    timeInForce: str
+    triggerCondition: str
+    triggerMode: str
+    state: str
+
+
+class TradeInfo(BaseModel):
     id: str
     instrument: str
-    price: float
-    open_time: str = Field(alias="openTime")
+    price: str
+    openTime: str
+    initialUnits: str
+    initialMarginRequired: str
     state: str
-    initial_units: str = Field(alias="initialUnits")
-    initial_margin_required: str = Field(alias="initialMarginRequired")
-    # Add any additional fields here...
+    currentUnits: str
+    realizedPL: str
+    financing: str
+    dividendAdjustment: str
+    unrealizedPL: str
+    marginUsed: str
+    stopLossOrder: StopLossOrder
 
 
-class TradesResponse(BaseModel):
-    trades: List[Trade]
-    last_transaction_id: str = Field(alias="lastTransactionID")
+class TradeList(BaseModel):
+    trades: List[TradeInfo]

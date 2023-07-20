@@ -87,3 +87,7 @@ class DebugEnum(Enum):
     RunFundamentalEvent = "Run Fundamental Event"
     PublishEvent = "Publish Event"
     RunIndicatorEvent = "Run Indicator Event"
+    TestOanda = "Test Oanda"
+    TestOpenTrade = "Test Open Trade"
+    TestGetTrades = "Test Get Open Trades"
+    TestCloseTrade = "Test Close Trade"
