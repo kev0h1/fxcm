@@ -1,23 +1,47 @@
 import os
 import dotenv
 from pandas import DataFrame
-from pydantic import parse_raw_as, parse_obj_as
-from src.domain.schema.trades import TradeList, TradeInfo
-from src.domain.schema.transaction import (
-    OrderSchema,
+from pydantic import parse_obj_as
+from src.domain.schema.trades import (
+    TradeInfo,
+    TradeCRDCOSchema,
+    TradeDetailResponse,
 )
+from src.domain.schema.transaction import OrderSchema
 from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
-from src.config import ForexPairEnum, OrderTypeEnum, PeriodEnum, SentimentEnum
+from src.config import ForexPairEnum, OrderTypeEnum, PeriodEnum
 import oandapyV20
 import oandapyV20.endpoints.instruments as instruments
 import pandas as pd
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.endpoints.accounts import AccountDetails
 from src.domain.schema.account import AccountDetailsSchema
-from oandapyV20.endpoints.trades import TradeClose, TradesList
+from oandapyV20.endpoints.trades import (
+    TradeClose,
+    TradesList,
+    TradeCRCDO,
+    TradeDetails,
+)
+
 
 env = os.path.abspath(os.curdir) + "/src/.env"
 config = dotenv.dotenv_values(env)
+from oandapyV20.exceptions import V20Error
+
+
+from src.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+def error_handler(func):
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except V20Error as e:
+            logger.error(e)
+
+    return wrapper
 
 
 class OandaConnect(BaseTradeConnect):
@@ -32,10 +56,12 @@ class OandaConnect(BaseTradeConnect):
             raise ValueError("No config defined")
         self.open_connection()
 
+    @error_handler
     async def get_connection_status(self) -> None:
         """Get the connection status"""
         raise NotImplementedError
 
+    @error_handler
     async def close_connection(self) -> None:
         """Closes the connection"""
         raise NotImplementedError
@@ -44,6 +70,7 @@ class OandaConnect(BaseTradeConnect):
         """Open the connection"""
         self.client = oandapyV20.API(access_token=self.token)
 
+    @error_handler
     async def get_candle_data(
         self, instrument: ForexPairEnum, period: PeriodEnum, number: int = 100
     ) -> dict:
@@ -58,8 +85,10 @@ class OandaConnect(BaseTradeConnect):
         r = instruments.InstrumentsCandles(
             instrument=instrument, params=params
         )
-        return self.client.request(r)
+        logger.info("Getting candle data for %s" % instrument)
+        return await self.get_refined_data(self.client.request(r))
 
+    @error_handler
     async def get_refined_data(self, data) -> DataFrame:
         """Refine the data that we get from FXCM"""
         list_of_candles = []
@@ -74,9 +103,10 @@ class OandaConnect(BaseTradeConnect):
                     "volume": float(i["volume"]),
                 }
             )
-
+        logger.info("Refining candle data")
         return pd.DataFrame(list_of_candles)
 
+    @error_handler
     async def get_open_positions(self, **kwargs) -> list[TradeInfo]:
         """returns the open positions"""
         trades_list_endpoint = TradesList(self.account_id)
@@ -85,8 +115,16 @@ class OandaConnect(BaseTradeConnect):
         retrieved_trades = []
         for trade in trades:
             retrieved_trades.append(parse_obj_as(TradeInfo, trade))
+
+        logger.info(
+            "Retrieved open positions %s"
+            % ", ".join(
+                [retrieved_trade.id for retrieved_trade in retrieved_trades]
+            )
+        )
         return trades
 
+    @error_handler
     async def open_trade(
         self,
         instrument: ForexPairEnum,
@@ -135,10 +173,28 @@ class OandaConnect(BaseTradeConnect):
         response = self.client.request(r)
         response_model: OrderSchema = parse_obj_as(OrderSchema, response)
         if response_model.orderFillTransaction is not None:
+            logger.info(
+                "Opened trade %s for %s units for currency pair %s, with a stop of %s"
+                % (
+                    response_model.orderFillTransaction.id,
+                    amount,
+                    instrument,
+                    stop,
+                )
+            )
             return response_model.orderFillTransaction.id
         else:
-            raise NotImplementedError
+            if response_model.orderCancelTransaction is not None:
+                reason = response_model.orderCancelTransaction.reason
+            else:
+                reason = "unable to establish reason"
 
+            logger.error(
+                "Failed to open trade for %s units for currency pair %s, with a stop of %s. The reason was %s"
+                % (amount, instrument, stop, reason)
+            )
+
+    @error_handler
     async def close_trade(self, trade_id: str, amount: int):
         """closes a trade position"""
         trade_close_endpoint = TradeClose(self.account_id, trade_id)
@@ -147,19 +203,30 @@ class OandaConnect(BaseTradeConnect):
         if response_model.orderFillTransaction is not None:
             return response_model.orderFillTransaction.id
         else:
-            raise NotImplementedError
+            if response_model.orderCancelTransaction is not None:
+                reason = response_model.orderCancelTransaction.reason
+            else:
+                reason = "unable to establish reason"
 
+            logger.error(
+                "Failed to close trade for id %s. The reason was %s"
+                % (trade_id, reason)
+            )
+
+    @error_handler
     async def close_all_trades(self, trade_ids: list[str]):
         """closes all open trades"""
         for trade in trade_ids:
             await self.close_trade(trade)
 
+    @error_handler
     async def get_account_balance(self) -> str:
         """returns the account balance"""
         account_details = await self.get_account_details()
 
         return account_details.account.balance
 
+    @error_handler
     async def get_account_details(self) -> AccountDetailsSchema:
         """returns the account details"""
         account_details_endpoint = AccountDetails(self.account_id)
@@ -169,3 +236,51 @@ class OandaConnect(BaseTradeConnect):
             AccountDetailsSchema, response
         )
         return response
+
+    @error_handler
+    async def get_latest_close(self, instrument: ForexPairEnum) -> float:
+        """returns the latest close"""
+        data: DataFrame = await self.get_candle_data(
+            instrument, PeriodEnum.MINUTE_1, 1
+        )
+        return float(data.iloc[-1]["close"])
+
+    @error_handler
+    async def modify_trade(
+        self, trade_id: str, stop: float, limit: float = None
+    ) -> str:
+        data = {
+            "stopLoss": {
+                "price": str(stop),
+                "timeInForce": "GTC",
+                "clientExtensions": {
+                    "id": "StopLossOrder",
+                    "tag": "strategy",
+                    "comment": "New stop loss price",
+                },
+            }
+        }
+
+        trade_modify_request = TradeCRCDO(
+            accountID=self.account_id, tradeID=trade_id, data=data
+        )
+        response = self.client.request(trade_modify_request)
+        response_model: TradeCRDCOSchema = parse_obj_as(
+            TradeCRDCOSchema, response
+        )
+        return response_model
+
+    @error_handler
+    async def get_trade_state(self, trade_id: str):
+        """get the trade state"""
+        trade_details_request = TradeDetails(
+            accountID=self.account_id, tradeID=trade_id
+        )
+        response = self.client.request(trade_details_request)
+
+        response_model: TradeDetailResponse = parse_obj_as(
+            TradeDetailResponse, response
+        )
+        if response_model.trade is not None:
+            return response_model.trade.state
+        return None

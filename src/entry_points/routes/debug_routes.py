@@ -4,6 +4,7 @@ from src.adapters.database.mongo.mongo_connect import Database
 from src.config import CurrencyEnum, ForexPairEnum, PeriodEnum, SentimentEnum
 from src.domain.events import CloseTradeEvent
 from src.entry_points.scheduler.scheduler import get_fundamental_trend_data
+from src.entry_points.scheduler.manage_trades import manage_trades
 from src.entry_points.scheduler.get_technical_signal import (
     get_technical_signal,
 )
@@ -12,7 +13,7 @@ from fastapi import Depends
 from src.container.container import Container
 from src.logger import get_logger
 from src.service_layer.uow import MongoUnitOfWork
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import BackgroundTasks
 from src.config import DebugEnum
 from src.service_layer.handlers import (
     get_trade_parameters,
@@ -95,6 +96,10 @@ class DebugResource(Resource):
 
         if debug_task == DebugEnum.TestGetTrades:
             return await self.uow.fxcm_connection.get_open_positions()
+
+        if debug_task == DebugEnum.TestManageTrade:
+            return await manage_trades()
+
         return "done"
 
 

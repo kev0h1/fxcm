@@ -35,16 +35,5 @@ class OpenTradeEvent(Event):
 
 
 @dataclass
-class CreateTradeEvent(Event):
-    currency: CurrencyEnum
-    forex_pair: ForexPairEnum
-    trade_id: str
-    postion_size: int
-    stop: Decimal
-    limit: Decimal
-    is_buy: bool
-
-
-@dataclass
 class TechnicalEvent(Event):
     currency: CurrencyEnum

@@ -55,7 +55,7 @@ class TradeRepository:
             )
         ]
 
-    async def get_open_trades_by_forex_pair(
+    async def get_open_trades_by_forex_pair_for_buy_or_sell(
         self, forex_pair: ForexPairEnum, is_buy: bool
     ) -> list[TradeDomain]:
         """Get all open trades by forex pair"""
@@ -68,6 +68,17 @@ class TradeRepository:
             )
         ]
 
+    async def get_open_trades_by_forex_pair(
+        self, forex_pair: ForexPairEnum
+    ) -> list[TradeDomain]:
+        """Get all open trades by forex pair"""
+        return [
+            await map_to_domain_model(obj)
+            for obj in TradeModel.objects(
+                forex_currency_pair=forex_pair, position=PositionEnum.OPEN
+            )
+        ]
+
     async def get_open_trades(self) -> list[TradeDomain]:
         """Get all open trades"""
         return [
@@ -75,4 +86,11 @@ class TradeRepository:
             for obj in TradeModel.objects(
                 position=PositionEnum.OPEN,
             )
+        ]
+
+    async def get_distinct_forex_pairs(self) -> list[ForexPairEnum]:
+        """Get all distinct forex pairs"""
+        return [
+            ForexPairEnum(obj)
+            for obj in TradeModel.objects().distinct("forex_currency_pair")
         ]

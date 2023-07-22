@@ -91,3 +91,4 @@ class DebugEnum(Enum):
     TestOpenTrade = "Test Open Trade"
     TestGetTrades = "Test Get Open Trades"
     TestCloseTrade = "Test Close Trade"
+    TestManageTrade = "Test Manage Trade"

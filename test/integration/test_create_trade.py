@@ -38,6 +38,7 @@ class TestTradeOrm:
             quote_currency=sampled_from([CurrencyEnum.CHF]),
             forex_currency_pair=sampled_from([ForexPairEnum.USDCHF]),
             position=sampled_from(PositionEnum),
+            close=floats(),
         )
     )
     @settings(

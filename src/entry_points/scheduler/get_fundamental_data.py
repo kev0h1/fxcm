@@ -87,7 +87,7 @@ async def generate_event(
                 )
             )
             data.processed = True
-            uow.fundamental_data_repository.save(data)
+            await uow.fundamental_data_repository.save(data)
 
 
 async def has_pending_calendar_updates(data: FundamentalData) -> bool:

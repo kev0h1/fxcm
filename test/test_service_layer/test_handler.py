@@ -52,6 +52,7 @@ class TestCloseEventHandler:
             quote_currency=sampled_from([CurrencyEnum.CHF]),
             forex_currency_pair=sampled_from([ForexPairEnum.USDCHF]),
             position=sampled_from(PositionEnum),
+            close=floats(),
         )
     )
     @settings(
@@ -134,6 +135,7 @@ class TestCloseEventHandler:
             quote_currency=sampled_from([CurrencyEnum.USD]),
             forex_currency_pair=sampled_from([ForexPairEnum.GBPUSD]),
             position=sampled_from(PositionEnum),
+            close=floats(),
         )
     )
     @settings(
@@ -175,6 +177,7 @@ class TestCloseEventHandler:
             quote_currency=sampled_from([CurrencyEnum.USD]),
             forex_currency_pair=sampled_from([ForexPairEnum.GBPUSD]),
             position=sampled_from(PositionEnum),
+            close=floats(),
         )
     )
     @settings(
@@ -493,6 +496,7 @@ class TestOpenTradeHandler:
                     quote_currency=sampled_from([CurrencyEnum.CHF]),
                     forex_currency_pair=sampled_from([ForexPairEnum.USDCHF]),
                     position=sampled_from([PositionEnum.OPEN]),
+                    close=floats(),
                 ),
                 min_size=2,
                 max_size=2,

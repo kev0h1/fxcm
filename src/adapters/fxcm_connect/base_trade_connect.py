@@ -101,3 +101,17 @@ class BaseTradeConnect(ABC):
     async def get_account_details(self) -> str:
         """returns the account details"""
         raise NotImplementedError
+
+    async def get_latest_close(self, instrument: ForexPairEnum) -> float:
+        """returns the latest close"""
+        raise NotImplementedError
+
+    async def modify_trade(
+        self, trade_id: str, stop: float, limit: float = None
+    ) -> str:
+        """Modifies the trade"""
+        raise NotImplementedError
+
+    async def get_trade_state(self, trade_id: str):
+        """Gets the trade details"""
+        raise NotImplementedError

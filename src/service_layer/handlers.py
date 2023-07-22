@@ -160,6 +160,7 @@ async def open_trade_handler(
             is_winner=False,
             initiated_date=datetime.now(),
             position=PositionEnum.OPEN,
+            close=event.close,
         )
 
         await uow.trade_repository.save(trade)
@@ -181,7 +182,7 @@ async def get_trade_parameters(
     stop_loss_pips = abs(event.close - event.stop) / pip_value
 
     units = (float(await uow.fxcm_connection.get_account_balance()) * risk) / (
-        10 * pip_value
+        stop_loss_pips * pip_value
     )
 
     return is_buy, units
@@ -192,7 +193,7 @@ async def close_forex_pair_handler(
 ):
     """Close all trades for a given forex pair"""
     is_buy = True if event.sentiment == SentimentEnum.BULLISH else False
-    trades = await uow.trade_repository.get_open_trades_by_forex_pair(
+    trades = await uow.trade_repository.get_open_trades_by_forex_pair_for_buy_or_sell(
         event.forex_pair, is_buy
     )
     for trade in trades:
