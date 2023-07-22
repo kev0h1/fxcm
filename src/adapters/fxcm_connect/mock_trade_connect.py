@@ -96,3 +96,14 @@ class MockTradeConnect(BaseTradeConnect):
 
     async def get_account_details(self):
         """returns the account details"""
+
+    async def get_latest_close(self, instrument: ForexPairEnum) -> float:
+        """returns the latest close"""
+
+    async def modify_trade(
+        self, trade_id: str, stop: float, limit: float = None
+    ) -> str:
+        pass
+
+    async def get_trade_state(self, trade_id: str):
+        """get the trade state"""

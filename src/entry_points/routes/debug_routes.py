@@ -1,8 +1,11 @@
+import asyncio
+from datetime import datetime, timedelta
 from typing import Any, Union
 from fastapi_restful import set_responses, Resource
 from src.adapters.database.mongo.mongo_connect import Database
 from src.config import CurrencyEnum, ForexPairEnum, PeriodEnum, SentimentEnum
 from src.domain.events import CloseTradeEvent
+from src.entry_points.scheduler.get_fundamental_data import process_data
 from src.entry_points.scheduler.scheduler import get_fundamental_trend_data
 from src.entry_points.scheduler.manage_trades import manage_trades
 from src.entry_points.scheduler.get_technical_signal import (
@@ -100,6 +103,12 @@ class DebugResource(Resource):
         if debug_task == DebugEnum.TestManageTrade:
             return await manage_trades()
 
+        if debug_task == DebugEnum.LoadData:
+            for i in range(1, 120):
+                date_ = datetime.today() - timedelta(days=i)
+                if date_.weekday() < 5:
+                    logger.info(f"Getting fundamental data for {date_}")
+                    await process_data(date_=date_, load_data=True)
         return "done"
 
 

@@ -52,6 +52,7 @@ class Trade(Document):
     units = FloatField()
     stop = FloatField()
     close = FloatField()
+    new_close = FloatField()
     limit = FloatField(allow_none=True)
     is_buy = BooleanField()
     is_winner = BooleanField()
@@ -86,6 +87,7 @@ async def map_to_db_model(trade: TradeDomain) -> Union[Trade, None]:
         initiated_date=trade.initiated_date,
         position=trade.position,
         close=trade.close,
+        new_close=trade.new_close,
     )
 
 
@@ -113,4 +115,5 @@ async def map_to_domain_model(trade: Trade) -> Union[TradeDomain, None]:
         initiated_date=trade.initiated_date,
         position=trade.position,
         close=trade.close,
+        new_close=trade.new_close,
     )

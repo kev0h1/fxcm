@@ -1,6 +1,6 @@
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
-from src.config import ForexPairEnum, PositionEnum
+from src.config import PositionEnum
 from src.container.container import Container
 from src.domain.trade import Trade
 
