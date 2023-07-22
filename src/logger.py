@@ -1,5 +1,4 @@
 import logging
-import colorlog
 
 
 def get_logger(logger_name: str) -> logging.Logger:
@@ -9,7 +8,7 @@ def get_logger(logger_name: str) -> logging.Logger:
 
     # create console handler and set level to info
     handler = logging.StreamHandler()
-    file_handler = logging.FileHandler("my_logger.log")
+    file_handler = logging.FileHandler("./src/my_logger.log")
 
     handler.setLevel(logging.INFO)
     formatter = logging.Formatter(
@@ -17,7 +16,7 @@ def get_logger(logger_name: str) -> logging.Logger:
     )
 
     file_handler.setFormatter(formatter)
-    file_handler.setLevel(logging.ERROR)
+    file_handler.setLevel(logging.INFO)
 
     handler.setFormatter(formatter)  # type: ignore
 
