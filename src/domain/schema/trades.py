@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Union
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class StopLossOrder(BaseModel):
@@ -35,48 +36,31 @@ class TradeList(BaseModel):
     trades: List[TradeInfo]
 
 
-class OrderTransaction(BaseModel):
+class TransactionDetails(BaseModel):
+    id: str
+    accountID: str
+    userID: int
+    batchID: str
+    requestID: str
+    time: datetime
+    type: str
+
+
+class StopLossOrderCancelTransaction(TransactionDetails):
     orderID: str
-    batchID: str
-    reason: str
-    time: str
-    type: str
-    userID: int
-    id: str
-    accountID: str
-    replacedByOrderID: str = None
-    tradeID: str = None
-    price: str = None
-    timeInForce: str = None
-    triggerCondition: str = None
-    replacesOrderID: str = None
-    cancellingTransactionID: str = None
+    clientOrderID: str
 
 
-class TakeProfitOrderTransaction(BaseModel):
+class StopLossOrderTransaction(TransactionDetails):
     tradeID: str
-    price: str
     timeInForce: str
-    reason: str
-    id: str
-    batchID: str
-    triggerCondition: str
-    userID: int
-    time: str
-    type: str
-    accountID: str
 
 
 class TradeCRDCOSchema(BaseModel):
-    lastTransactionID: str
-    stopLossOrderCancelTransaction: OrderTransaction
-    stopLossOrderTransaction: OrderTransaction
+    stopLossOrderCancelTransaction: StopLossOrderCancelTransaction
+    stopLossOrderTransaction: StopLossOrderTransaction
     relatedTransactionIDs: List[str]
-    takeProfitOrderTransaction: TakeProfitOrderTransaction
-
-
-from typing import Union, List
-from pydantic import BaseModel
+    lastTransactionID: str
 
 
 class NotFoundTrade(BaseModel):

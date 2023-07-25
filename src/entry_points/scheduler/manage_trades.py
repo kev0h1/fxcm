@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 
 @inject
-async def manage_trades(
+async def manage_trades_handler(
     uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
 ) -> None:  # type: ignore
     async with uow:

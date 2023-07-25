@@ -23,9 +23,6 @@ from oandapyV20.endpoints.trades import (
     TradeDetails,
 )
 
-
-env = os.path.abspath(os.curdir) + "/src/.env"
-config = dotenv.dotenv_values(env)
 from oandapyV20.exceptions import V20Error
 
 
@@ -45,12 +42,11 @@ def error_handler(func):
 
 
 class OandaConnect(BaseTradeConnect):
-    def __init__(self, conf: dict = None) -> None:
+    def __init__(self) -> None:
         """set up the connection to fxcm"""
-        self.token = conf["OANDA_TOKEN"] if "OANDA_TOKEN" in conf else None
-        self.account_id = (
-            conf["OANDA_ACCOUNT_ID"] if "OANDA_ACCOUNT_ID" in conf else None
-        )
+
+        self.token = os.environ["OANDA_TOKEN"]
+        self.account_id = os.environ["OANDA_ACCOUNT_ID"]
 
         if self.token is None:
             raise ValueError("No config defined")

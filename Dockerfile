@@ -1,5 +1,9 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3.11.1
+FROM python:3.11-slim
+
+
+ENV OANDA_TOKEN=865518cb43ca925a7d8ee30ded1d7a3e-31b4a2e1c4bf96de5d31771f15d2a31f
+ENV OANDA_ACCOUNT_ID=101-004-26172134-001
 
 EXPOSE 8000
 
@@ -14,12 +18,11 @@ ENV PYTHONUNBUFFERED=1 \
 RUN python -m pip install "poetry==$POETRY_VERSION"
 
 WORKDIR /app
-COPY . /app
-COPY poetry.lock pyproject.toml /code/
+COPY poetry.lock pyproject.toml /app/
 RUN poetry config virtualenvs.create false \
-    && poetry install $(test "$YOUR_ENV" == production && echo "--no-dev")--no-interaction --no-ansi
+    && poetry install $(test "$YOUR_ENV" == production && echo "--no-dev") --no-interaction --no-ansi
 
-
+COPY . /app
 
 
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
@@ -28,4 +31,5 @@ RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /
 USER appuser
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["uvicorn", "src.api.app:create_app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "src.entry_points.app:create_app", "--host", "0.0.0.0", "--port", "8000"]
+

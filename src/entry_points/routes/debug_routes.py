@@ -7,7 +7,7 @@ from src.config import CurrencyEnum, ForexPairEnum, PeriodEnum, SentimentEnum
 from src.domain.events import CloseTradeEvent
 from src.entry_points.scheduler.get_fundamental_data import process_data
 from src.entry_points.scheduler.scheduler import get_fundamental_trend_data
-from src.entry_points.scheduler.manage_trades import manage_trades
+from src.entry_points.scheduler.manage_trades import manage_trades_handler
 from src.entry_points.scheduler.get_technical_signal import (
     get_technical_signal,
 )
@@ -71,13 +71,13 @@ class DebugResource(Resource):
             data = await self.uow.fxcm_connection.get_candle_data(
                 ForexPairEnum.AUDUSD, PeriodEnum.HOUR_1, 100
             )
-            close = data["candles"][-1]["mid"]["c"]
-            stop = data["candles"][-1]["mid"]["l"]
+            close = data.iloc[-1]["close"]
+            stop = data.iloc[-1]["low"]
 
             event = OpenTradeEvent(
                 forex_pair=ForexPairEnum.AUDUSD,
                 sentiment=SentimentEnum.BULLISH,
-                stop=float(stop),
+                stop=0.67500,
                 close=float(close),
                 limit=None,
             )
@@ -93,9 +93,13 @@ class DebugResource(Resource):
                 stop=event.stop,
                 limit=None,
             )
+        if debug_task == DebugEnum.TestModifyTrade:
+            return await self.uow.fxcm_connection.modify_trade(
+                trade_id="72", stop=0.6750
+            )
 
         if debug_task == DebugEnum.TestCloseTrade:
-            return await self.uow.fxcm_connection.close_trade("63", 20)
+            return await self.uow.fxcm_connection.close_trade("72", 20)
 
         if debug_task == DebugEnum.TestGetTrades:
             return await self.uow.fxcm_connection.get_open_positions()
