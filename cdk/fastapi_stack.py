@@ -4,6 +4,8 @@ from aws_cdk import (
     aws_ecs_patterns as ecs_patterns,
     aws_docdb as docdb,
     aws_secretsmanager as secretsmanager,
+    aws_ecr_assets,
+    aws_ecr as ecr,
 )
 
 from constructs import Construct
@@ -17,10 +19,30 @@ class FastAPIStack(Stack):
 
         self.vpc = ec2.Vpc(self, "MyVPC", max_azs=2)
 
+        # Create an ECR repository
+        repository = ecr.Repository(
+            self,
+            "MyRepository",
+            repository_name="fxcm-fastapi",
+        )
+
+        # self.vpc = ec2.Vpc.from_lookup(self, "ExistingVPC", vpc_id="your-vpc-id")
+
         self.ecs_cluster = ecs.Cluster(self, "MyECSCluster", vpc=self.vpc)
 
-        image = ecs.ContainerImage.from_asset(directory="..")
+        docker_image = aws_ecr_assets.DockerImageAsset(
+            self,
+            "DockerImageAsset",
+            directory="..",
+            file="Dockerfile",
+            build_args={
+                "OANDA_TOKEN": "865518cb43ca925a7d8ee30ded1d7a3e-31b4a2e1c4bf96de5d31771f15d2a31f",
+                "OANDA_ACCOUNT_ID": "101-004-26172134-001",
+                "--platform": "linux/amd64",
+            },
+        )
 
+        docker_image.node.add_dependency(repository)
         # Create a security group
 
         self.sg = ec2.SecurityGroup(
@@ -30,6 +52,8 @@ class FastAPIStack(Stack):
             description="My security group",
             allow_all_outbound=True,  # Allow outbound traffic by default
         )
+
+        self.sg.node.add_dependency(self.vpc)
 
         # Allow inbound traffic on specific port (27017 here for DocumentDB)
         self.sg.add_ingress_rule(
@@ -48,17 +72,17 @@ class FastAPIStack(Stack):
         )
 
         # Create a DocumentDB subnet group
-        docdb_subnet_group = docdb.CfnDBSubnetGroup(
-            self,
-            "MyDBSubnetGroup",
-            db_subnet_group_description="Subnet group for DocumentDB cluster",
-            subnet_ids=self.vpc.select_subnets(
-                subnet_type=ec2.SubnetType.PRIVATE_WITH_NAT
-            ).subnet_ids,
-        )
+        # docdb_subnet_group = docdb.CfnDBSubnetGroup(
+        #     self,
+        #     "MyDBSubnetGroup",
+        #     db_subnet_group_description="Subnet group for DocumentDB cluster",
+        #     subnet_ids=self.vpc.select_subnets(
+        #         subnet_type=ec2.SubnetType.PRIVATE_WITH_NAT
+        #     ).subnet_ids,
+        # )
 
-        # Add the dependency
-        docdb_subnet_group.node.add_dependency(self.vpc)
+        # # Add the dependency
+        # docdb_subnet_group.node.add_dependency(self.vpc)
 
         # self.docdb_cluster = docdb.CfnDBCluster(
         #     self,
@@ -76,7 +100,6 @@ class FastAPIStack(Stack):
         # )
 
         # self.docdb_cluster.node.add_dependency(docdb_subnet_group)
-
         self.ecs_service = ecs_patterns.ApplicationLoadBalancedFargateService(
             self,
             "FastAPIService",
@@ -85,7 +108,7 @@ class FastAPIStack(Stack):
             memory_limit_mib=512,
             desired_count=1,
             task_image_options=ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
-                image=image
+                image=ecs.ContainerImage.from_registry(docker_image.image_uri),
             ),
             public_load_balancer=True,
         )
@@ -94,7 +117,7 @@ class FastAPIStack(Stack):
 
         self.ecs_service.task_definition.add_container(
             "FastAPIContainer",
-            image=image,
+            image=ecs.ContainerImage.from_registry(docker_image.image_uri),
             environment={
                 # "DB_HOST": self.docdb_cluster.attr_endpoint,
                 # "DB_PORT": str(self.docdb_cluster.port),

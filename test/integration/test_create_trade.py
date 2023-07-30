@@ -12,6 +12,7 @@ from hypothesis.strategies import (
     floats,
     booleans,
     sampled_from,
+    datetimes,
 )
 from hypothesis import given, settings, HealthCheck
 from src.adapters.database.repositories.trade_repository import TradeRepository
@@ -39,6 +40,8 @@ class TestTradeOrm:
             forex_currency_pair=sampled_from([ForexPairEnum.USDCHF]),
             position=sampled_from(PositionEnum),
             close=floats(),
+            new_close=floats(),
+            initiated_date=datetimes(),
         )
     )
     @settings(

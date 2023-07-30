@@ -1,5 +1,5 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3.11-slim
+FROM public.ecr.aws/docker/library/python:3.11
 
 
 ENV OANDA_TOKEN=865518cb43ca925a7d8ee30ded1d7a3e-31b4a2e1c4bf96de5d31771f15d2a31f
@@ -12,15 +12,21 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1 \
-    POETRY_VERSION=1.3.1
+    POETRY_VERSION=1.5.1
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install pip requirements
-RUN python -m pip install "poetry==$POETRY_VERSION"
+RUN python -m ensurepip --upgrade \
+    && python -m pip install "poetry==$POETRY_VERSION"
 
 WORKDIR /app
 COPY poetry.lock pyproject.toml /app/
 RUN poetry config virtualenvs.create false \
-    && poetry install $(test "$YOUR_ENV" == production && echo "--no-dev") --no-interaction --no-ansi
+    && poetry install $(test "production" == production && echo "--no-dev") --no-interaction --no-ansi
 
 COPY . /app
 
