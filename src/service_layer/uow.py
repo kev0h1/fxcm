@@ -67,7 +67,7 @@ class MongoUnitOfWork(AbstractUnitOfWork):
             self.event_bus.subscribe(event, handler)
 
     async def __aenter__(self):
-        _ = connect(self.host)
+        _ = connect(host=self.host)
 
     async def __aexit__(self, *args):
         disconnect()
