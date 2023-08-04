@@ -1,35 +1,31 @@
-# For more information, please refer to https://aka.ms/vscode-docker-python
-FROM public.ecr.aws/docker/library/python:3.11
+# Use an official Python runtime as a parent image
+FROM python:3.11
 
+# Install Nginx
+RUN apt-get update && apt-get install -y nginx
 
-ENV OANDA_TOKEN=865518cb43ca925a7d8ee30ded1d7a3e-31b4a2e1c4bf96de5d31771f15d2a31f
-ENV OANDA_ACCOUNT_ID=101-004-26172134-001
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    POETRY_VERSION=1.5.1 
 
-EXPOSE 8000
-
-# Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE=1
-
-# Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED=1 \
-    POETRY_VERSION=1.5.1
-
+# Install build dependencies and Poetry
 RUN apt-get update && apt-get install -y \
     build-essential \
     libffi-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install pip requirements
-RUN python -m ensurepip --upgrade \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m ensurepip --upgrade \
     && python -m pip install "poetry==$POETRY_VERSION"
 
+# Set the working directory to /app
 WORKDIR /app
-COPY poetry.lock pyproject.toml /app/
-RUN poetry config virtualenvs.create false \
-    && poetry install $(test "production" == production && echo "--no-dev") --no-interaction --no-ansi
 
+# Copy the current directory contents into the container at /app
 COPY . /app
 
+# Install any needed packages specified in pyproject.toml
+RUN poetry config virtualenvs.create false \
+    && poetry install $(test "production" == production && echo "--no-dev") --no-interaction --no-ansi
 
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
 # For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
@@ -39,3 +35,16 @@ USER appuser
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
 CMD ["python", "-m", "uvicorn", "src.entry_points.app:create_app", "--host", "0.0.0.0", "--port", "8000"]
 
+# # Copy the custom Nginx configuration file to the container
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# # Make port 80 available to the world outside this container
+# EXPOSE 80
+
+# # Define environment variable
+# ENV NAME World
+
+# # Run Nginx and FastAPI application using a script
+# COPY start.sh /start.sh
+# RUN chmod +x /start.sh
+# CMD ["/start.sh"]
