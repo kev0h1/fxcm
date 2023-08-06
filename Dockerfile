@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.11
+FROM python:3.11.1
 
 # Install Nginx
 RUN apt-get update && apt-get install -y nginx
@@ -29,22 +29,24 @@ RUN poetry config virtualenvs.create false \
 
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
 # For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
+# RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+# USER appuser
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["python", "-m", "uvicorn", "src.entry_points.app:create_app", "--host", "0.0.0.0", "--port", "8000"]
+# CMD ["python", "-m", "uvicorn", "src.entry_points.app:create_app", "--host", "0.0.0.0", "--port", "8000"]
 
-# # Copy the custom Nginx configuration file to the container
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy the custom Nginx configuration file to the container
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN nginx -t
 
-# # Make port 80 available to the world outside this container
-# EXPOSE 80
+# Make port 80 available to the world outside this container
+EXPOSE 80
 
-# # Define environment variable
-# ENV NAME World
+# Define environment variable
+ENV NAME World
 
-# # Run Nginx and FastAPI application using a script
-# COPY start.sh /start.sh
-# RUN chmod +x /start.sh
-# CMD ["/start.sh"]
+# Run Nginx and FastAPI application using a script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]
