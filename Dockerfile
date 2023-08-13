@@ -33,20 +33,12 @@ RUN poetry config virtualenvs.create false \
 # USER appuser
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-# CMD ["python", "-m", "uvicorn", "src.entry_points.app:create_app", "--host", "0.0.0.0", "--port", "8000"]
-
-# Copy the custom Nginx configuration file to the container
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-RUN nginx -t
+# 
 
 # Make port 80 available to the world outside this container
-EXPOSE 80
+EXPOSE 8000
 
 # Define environment variable
 ENV NAME World
 
-# Run Nginx and FastAPI application using a script
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-CMD ["/start.sh"]
+CMD ["python", "-m", "uvicorn", "src.entry_points.app:create_app", "--host", "0.0.0.0", "--port", "8000"]
