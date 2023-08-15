@@ -46,19 +46,19 @@ class OandaConnect(BaseTradeConnect):
     def __init__(self) -> None:
         """set up the connection to fxcm"""
 
-        # if os.environ.get("DEPLOY_ENV", "local") == "aws":
-        #     secret = get_secret("OandaSecret")
-        #     self.token, self.account_id = (
-        #         secret["OANDA_TOKEN"],
-        #         secret["OANDA_ACCOUNT_ID"],
-        #     )
-        # else:
-        #     self.token = os.environ["OANDA_TOKEN"]
-        #     self.account_id = os.environ["OANDA_ACCOUNT_ID"]
+        if os.environ.get("DEPLOY_ENV", "local") == "aws":
+            secret = get_secret("OandaSecret")
+            self.token, self.account_id = (
+                secret["OANDA_TOKEN"],
+                secret["OANDA_ACCOUNT_ID"],
+            )
+        else:
+            self.token = os.environ["OANDA_TOKEN"]
+            self.account_id = os.environ["OANDA_ACCOUNT_ID"]
 
-        # if self.token is None:
-        #     raise ValueError("No config defined")
-        # self.open_connection()
+        if self.token is None:
+            raise ValueError("No config defined")
+        self.open_connection()
 
     @error_handler
     async def get_connection_status(self) -> None:

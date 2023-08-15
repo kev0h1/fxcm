@@ -19,7 +19,7 @@ scheduler = AsyncIOScheduler()
 
 @scheduler.scheduled_job("interval", seconds=240)
 async def get_fundamental_trend_data():
-    date_: datetime = datetime.now(timezone.utc)
+    date_: datetime = datetime.now(timezone.utc) - timedelta(days=5)
     if date_.weekday() < 5:
         logger.info(f"Getting fundamental data for {date_}")
         await process_data(date_=date_)

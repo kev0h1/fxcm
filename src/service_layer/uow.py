@@ -46,15 +46,16 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         scraper: "BaseScraper",
         db_name: str = "my_db",
     ):
-        # if os.environ.get("DEPLOY_ENV", "local") == "aws":
-        #     logger.info("Using AWS DocDB")
-        #     secret = get_secret()
-        #     username, password = secret["username"], secret["password"]
-        #     docdb_cluster_endpoint = "mydbcluster.cluster-cj2g1svpqisv.us-east-1.docdb.amazonaws.com"
-        #     self.host = f"mongodb://{username}:{password}@{docdb_cluster_endpoint}:27017/{db_name}?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
-        # else:
-        logger.info("Using local MongoDB")
-        self.host = f"mongodb://localhost/{db_name}"
+        self.db_name = db_name
+        if os.environ.get("DEPLOY_ENV", "local") == "aws":
+            logger.info("Using AWS DocDB")
+            secret = get_secret("DocumentDBSecret")
+            username, password = secret["username"], secret["password"]
+            docdb_cluster_endpoint = "mydbcluster.cluster-cj2g1svpqisv.us-east-1.docdb.amazonaws.com"
+            self.host = f"mongodb://{username}:{password}@{docdb_cluster_endpoint}:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
+        else:
+            logger.info("Using local MongoDB")
+            self.host = f"mongodb://localhost"
         self.event_bus = TradingEventBus(uow=self)
         self.fundamental_data_repository: FundamentalDataRepository = (
             FundamentalDataRepository()
@@ -67,7 +68,7 @@ class MongoUnitOfWork(AbstractUnitOfWork):
             self.event_bus.subscribe(event, handler)
 
     async def __aenter__(self):
-        _ = connect(host=self.host)
+        self.client = connect(self.db_name, host=self.host)
 
     async def __aexit__(self, *args):
         disconnect()

@@ -149,7 +149,13 @@ class ForexFactoryScraper(BaseScraper):
 
     async def get_impact_value(self, impact) -> str:  # type: ignore
         """Returns impact value"""
-        return impact.attrs["class"][-1].split("--")[-1]
+        impact_icon = impact.find("span")["class"][-1]
+        if "red" in impact_icon:
+            return "high"
+        elif "orange" in impact_icon:
+            return "medium"
+        else:
+            return "low"
 
     async def get_event_values(
         self, element: element.Tag, class_name: str
@@ -170,7 +176,11 @@ class ForexFactoryScraper(BaseScraper):
         """Get strength"""
         span = data.find("span")
         if span:
-            strength = span.attrs["class"][-1]
+            strength = (
+                span.attrs["class"][-1]
+                if len(span.attrs["class"]) > 0
+                else SentimentEnum.FLAT
+            )
             strength = (
                 SentimentEnum(strength)
                 if strength in SentimentEnum._value2member_map_
