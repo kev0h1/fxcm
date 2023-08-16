@@ -8,7 +8,12 @@
       "module": "uvicorn",
       "args": ["src.entry_points.app:create_app", "--reload"],
       "jinja": true,
-      "justMyCode": true
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceRoot}",
+        "OANDA_TOKEN": "865518cb43ca925a7d8ee30ded1d7a3e-31b4a2e1c4bf96de5d31771f15d2a31f",
+        "OANDA_ACCOUNT_ID": "101-004-26172134-001"
+      }
     },
     {
       "name": "Python: Current File",
@@ -17,7 +22,9 @@
       "program": "${file}",
       "console": "integratedTerminal",
       "env": {
-        "PYTHONPATH": "${workspaceRoot}"
+        "PYTHONPATH": "${workspaceRoot}",
+        "OANDA_TOKEN": "865518cb43ca925a7d8ee30ded1d7a3e-31b4a2e1c4bf96de5d31771f15d2a31f",
+        "OANDA_ACCOUNT_ID": "101-004-26172134-001"
       },
       "justMyCode": true
     },

@@ -1,4 +1,3 @@
-from dataclasses import asdict
 from datetime import date
 from typing import List
 from fastapi_restful import set_responses, Resource

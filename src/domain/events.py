@@ -29,17 +29,9 @@ class CloseForexPairEvent(Event):
 class OpenTradeEvent(Event):
     forex_pair: ForexPairEnum
     sentiment: SentimentEnum
-
-
-@dataclass
-class CreateTradeEvent(Event):
-    currency: CurrencyEnum
-    forex_pair: ForexPairEnum
-    trade_id: str
-    postion_size: int
-    stop: Decimal
-    limit: Decimal
-    is_buy: bool
+    stop: float
+    close: float
+    limit: float = None
 
 
 @dataclass

@@ -5,7 +5,7 @@ from src.service_layer.uow import MongoUnitOfWork
 
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
-from src.config import ForexPairEnum, SentimentEnum
+from src.config import ForexPairEnum, PeriodEnum, SentimentEnum
 
 from src.domain.events import (
     CloseForexPairEvent,
@@ -26,10 +26,12 @@ async def get_technical_signal(
 ) -> None:  # type: ignore
     """Gets the technical signal for the currency"""
     async with uow:
-        for forex_pair in ForexPairEnum.__members__:
+        for forex_pair in ForexPairEnum.__members__.values():
             refined_data: pd.DataFrame = (
                 await uow.fxcm_connection.get_candle_data(
-                    instrument=forex_pair, period="m15", number=250
+                    instrument=ForexPairEnum(forex_pair),
+                    period=PeriodEnum.MINUTE_5,
+                    number=250,
                 )
             )
 
@@ -65,23 +67,29 @@ async def get_technical_signal(
             if refined_data.iloc[-1]["Signal"] > 0:
                 await uow.publish(
                     CloseForexPairEvent(
-                        forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
+                        forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
                     )
                 )
                 await uow.publish(
                     OpenTradeEvent(
-                        forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
+                        forex_pair=forex_pair,
+                        sentiment=SentimentEnum.BULLISH,
+                        stop=refined_data.iloc[-1]["LongTerm_MA"],
+                        close=refined_data.iloc[-1]["close"],
                     )
                 )
             elif refined_data.iloc[-1]["Signal"] < 0:
                 await uow.publish(
                     CloseForexPairEvent(
-                        forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
+                        forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
                     )
                 )
                 await uow.publish(
                     OpenTradeEvent(
-                        forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
+                        forex_pair=forex_pair,
+                        sentiment=SentimentEnum.BEARISH,
+                        stop=refined_data.iloc[-1]["LongTerm_MA"],
+                        close=refined_data.iloc[-1]["close"],
                     )
                 )
 

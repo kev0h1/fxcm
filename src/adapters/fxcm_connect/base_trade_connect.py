@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from pandas import DataFrame
-from src.config import ForexPairEnum, PeriodEnum
+from src.config import ForexPairEnum, OrderTypeEnum, PeriodEnum
 
 from src.domain.errors.errors import InvalidTradeParameter
 
@@ -80,3 +80,38 @@ class BaseTradeConnect(ABC):
     @abstractmethod
     async def get_refined_data(self, data):
         """Refine the data that we get from FXCM"""
+
+    async def open_trade(
+        self,
+        instrument: ForexPairEnum,
+        is_buy: bool,
+        stop: float,
+        limit: float,
+        amount: int,
+        is_pips: bool = False,
+        order_type: OrderTypeEnum = OrderTypeEnum.AT_MARKET,
+        time_in_force: str = "GTC",
+    ) -> str:
+        raise NotImplementedError
+
+    async def get_account_balance(self) -> str:
+        """returns the account balance"""
+        raise NotImplementedError
+
+    async def get_account_details(self) -> str:
+        """returns the account details"""
+        raise NotImplementedError
+
+    async def get_latest_close(self, instrument: ForexPairEnum) -> float:
+        """returns the latest close"""
+        raise NotImplementedError
+
+    async def modify_trade(
+        self, trade_id: str, stop: float, limit: float = None
+    ) -> str:
+        """Modifies the trade"""
+        raise NotImplementedError
+
+    async def get_trade_state(self, trade_id: str):
+        """Gets the trade details"""
+        raise NotImplementedError

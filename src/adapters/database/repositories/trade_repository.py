@@ -1,4 +1,4 @@
-from src.config import CurrencyEnum, PositionEnum
+from src.config import CurrencyEnum, ForexPairEnum, PositionEnum
 from src.domain.trade import Trade as TradeDomain
 from src.adapters.database.mongo.trade_model import (
     Trade as TradeModel,
@@ -13,7 +13,7 @@ class TradeRepository:
         """Add an object"""
         trade_model = await map_to_db_model(obj)
         trade_model.save()
-        return await map_to_domain_model(trade_model)
+        return obj
 
     async def get_all(self) -> list[TradeDomain]:
         """Get all trade objects"""
@@ -53,4 +53,44 @@ class TradeRepository:
                 )
                 & Q(position=PositionEnum.OPEN)
             )
+        ]
+
+    async def get_open_trades_by_forex_pair_for_buy_or_sell(
+        self, forex_pair: ForexPairEnum, is_buy: bool
+    ) -> list[TradeDomain]:
+        """Get all open trades by forex pair"""
+        return [
+            await map_to_domain_model(obj)
+            for obj in TradeModel.objects(
+                forex_currency_pair=forex_pair,
+                position=PositionEnum.OPEN,
+                is_buy=is_buy,
+            )
+        ]
+
+    async def get_open_trades_by_forex_pair(
+        self, forex_pair: ForexPairEnum
+    ) -> list[TradeDomain]:
+        """Get all open trades by forex pair"""
+        return [
+            await map_to_domain_model(obj)
+            for obj in TradeModel.objects(
+                forex_currency_pair=forex_pair, position=PositionEnum.OPEN
+            )
+        ]
+
+    async def get_open_trades(self) -> list[TradeDomain]:
+        """Get all open trades"""
+        return [
+            await map_to_domain_model(obj)
+            for obj in TradeModel.objects(
+                position=PositionEnum.OPEN,
+            )
+        ]
+
+    async def get_distinct_forex_pairs(self) -> list[ForexPairEnum]:
+        """Get all distinct forex pairs"""
+        return [
+            ForexPairEnum(obj)
+            for obj in TradeModel.objects().distinct("forex_currency_pair")
         ]

@@ -32,7 +32,7 @@ class TestGetTechnicalSignal:
         assert data_frame.iloc[-1]["Signal"] == 1
 
     @pytest.mark.asyncio
-    async def test_get_technical_signal_for_buy_event(self) -> None:
+    async def test_get_technical_signal_for_buy_event(self, get_db) -> None:
         data_frame = pd.DataFrame(
             [
                 {
@@ -42,6 +42,7 @@ class TestGetTechnicalSignal:
                     "Prev_ShortTerm_MA": 0.4,
                     "Prev_MediumTerm_MA": 0.5,
                     "rsi": 51,
+                    "close": 1.2,
                 }
             ]
         )
@@ -53,11 +54,12 @@ class TestGetTechnicalSignal:
             uow = MongoUnitOfWork(
                 fxcm_connection=MockTradeConnect(),
                 scraper=mock.MagicMock(),
+                db_name=get_db,
             )
             await get_technical_signal(uow=uow, indicator=Indicators())
             event = await uow.event_bus.queue.get()
             assert isinstance(event, CloseForexPairEvent)
-            assert event.sentiment == SentimentEnum.BULLISH
+            assert event.sentiment == SentimentEnum.BEARISH
 
             event = await uow.event_bus.queue.get()
             assert isinstance(event, OpenTradeEvent)
@@ -81,7 +83,7 @@ class TestGetTechnicalSignal:
         assert data_frame.iloc[-1]["Signal"] == -1
 
     @pytest.mark.asyncio
-    async def test_get_technical_signal_for_sell_event(self) -> None:
+    async def test_get_technical_signal_for_sell_event(self, get_db) -> None:
         data_frame = pd.DataFrame(
             [
                 {
@@ -91,6 +93,7 @@ class TestGetTechnicalSignal:
                     "Prev_ShortTerm_MA": 0.5,
                     "Prev_MediumTerm_MA": 0.4,
                     "rsi": 45,
+                    "close": 1.2,
                 }
             ]
         )
@@ -102,11 +105,12 @@ class TestGetTechnicalSignal:
             uow = MongoUnitOfWork(
                 fxcm_connection=MockTradeConnect(),
                 scraper=mock.MagicMock(),
+                db_name=get_db,
             )
             await get_technical_signal(uow=uow, indicator=Indicators())
             event = await uow.event_bus.queue.get()
             assert isinstance(event, CloseForexPairEvent)
-            assert event.sentiment == SentimentEnum.BEARISH
+            assert event.sentiment == SentimentEnum.BULLISH
 
             event = await uow.event_bus.queue.get()
             assert isinstance(event, OpenTradeEvent)

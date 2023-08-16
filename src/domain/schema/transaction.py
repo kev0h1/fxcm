@@ -1,108 +1,103 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Optional
-import re
 
 
-def to_camel(string: str) -> str:
-    string = re.sub("(?<=[a-z])(?=[A-Z])", "_", string).lower()
-    return string
+class StopLossOnFill(BaseModel):
+    price: str
+    timeInForce: str
+    triggerMode: str
 
 
-class Transaction(BaseModel):
-    type: str = Field(alias="type")
-    instrument: str = Field(alias="instrument")
-    units: str = Field(alias="units")
-    time_in_force: str = Field(alias="timeInForce")
-    position_fill: str = Field(alias="positionFill")
-    reason: str = Field(alias="reason")
-    id: str = Field(alias="id")
-    account_id: str = Field(alias="accountID")
-    user_id: int = Field(alias="userID")
-    batch_id: str = Field(alias="batchID")
-    request_id: str = Field(alias="requestID")
-    time: str = Field(alias="time")
-    price: str = Field(alias="price", default=None)
-    pl: str = Field(alias="pl", default=None)
-    financing: str = Field(alias="financing", default=None)
-    commission: str = Field(alias="commission", default=None)
-    account_balance: str = Field(alias="accountBalance", default=None)
-    gain_quote_home_conversion_factor: str = Field(
-        alias="gainQuoteHomeConversionFactor", default=None
-    )
-    loss_quote_home_conversion_factor: str = Field(
-        alias="lossQuoteHomeConversionFactor", default=None
-    )
-    guaranteed_execution_fee: str = Field(
-        alias="guaranteedExecutionFee", default=None
-    )
-    half_spread_cost: str = Field(alias="halfSpreadCost", default=None)
-    full_vwap: str = Field(alias="fullVWAP", default=None)
-    order_id: str = Field(alias="orderID", default=None)
-
-    class Config:
-        allow_population_by_field_name = True
-        alias_generator = to_camel
-
-
-class OandaResponse(BaseModel):
-    order_create_transaction: Transaction = Field(
-        alias="orderCreateTransaction"
-    )
-    order_fill_transaction: Transaction = Field(alias="orderFillTransaction")
-    related_transaction_i_ds: List[str] = Field(alias="relatedTransactionIDs")
-    last_transaction_id: str = Field(alias="lastTransactionID")
-
-    class Config:
-        allow_population_by_field_name = True
-        alias_generator = to_camel
-
-
-class TradeClose(BaseModel):
-    trade_id: str = Field(alias="tradeID")
+class TradeOpened(BaseModel):
+    price: str
+    tradeID: str
     units: str
-    price: Optional[float]
+    guaranteedExecutionFee: str
+    quoteGuaranteedExecutionFee: str
+    halfSpreadCost: str
+    initialMarginRequired: str
 
 
-class OrderCreateTransaction(BaseModel):
-    type: str
-    instrument: str
-    units: str
-    time_in_force: str = Field(alias="timeInForce")
-    position_fill: str = Field(alias="positionFill")
-    reason: str
+class Bid(BaseModel):
+    price: str
+    liquidity: str
+
+
+class Ask(BaseModel):
+    price: str
+    liquidity: str
+
+
+class FullPrice(BaseModel):
+    closeoutBid: str
+    closeoutAsk: str
+    timestamp: str
+    bids: List[Bid]
+    asks: List[Ask]
+
+
+class ConversionFactor(BaseModel):
+    factor: str
+
+
+class HomeConversionFactors(BaseModel):
+    gainQuoteHome: ConversionFactor
+    lossQuoteHome: ConversionFactor
+    gainBaseHome: ConversionFactor
+    lossBaseHome: ConversionFactor
+
+
+class OrderTransaction(BaseModel):
     id: str
-    account_id: str = Field(alias="accountID")
-    user_id: str = Field(alias="userID")
-    batch_id: str = Field(alias="batchID")
-    request_id: str = Field(alias="requestID")
+    accountID: str
+    userID: int
+    batchID: str
+    requestID: str
     time: str
-    trade_close: Optional[TradeClose] = Field(alias="tradeClose")
+    type: str
+    instrument: Optional[str]
+    units: Optional[str]
+    priceBound: Optional[str]
+    timeInForce: Optional[str]
+    positionFill: Optional[str]
+    stopLossOnFill: Optional[StopLossOnFill]
+    reason: str
+    orderID: Optional[str]
 
 
 class OrderFillTransaction(BaseModel):
+    id: str
+    accountID: str
+    userID: int
+    batchID: str
+    requestID: str
+    time: str
     type: str
-    order_id: str = Field(alias="orderID")
+    orderID: str
     instrument: str
     units: str
+    requestedUnits: str
     price: str
     pl: str
+    quotePL: str
     financing: str
+    baseFinancing: str
     commission: str
-    account_balance: str = Field(alias="accountBalance")
-    id: str
-    account_id: str = Field(alias="accountID")
-    user_id: str = Field(alias="userID")
-    batch_id: str = Field(alias="batchID")
-    request_id: str = Field(alias="requestID")
-    time: str
+    accountBalance: str
+    gainQuoteHomeConversionFactor: str
+    lossQuoteHomeConversionFactor: str
+    guaranteedExecutionFee: str
+    quoteGuaranteedExecutionFee: str
+    halfSpreadCost: str
+    fullVWAP: str
+    reason: str
+    fullPrice: FullPrice
+    homeConversionFactors: HomeConversionFactors
 
 
-class CloseTradeResponse(BaseModel):
-    order_create_transaction: OrderCreateTransaction = Field(
-        alias="orderCreateTransaction"
-    )
-    order_fill_transaction: OrderFillTransaction = Field(
-        alias="orderFillTransaction"
-    )
-    related_transaction_ids: list[str] = Field(alias="relatedTransactionIDs")
-    last_transaction_id: str = Field(alias="lastTransactionID")
+class OrderSchema(BaseModel):
+    orderCreateTransaction: OrderTransaction
+    orderFillTransaction: Optional[OrderFillTransaction]
+    orderCancelTransaction: Optional[OrderTransaction]
+    relatedTransactionIDs: List[str]
+    lastTransactionID: str

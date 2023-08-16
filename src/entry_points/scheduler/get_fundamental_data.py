@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 @inject
 async def process_data(
     date_: datetime,
+    load_data=False,
     uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
     fundamental_data_service: FundamentalDataService = Depends(
         Provide[Container.fundamental_data_service]
@@ -61,7 +62,11 @@ async def process_data(
                 )
                 await uow.fundamental_data_repository.save(fundamental_data)
                 fundamental_data_list.append(fundamental_data)
-        await generate_event(uow, fundamental_data_list, currency)
+            if not load_data:
+                await generate_event(uow, fundamental_data_list, currency)
+            else:
+                fundamental_data.processed = True
+                await uow.fundamental_data_repository.save(fundamental_data)
 
 
 async def generate_event(
@@ -87,7 +92,7 @@ async def generate_event(
                 )
             )
             data.processed = True
-            uow.fundamental_data_repository.save(data)
+            await uow.fundamental_data_repository.save(data)
 
 
 async def has_pending_calendar_updates(data: FundamentalData) -> bool:

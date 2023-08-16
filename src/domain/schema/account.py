@@ -1,22 +1,46 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from typing import List, Optional
+from pydantic import BaseModel
 
 
 class Account(BaseModel):
-    id: str = Field(alias="id")
-    alias: str = Field(alias="alias")
-    currency: str = Field(alias="currency")
-    balance: str = Field(alias="balance")
-    created_by_user_id: int = Field(alias="createdByUserID")
-    created_time: str = Field(alias="createdTime")
+    guaranteedStopLossOrderMode: str
+    hedgingEnabled: bool
+    id: str
+    createdTime: str
+    currency: str
+    createdByUserID: int
+    alias: str
+    marginRate: str
+    lastTransactionID: str
+    balance: str
+    openTradeCount: int
+    openPositionCount: int
+    pendingOrderCount: int
+    pl: str
+    resettablePL: str
+    resettablePLTime: str
+    financing: str
+    commission: str
+    dividendAdjustment: str
+    guaranteedExecutionFees: str
+    orders: List
+    positions: List
+    trades: List
+    unrealizedPL: str
+    NAV: str
+    marginUsed: str
+    marginAvailable: str
+    positionValue: str
+    marginCloseoutUnrealizedPL: str
+    marginCloseoutNAV: str
+    marginCloseoutMarginUsed: str
+    marginCloseoutPositionValue: str
+    marginCloseoutPercent: str
+    withdrawalLimit: str
+    marginCallMarginUsed: str
+    marginCallPercent: str
 
 
-class AccountDetailsResponse(BaseModel):
+class AccountDetailsSchema(BaseModel):
     account: Account
-    last_transaction_id: str = Field(alias="lastTransactionID")
-
-
-class AccountDetails(BaseModel):
-    account_id: str = Field(alias="accountID")
-    status: str = Field(alias="status")
-    account: Optional[AccountDetailsResponse] = None
+    lastTransactionID: str

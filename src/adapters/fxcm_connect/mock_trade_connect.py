@@ -1,6 +1,7 @@
 from decimal import Decimal
 import json
 import os
+import uuid
 
 import dotenv
 from fxcmpy import fxcmpy
@@ -68,10 +69,10 @@ class MockTradeConnect(BaseTradeConnect):
         self,
         instrument: ForexPairEnum,
         is_buy: bool,
-        is_pips: bool,
         stop: float,
         limit: float,
         amount: int,
+        is_pips: bool = False,
         order_type: OrderTypeEnum = OrderTypeEnum.AT_MARKET,
         time_in_force: str = "GTC",
     ):
@@ -81,13 +82,28 @@ class MockTradeConnect(BaseTradeConnect):
         open_trade(symbol, is_buy, amount, time_in_force, order_type, rate=0, is_in_pips=True,
         limit=None, at_market=0, stop=None, trailing_step=None, account_id=None)
         """
-        stops = {}
-        if limit is not None:
-            stops["limit"] = limit
-        if stop is not None:
-            stops["stop"] = stop
-
-        await self.validate_stops(is_buy, is_pips, stop, limit)
+        return str(uuid.uuid4())
 
     async def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""
+
+    async def close_all_trades(self, trade_ids: list[str]):
+        """closes all open trades"""
+
+    async def get_account_balance(self) -> str:
+        """returns the account balance"""
+        return "1000"
+
+    async def get_account_details(self):
+        """returns the account details"""
+
+    async def get_latest_close(self, instrument: ForexPairEnum) -> float:
+        """returns the latest close"""
+
+    async def modify_trade(
+        self, trade_id: str, stop: float, limit: float = None
+    ) -> str:
+        pass
+
+    async def get_trade_state(self, trade_id: str):
+        """get the trade state"""

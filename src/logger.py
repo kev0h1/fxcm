@@ -1,5 +1,4 @@
 import logging
-import colorlog
 
 
 def get_logger(logger_name: str) -> logging.Logger:
@@ -9,18 +8,10 @@ def get_logger(logger_name: str) -> logging.Logger:
 
     # create console handler and set level to info
     handler = logging.StreamHandler()
-    handler.setLevel(logging.INFO)
-    formatter = "%(levelname)s:\t  %(asctime)s - %(name)s - %(message)s"
 
-    formatter = colorlog.ColoredFormatter(
-        formatter,
-        log_colors={
-            "DEBUG": "cyan",
-            "INFO": "green",
-            "WARNING": "yellow",
-            "ERROR": "red",
-            "CRITICAL": "red,bg_white",
-        },
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter(
+        "%(levelname)s:\t  %(asctime)s - %(name)s - %(message)s"
     )
 
     handler.setFormatter(formatter)  # type: ignore
