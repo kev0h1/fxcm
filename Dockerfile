@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y \
 # Set the working directory to /app
 WORKDIR /app
 
+RUN wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+
+
 # Copy the current directory contents into the container at /app
 COPY . /app
 
