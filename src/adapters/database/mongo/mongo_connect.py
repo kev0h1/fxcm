@@ -9,7 +9,7 @@ class Database:
     ) -> None:
         self.uow = uow
 
-    async def reset_db(self, db_name="my_db") -> None:
+    def reset_db(self, db_name="my_db") -> None:
         """Drop database"""
-        async with self.uow:
+        with self.uow:
             self.uow.client.drop_database(db_name)
