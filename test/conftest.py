@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from src.service_layer.uow import MongoUnitOfWork
 
 
+# fix me how can a yield an async generator
 @pytest.fixture()
 def get_db() -> None:
     # Generate a unique database name for each test

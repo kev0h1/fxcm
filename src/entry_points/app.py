@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_restful import Api
 from src.entry_points.routes.debug_routes import DebugResource, EventBusRoute
 from src.entry_points.routes.fundamental_routes import FundamentalResource
-from src.entry_points.routes.log_resource import LogResource
 from src.entry_points.scheduler.scheduler import scheduler
 from src.logger import get_logger
 from src.service_layer.uow import MongoUnitOfWork
@@ -33,7 +32,6 @@ def create_app():
         FundamentalResource(), "/fundamental-data", tags=["Fundamental Data"]
     )
     api.add_resource(EventBusRoute(), "/event-bus", tags=["Event Bus"])
-    api.add_resource(LogResource(), "/logs", tags=["Logs"])
 
     @app.on_event("startup")
     async def start_up():
