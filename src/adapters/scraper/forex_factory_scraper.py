@@ -1,7 +1,6 @@
 import itertools
 from typing import Tuple, Union
 from bs4 import BeautifulSoup, element
-import pytz
 from pytz import BaseTzInfo
 from src.adapters.scraper.base_scraper import BaseScraper
 from src.domain.fundamental import CalendarEvent, FundamentalData
@@ -16,7 +15,6 @@ import re
 from src.domain.errors.errors import (
     NoEconomicImpactDefined,
 )
-from pytz import timezone
 
 from src.service_layer.uow import MongoUnitOfWork
 from tzlocal import get_localzone
@@ -204,12 +202,12 @@ class ForexFactoryScraper(BaseScraper):
         try:
             # Get the local timezone
             local_timezone: BaseTzInfo = get_localzone()  # type: ignore
-            local = timezone(local_timezone.zone)  # type: ignore
-            return (
-                datetime.strptime(time, "%I:%M%p")
-                .time()
-                .replace(tzinfo=local.localize(datetime.now()).tzinfo)  # type: ignore
+            naive_datetime = datetime.strptime(time, "%I:%M%p")
+            localized_datetime = local_timezone.localize(naive_datetime)  # type: ignore
+            return localized_datetime.time().replace(
+                tzinfo=localized_datetime.tzinfo
             )
+
         except ValueError:
             return None  # type: ignore
 
