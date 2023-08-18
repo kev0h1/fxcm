@@ -48,6 +48,7 @@ class FundamentalDataRepository:
             (
                 FundamentalData.objects(
                     currency=currency,
+                    processed=True,
                 )
                 .order_by("-last_updated")
                 .first()

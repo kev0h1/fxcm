@@ -103,6 +103,7 @@ class TestFundamentalMapper:
             builds(
                 FundamentalData,
                 currency=sampled_from([CurrencyEnum.USD]),
+                processed=just(True),
                 last_updated=datetimes(),
             ),
             min_size=3,

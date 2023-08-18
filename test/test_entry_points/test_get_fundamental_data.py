@@ -8,6 +8,7 @@ from src.service_layer.fundamental_service import FundamentalDataService
 from src.entry_points.scheduler.get_fundamental_data import (
     process_data,
     get_calendar_event,
+    calendar_updates_complete,
 )
 import pytest
 from src.domain.events import CloseTradeEvent
@@ -93,3 +94,106 @@ class TestGetCalendarEvent:
             fundamental_data=fundamental_data, calendar_event=test_event_2
         )
         assert event is None
+
+
+class TestCalendarUpdatesComplete:
+    @pytest.mark.asyncio
+    async def test_calendar_updates_complete(self) -> None:
+        test_event = CalendarEvent(
+            calendar_event="mock_event",
+            sentiment=SentimentEnum.BULLISH,
+            forecast=1.2,
+            actual=1.3,
+            previous=1.1,
+        )
+
+        test_event_2 = CalendarEvent(
+            calendar_event="t2",
+            sentiment=SentimentEnum.BULLISH,
+            forecast=1.2,
+            actual=1.3,
+            previous=1.1,
+        )
+        fundamental_data = FundamentalData(
+            currency=CurrencyEnum.USD,
+            last_updated=datetime.now(),
+            calendar_events=[test_event, test_event_2],
+            processed=False,
+        )
+
+        assert await calendar_updates_complete(fundamental_data) is True
+
+    @pytest.mark.asyncio
+    async def test_calendar_updates_complete_returns_false(self) -> None:
+        test_event = CalendarEvent(
+            calendar_event="mock_event",
+            sentiment=SentimentEnum.BULLISH,
+            forecast=1.2,
+            actual=None,
+            previous=1.1,
+        )
+
+        test_event_2 = CalendarEvent(
+            calendar_event="t2",
+            sentiment=SentimentEnum.BULLISH,
+            forecast=1.2,
+            actual=1.3,
+            previous=1.1,
+        )
+        fundamental_data = FundamentalData(
+            currency=CurrencyEnum.USD,
+            last_updated=datetime.now(),
+            calendar_events=[test_event, test_event_2],
+            processed=False,
+        )
+
+        assert await calendar_updates_complete(fundamental_data) is False
+
+    @pytest.mark.asyncio
+    async def test_calendar_updates_complete_returns_false_for_all_floats(
+        self,
+    ) -> None:
+        test_event = CalendarEvent(
+            calendar_event="mock_event",
+            sentiment=SentimentEnum.BULLISH,
+            forecast=None,
+            actual=None,
+            previous=None,
+        )
+
+        test_event_2 = CalendarEvent(
+            calendar_event="t2",
+            sentiment=SentimentEnum.BULLISH,
+            forecast=1.2,
+            actual=1.3,
+            previous=1.1,
+        )
+        fundamental_data = FundamentalData(
+            currency=CurrencyEnum.USD,
+            last_updated=datetime.now(),
+            calendar_events=[test_event, test_event_2],
+            processed=False,
+        )
+
+        assert await calendar_updates_complete(fundamental_data) is False
+
+    @pytest.mark.asyncio
+    async def test_calendar_updates_complete_returns_false_for_one_event(
+        self,
+    ) -> None:
+        test_event = CalendarEvent(
+            calendar_event="mock_event",
+            sentiment=SentimentEnum.BULLISH,
+            forecast=None,
+            actual=None,
+            previous=None,
+        )
+
+        fundamental_data = FundamentalData(
+            currency=CurrencyEnum.USD,
+            last_updated=datetime.now(),
+            calendar_events=[test_event],
+            processed=False,
+        )
+
+        assert await calendar_updates_complete(fundamental_data) is False

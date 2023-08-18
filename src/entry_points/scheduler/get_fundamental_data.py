@@ -75,7 +75,7 @@ async def generate_event(
     currency: CurrencyEnum,
 ) -> None:
     for data in fundamental_data_list:
-        can_process_close_event = await has_pending_calendar_updates(data)
+        can_process_close_event = await calendar_updates_complete(data)
         if (
             data.processed is False
             and data.aggregate_sentiment != SentimentEnum.FLAT
@@ -95,17 +95,10 @@ async def generate_event(
             await uow.fundamental_data_repository.save(data)
 
 
-async def has_pending_calendar_updates(data: FundamentalData) -> bool:
+async def calendar_updates_complete(data: FundamentalData) -> bool:
     can_process_close_event = True
     for calendar_event in data.calendar_events:
         if any(
-            value is None
-            for value in [
-                calendar_event.actual,
-                calendar_event.previous,
-                calendar_event.forecast,
-            ]
-        ) and not all(
             value is None
             for value in [
                 calendar_event.actual,
