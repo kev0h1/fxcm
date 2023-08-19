@@ -119,9 +119,9 @@ class DebugResource(Resource):
 
         if debug_task == DebugEnum.LoadData:
             for i in range(1, 120):
-                if os.environ.get("DEPLOY_ENV", "local") == "local":
+                if os.environ.get("DEPLOY_ENV", "local") == "aws":
                     date_ = datetime.now(
-                        pytz.timezone("Europe/London")
+                        pytz.timezone("America/New_York")
                     ) - timedelta(days=i)
                 if date_.weekday() < 5:
                     logger.info(f"Getting fundamental data for {date_}")
