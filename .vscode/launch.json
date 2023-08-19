@@ -12,7 +12,8 @@
       "env": {
         "PYTHONPATH": "${workspaceRoot}",
         "OANDA_TOKEN": "865518cb43ca925a7d8ee30ded1d7a3e-31b4a2e1c4bf96de5d31771f15d2a31f",
-        "OANDA_ACCOUNT_ID": "101-004-26172134-001"
+        "OANDA_ACCOUNT_ID": "101-004-26172134-001",
+        "DEPLOY_ENV": "local"
       }
     },
     {

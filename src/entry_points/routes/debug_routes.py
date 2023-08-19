@@ -1,7 +1,9 @@
 import asyncio
 from datetime import datetime, timedelta
+import os
 from typing import Any, Union
 from fastapi_restful import set_responses, Resource
+import pytz
 from tzlocal import get_localzone
 from src.adapters.database.mongo.mongo_connect import Database
 from src.config import CurrencyEnum, ForexPairEnum, PeriodEnum, SentimentEnum
@@ -117,7 +119,10 @@ class DebugResource(Resource):
 
         if debug_task == DebugEnum.LoadData:
             for i in range(1, 120):
-                date_ = datetime.today() - timedelta(days=i)
+                if os.environ.get("DEPLOY_ENV", "local") == "local":
+                    date_ = datetime.now(
+                        pytz.timezone("Europe/London")
+                    ) - timedelta(days=i)
                 if date_.weekday() < 5:
                     logger.info(f"Getting fundamental data for {date_}")
                     await process_data(date_=date_, load_data=True)
