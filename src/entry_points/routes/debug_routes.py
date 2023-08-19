@@ -2,9 +2,11 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Any, Union
 from fastapi_restful import set_responses, Resource
+from tzlocal import get_localzone
 from src.adapters.database.mongo.mongo_connect import Database
 from src.config import CurrencyEnum, ForexPairEnum, PeriodEnum, SentimentEnum
 from src.domain.events import CloseTradeEvent
+from src.entry_points.scheduler import manage_trades
 from src.entry_points.scheduler.get_fundamental_data import process_data
 from src.entry_points.scheduler.scheduler import get_fundamental_trend_data
 from src.entry_points.scheduler.manage_trades import manage_trades_handler
@@ -43,6 +45,12 @@ class DebugResource(Resource):
         logger.info("Deleting database")
         await self.db.reset_db()
         return "done"
+
+    @set_responses(Any, 200)
+    async def get(self):
+        """Deletes the database"""
+        logger.info("Get system info")
+        return {"time": datetime.now(tz=get_localzone()), "system": "ok"}
 
     @set_responses(Any, 200)
     async def put(self, debug_task: DebugEnum):

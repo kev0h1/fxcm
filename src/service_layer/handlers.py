@@ -71,12 +71,12 @@ async def get_combined_techincal_and_fundamental_sentiment(
         (
             base_currency_fundamentals == latest_object
             and base_currency_fundamentals.aggregate_sentiment
-            == SentimentEnum.BULLISH
+            != SentimentEnum.BEARISH
         )
         or (
             quote_currency_fundamentals == latest_object
             and quote_currency_fundamentals.aggregate_sentiment
-            == SentimentEnum.BEARISH
+            != SentimentEnum.BULLISH
         )
     ):
         return SentimentEnum.BULLISH
@@ -85,12 +85,12 @@ async def get_combined_techincal_and_fundamental_sentiment(
         (
             base_currency_fundamentals == latest_object
             and base_currency_fundamentals.aggregate_sentiment
-            == SentimentEnum.BEARISH
+            != SentimentEnum.BULLISH
         )
         or (
             quote_currency_fundamentals == latest_object
             and quote_currency_fundamentals.aggregate_sentiment
-            == SentimentEnum.BULLISH
+            != SentimentEnum.BEARISH
         )
     ):
         return SentimentEnum.BEARISH
