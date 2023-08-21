@@ -157,7 +157,7 @@ async def open_trade_handler(
         trade = Trade(
             trade_id=trade_id,
             units=units,
-            stop=event.stop,
+            stop=stop_loss,
             limit=event.limit,
             is_buy=True if event.sentiment == SentimentEnum.BULLISH else False,
             base_currency=CurrencyEnum(currencies[0]),
