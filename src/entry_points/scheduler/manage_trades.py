@@ -6,6 +6,7 @@ from src.domain.trade import Trade
 
 from src.service_layer.uow import MongoUnitOfWork
 from src.logger import get_logger
+from src.utils import count_decimal_places
 
 logger = get_logger(__name__)
 
@@ -64,13 +65,6 @@ async def manage_trades_handler(
                                 modified = True
 
                 if modified:
-
-                    def count_decimal_places(n):
-                        str_n = str(n)
-                        if "." not in str_n:
-                            return 0
-                        return len(str_n) - str_n.index(".") - 1
-
                     await uow.fxcm_connection.modify_trade(
                         trade_id=trade.trade_id,
                         stop=round(

@@ -27,3 +27,11 @@ def get_secret(secret_name="MyDocDBSecret3E0BB6C4-lhNB3WLqtIVK"):
     secret_data = json.loads(secret)
 
     return secret_data
+
+
+def count_decimal_places(n):
+    """count the number of decimal places"""
+    str_n = str(n)
+    if "." not in str_n:
+        return 0
+    return len(str_n) - str_n.index(".") - 1

@@ -472,11 +472,12 @@ class TestOpenTradeHandler:
                 limit=None,
             )
 
-            (is_buy, amount) = await get_trade_parameters(
+            (is_buy, amount, stop_loss) = await get_trade_parameters(
                 event, uow, ForexPairEnum.USDCAD.value.split("/")
             )
             assert is_buy == expected
             assert amount == units
+            assert stop_loss == 1.3
 
     class TestCloseForexPairHandler:
         @pytest.mark.asyncio

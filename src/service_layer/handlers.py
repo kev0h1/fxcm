@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from src.domain.fundamental import FundamentalData
 
 from src.domain.trade import Trade
+from src.utils import count_decimal_places
 
 if TYPE_CHECKING:
     from src.service_layer.uow import MongoUnitOfWork
@@ -120,7 +121,7 @@ async def open_trade_handler(
         % (event.forex_pair, event.sentiment)
     )
     currencies = event.forex_pair.value.split("/")
-    is_buy, units = await get_trade_parameters(
+    is_buy, units, stop_loss = await get_trade_parameters(
         event=event, uow=uow, currencies=currencies
     )
 
@@ -136,7 +137,7 @@ async def open_trade_handler(
             instrument=event.forex_pair,
             is_buy=is_buy,
             amount=units,
-            stop=event.stop,
+            stop=stop_loss,
             limit=None,
         )
     elif (
@@ -149,7 +150,7 @@ async def open_trade_handler(
             instrument=event.forex_pair,
             is_buy=is_buy,
             amount=units,
-            stop=event.stop,
+            stop=stop_loss,
             limit=None,
         )
     if trade_id:
@@ -177,7 +178,7 @@ async def open_trade_handler(
 
 async def get_trade_parameters(
     event: events.OpenTradeEvent, uow: MongoUnitOfWork, currencies: list[str]
-) -> tuple[bool, int]:
+) -> tuple[bool, int, float]:
     """Gets the trade parameters for a given event"""
     is_buy = True if event.sentiment == SentimentEnum.BULLISH else False
 
@@ -194,7 +195,9 @@ async def get_trade_parameters(
         stop_loss_pips * (pip_value * quoted_currency_exchange_rate)
     )
 
-    return is_buy, int(units)
+    stop_loss = round(event.stop, count_decimal_places(pip_value))
+
+    return is_buy, int(units), stop_loss
 
 
 async def close_forex_pair_handler(
