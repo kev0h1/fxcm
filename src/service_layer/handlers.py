@@ -1,5 +1,10 @@
 from __future__ import annotations
-from src.config import CurrencyEnum, PositionEnum, SentimentEnum
+from src.config import (
+    CurrencyEnum,
+    PositionEnum,
+    SentimentEnum,
+    conversion_map,
+)
 from src.domain import events
 from typing import TYPE_CHECKING
 from src.domain.fundamental import FundamentalData
@@ -172,7 +177,7 @@ async def open_trade_handler(
 
 async def get_trade_parameters(
     event: events.OpenTradeEvent, uow: MongoUnitOfWork, currencies: list[str]
-) -> tuple[bool, float]:
+) -> tuple[bool, int]:
     """Gets the trade parameters for a given event"""
     is_buy = True if event.sentiment == SentimentEnum.BULLISH else False
 
@@ -181,11 +186,15 @@ async def get_trade_parameters(
 
     stop_loss_pips = abs(event.close - event.stop) / pip_value
 
-    units = (float(await uow.fxcm_connection.get_account_balance()) * risk) / (
-        stop_loss_pips * pip_value
+    quoted_currency_exchange_rate = await uow.fxcm_connection.get_latest_close(
+        conversion_map[event.forex_pair]
     )
 
-    return is_buy, units
+    units = (float(await uow.fxcm_connection.get_account_balance()) * risk) / (
+        stop_loss_pips * (pip_value * quoted_currency_exchange_rate)
+    )
+
+    return is_buy, int(units)
 
 
 async def close_forex_pair_handler(

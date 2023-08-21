@@ -24,12 +24,42 @@ class PositionEnum(str, Enum):
 
 class ForexPairEnum(str, Enum):
     EURUSD = "EUR/USD"
-    USDJPY = "USD/JPY"  # DO NOT TRADE TOO MUCH UNCERTAINTY
+    USDJPY = "USD/JPY"
     GBPUSD = "GBP/USD"
     USDCHF = "USD/CHF"
     USDCAD = "USD/CAD"
     AUDUSD = "AUD/USD"
     NZDUSD = "NZD/USD"
+
+
+class GBPConversionMapEnum(str, Enum):
+    GBPUSD = "GBP/USD"
+    GBPJPY = "GBP/JPY"
+    GBPAUD = "GBP/AUD"
+    GBPCAD = "GBP/CAD"
+    GBPCHF = "GBP/CHF"
+    GBPNZD = "GBP/NZD"
+    GBPEUR = "GBP/EUR"
+    GBPNOK = "GBP/NOK"
+    GBPSGD = "GBP/SGD"
+    GBPHKD = "GBP/HKD"
+    GBPCNH = "GBP/CNH"
+    GBPMXN = "GBP/MXN"
+    GBPCZK = "GBP/CZK"
+    GBPDKK = "GBP/DKK"
+    GBPHUF = "GBP/HUF"
+    GBPILS = "GBP/ILS"
+
+
+conversion_map = {
+    ForexPairEnum.EURUSD: GBPConversionMapEnum.GBPUSD,
+    ForexPairEnum.USDJPY: GBPConversionMapEnum.GBPJPY,
+    ForexPairEnum.GBPUSD: GBPConversionMapEnum.GBPUSD,
+    ForexPairEnum.USDCHF: GBPConversionMapEnum.GBPCHF,
+    ForexPairEnum.USDCAD: GBPConversionMapEnum.GBPCAD,
+    ForexPairEnum.AUDUSD: GBPConversionMapEnum.GBPUSD,
+    ForexPairEnum.NZDUSD: GBPConversionMapEnum.GBPUSD,
+}
 
 
 class OrderTypeEnum(str, Enum):

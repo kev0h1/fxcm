@@ -99,6 +99,7 @@ class MockTradeConnect(BaseTradeConnect):
 
     async def get_latest_close(self, instrument: ForexPairEnum) -> float:
         """returns the latest close"""
+        return 1.8
 
     async def modify_trade(
         self, trade_id: str, stop: float, limit: float = None

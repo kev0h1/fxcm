@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 scheduler = AsyncIOScheduler()
 
 
-@scheduler.scheduled_job("interval", seconds=240)
+@scheduler.scheduled_job("interval", seconds=115)
 async def get_fundamental_trend_data():
     date_: datetime = (
         datetime.now(pytz.timezone("America/New_York"))
@@ -31,7 +31,7 @@ async def get_fundamental_trend_data():
         await process_data(date_=date_)
 
 
-@scheduler.scheduled_job("interval", seconds=270)
+@scheduler.scheduled_job("interval", seconds=300)
 async def get_fundamental_technical_data():
     date_: datetime = datetime.now(timezone.utc)
     if date_.weekday() < 5:

@@ -447,12 +447,12 @@ class TestOpenTradeHandler:
                 (
                     SentimentEnum.BULLISH,
                     True,
-                    (1000 * 0.05) / ((abs(1.2 - 1.3))),
+                    int((1000 * 0.05) / ((abs(1.2 - 1.3) * 1.8))),
                 ),
                 (
                     SentimentEnum.BEARISH,
                     False,
-                    (1000 * 0.05) / ((abs(1.2 - 1.3))),
+                    int((1000 * 0.05) / ((abs(1.2 - 1.3) * 1.8))),
                 ),
             ],
         )
