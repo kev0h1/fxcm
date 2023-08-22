@@ -28,7 +28,7 @@ class TradeRepository:
             return [
                 await map_to_domain_model(obj)
                 for obj in objs.filter(
-                    last_updated__gte=date, last_updated__lte=next_day
+                    initiated_date__gte=date, initiated_date__lte=next_day
                 )
             ]
 
