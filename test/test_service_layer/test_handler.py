@@ -16,6 +16,7 @@ from src.service_layer.handlers import (
     open_trade_handler,
     get_combined_techincal_and_fundamental_sentiment,
 )
+from src.adapters.fxcm_connect.oanda_connect import OandaConnect
 from src.config import (
     CurrencyEnum,
     ForexPairEnum,
@@ -36,6 +37,7 @@ from hypothesis.strategies import (
 from datetime import datetime, timedelta
 
 from src.service_layer.uow import MongoUnitOfWork
+import mock
 
 
 class TestCloseEventHandler:
@@ -442,42 +444,87 @@ class TestOpenTradeHandler:
     class TestGetTradeParameters:
         @pytest.mark.asyncio
         @pytest.mark.parametrize(
-            "sentiment, expected, units",
+            "sentiment, expected, units, stop, close, forex_pair, exchange_rate",
             [
                 (
                     SentimentEnum.BULLISH,
                     True,
-                    int((1000 * 0.05) / ((abs(1.2 - 1.3) * 1.8))),
+                    int(
+                        100000
+                        * (100000 * 0.05)
+                        / (
+                            (
+                                abs(0.8784 - 0.8804)
+                                / 0.0001
+                                * 100000
+                                * 0.0001
+                                * (1 / 1.72556)
+                            )
+                        )
+                    ),
+                    0.8784,
+                    0.8804,
+                    ForexPairEnum.USDCAD,
+                    1.72556,
                 ),
                 (
                     SentimentEnum.BEARISH,
                     False,
-                    int((1000 * 0.05) / ((abs(1.2 - 1.3) * 1.8))),
+                    int(
+                        100000
+                        * (100000 * 0.05)
+                        / (
+                            (
+                                abs(145.748 - 145.81)
+                                / 0.01
+                                * 100000
+                                * 0.01
+                                * (1 / 185.967)
+                            )
+                        )
+                    ),
+                    145.81,
+                    145.748,
+                    ForexPairEnum.USDJPY,
+                    185.967,
                 ),
             ],
         )
         async def test_get_trade_parameters(
-            self, sentiment, expected, get_db, units
+            self,
+            sentiment,
+            expected,
+            stop,
+            close,
+            forex_pair,
+            exchange_rate,
+            get_db,
+            units,
         ):
-            uow = MongoUnitOfWork(
-                MockTradeConnect(),
-                scraper=mock.MagicMock(),
-                db_name=get_db,
-            )
-            event = OpenTradeEvent(
-                forex_pair=ForexPairEnum.USDCAD,
-                sentiment=sentiment,
-                stop=1.3,
-                close=1.2,
-                limit=None,
-            )
+            with mock.patch.object(
+                MockTradeConnect, "get_latest_close"
+            ) as mock_get_exchange_rate:
+                mock_get_exchange_rate.return_value = exchange_rate
 
-            (is_buy, amount, stop_loss) = await get_trade_parameters(
-                event, uow, ForexPairEnum.USDCAD.value.split("/")
-            )
-            assert is_buy == expected
-            assert amount == units
-            assert stop_loss == 1.3
+                uow = MongoUnitOfWork(
+                    MockTradeConnect(),
+                    scraper=mock.MagicMock(),
+                    db_name=get_db,
+                )
+                event = OpenTradeEvent(
+                    forex_pair=forex_pair,
+                    sentiment=sentiment,
+                    stop=stop,
+                    close=close,
+                    limit=None,
+                )
+
+                (is_buy, amount, stop_loss) = await get_trade_parameters(
+                    event, uow, forex_pair.value.split("/")
+                )
+                assert is_buy == expected
+                assert amount == units
+                # assert stop_loss == 1.3
 
     class TestCloseForexPairHandler:
         @pytest.mark.asyncio

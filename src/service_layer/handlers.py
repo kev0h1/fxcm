@@ -179,7 +179,17 @@ async def open_trade_handler(
 async def get_trade_parameters(
     event: events.OpenTradeEvent, uow: MongoUnitOfWork, currencies: list[str]
 ) -> tuple[bool, int, float]:
-    """Gets the trade parameters for a given event"""
+    """Gets the trade parameters for a given event
+
+    units= Risk per unit in GBP/ Amount at risk in GBP
+    Risk per unit in GBP = Account Balance × Risk Percentage
+    Risk per unit in GBP= Stop loss in pips × Pip value in GBP
+
+    remember that pip value is 0.0001 for most pairs, but 0.01 for yen pairs
+    therefore for a standard lot of 100,000 units, the pip value is 10 for non-yen pairs = 0.0001 * 100,000
+    and 1000 for yen pairs = 0.01 * 100,000
+
+    """
     is_buy = True if event.sentiment == SentimentEnum.BULLISH else False
 
     pip_value = 0.0001 if "JPY" not in currencies else 0.01
@@ -191,8 +201,13 @@ async def get_trade_parameters(
         conversion_map[event.forex_pair]
     )
 
-    units = (float(await uow.fxcm_connection.get_account_balance()) * risk) / (
-        stop_loss_pips * (pip_value * quoted_currency_exchange_rate)
+    units = (
+        100000
+        * (float(await uow.fxcm_connection.get_account_balance()) * risk)
+        / (
+            stop_loss_pips
+            * (100000 * (pip_value * 1 / quoted_currency_exchange_rate))
+        )
     )
 
     stop_loss = round(event.stop, count_decimal_places(pip_value))

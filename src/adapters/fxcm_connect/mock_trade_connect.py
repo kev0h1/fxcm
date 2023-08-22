@@ -92,7 +92,7 @@ class MockTradeConnect(BaseTradeConnect):
 
     async def get_account_balance(self) -> str:
         """returns the account balance"""
-        return "1000"
+        return "100000"
 
     async def get_account_details(self):
         """returns the account details"""
