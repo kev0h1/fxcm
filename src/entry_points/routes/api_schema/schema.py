@@ -2,7 +2,13 @@ from typing import List
 from fastapi_camelcase import CamelModel
 from datetime import datetime
 from pydantic import Field
-from src.config import SentimentEnum, CurrencyEnum, CalendarEventEnum
+from src.config import (
+    ForexPairEnum,
+    PositionEnum,
+    SentimentEnum,
+    CurrencyEnum,
+    CalendarEventEnum,
+)
 
 
 class Base(CamelModel):
@@ -31,3 +37,19 @@ class FundamentalSchema(Base):
     processed: bool
     aggregate_sentiment: SentimentEnum
     calendar_events: List[CalendarEventSchema]
+
+
+class TradeSchema(Base):
+    trade_id: str
+    units: float
+    close: float
+    stop: float
+    limit: float
+    is_buy: bool
+    base_currency: CurrencyEnum
+    quote_currency: CurrencyEnum
+    forex_currency_pair: ForexPairEnum
+    new_close: float = Field(default=None)
+    is_winner: bool = Field(default=False)
+    initiated_date: datetime
+    position: PositionEnum

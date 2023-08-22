@@ -105,11 +105,11 @@ class DebugResource(Resource):
             )
         if debug_task == DebugEnum.TestModifyTrade:
             return await self.uow.fxcm_connection.modify_trade(
-                trade_id="72", stop=0.6750
+                trade_id="295", stop=0.87844
             )
 
         if debug_task == DebugEnum.TestCloseTrade:
-            return await self.uow.fxcm_connection.close_trade("72", 20)
+            return await self.uow.fxcm_connection.close_trade("252", 3839671)
 
         if debug_task == DebugEnum.TestGetTrades:
             return await self.uow.fxcm_connection.get_open_positions()

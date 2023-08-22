@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -57,7 +57,7 @@ class StopLossOrderTransaction(TransactionDetails):
 
 
 class TradeCRDCOSchema(BaseModel):
-    stopLossOrderCancelTransaction: StopLossOrderCancelTransaction
+    stopLossOrderCancelTransaction: Optional[StopLossOrderCancelTransaction]
     stopLossOrderTransaction: StopLossOrderTransaction
     relatedTransactionIDs: List[str]
     lastTransactionID: str
@@ -69,7 +69,7 @@ class NotFoundTrade(BaseModel):
 
 
 class NotFoundResponse(BaseModel):
-    tradeNotFound: NotFoundTrade
+    tradeNotFound: Optional[NotFoundTrade]
     lastTransactionID: str
 
 
@@ -89,9 +89,9 @@ class OpenTrade(BaseModel):
     state: str
     initialUnits: str
     currentUnits: str
-    realizedPL: str
-    unrealizedPL: str
-    averageClosePrice: str
+    realizedPL: Optional[str]
+    unrealizedPL: Optional[str]
+    averageClosePrice: Optional[str]
     stopLossOrder: StopLossOrder
 
 

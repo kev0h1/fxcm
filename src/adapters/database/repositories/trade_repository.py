@@ -1,3 +1,4 @@
+import datetime
 from src.config import CurrencyEnum, ForexPairEnum, PositionEnum
 from src.domain.trade import Trade as TradeDomain
 from src.adapters.database.mongo.trade_model import (
@@ -15,9 +16,23 @@ class TradeRepository:
         trade_model.save()
         return obj
 
-    async def get_all(self) -> list[TradeDomain]:
+    async def get_all(self, **kwargs) -> list[TradeDomain]:
         """Get all trade objects"""
-        return [await map_to_domain_model(obj) for obj in TradeModel.objects()]
+        date = None
+        if "last_updated" in kwargs:
+            date = kwargs.pop("last_updated")
+            next_day = date + datetime.timedelta(days=1)
+        objs = TradeModel.objects()
+
+        if date:
+            return [
+                await map_to_domain_model(obj)
+                for obj in objs.filter(
+                    last_updated__gte=date, last_updated__lte=next_day
+                )
+            ]
+
+        return [await map_to_domain_model(obj) for obj in objs]
 
     async def get_trade_by_trade_id(self, trade_id: str) -> TradeDomain:
         """Get a single trade"""
