@@ -44,7 +44,7 @@ class TradeSchema(Base):
     units: float
     close: float
     stop: float
-    limit: float
+    limit: float = Field(default=None)
     is_buy: bool
     base_currency: CurrencyEnum
     quote_currency: CurrencyEnum
