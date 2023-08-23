@@ -55,7 +55,7 @@ class TestManageClosedTrades:
         ) as mock_method:
             async with uow:
                 await uow.trade_repository.save(trade)
-            mock_method.return_value = "OPEN"
+            mock_method.return_value = ("OPEN", 0)
 
             await manage_closed_trades(uow=uow)
 
@@ -63,9 +63,10 @@ class TestManageClosedTrades:
                 trades = await uow.trade_repository.get_all()
                 trades[0].position = PositionEnum.OPEN
 
-            mock_method.return_value = "CLOSED"
+            mock_method.return_value = "CLOSED", 2000
             await manage_closed_trades(uow=uow)
 
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 trades[0].position = PositionEnum.CLOSED
+                trades[0].is_winner = True

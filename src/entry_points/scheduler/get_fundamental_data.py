@@ -55,6 +55,14 @@ async def process_data(
                     fundamental_data.calendar_events.append(
                         scraped_calendar_event
                     )
+                elif (
+                    not calender_event.actual
+                    or not calender_event.previous
+                    or not calender_event.forecast
+                ) and fundamental_data.processed is False:
+                    calender_event.actual = scraped_calendar_event.actual
+                    calender_event.previous = scraped_calendar_event.previous
+                    calender_event.forecast = scraped_calendar_event.forecast
 
                 logger.info("Calculating aggregate score")
                 await fundamental_data_service.calculate_aggregate_score(

@@ -107,6 +107,19 @@ class DebugResource(Resource):
             return await self.uow.fxcm_connection.modify_trade(
                 trade_id="295", stop=0.87844
             )
+        if debug_task == DebugEnum.GetTradeState:
+            trades = await self.uow.trade_repository.get_all()
+            for trade in trades:
+                (
+                    state,
+                    realised_pl,
+                ) = await self.uow.fxcm_connection.get_trade_state(
+                    trade_id=trade.trade_id
+                )
+                if state != "OPEN":
+                    trade.position = "CLOSED"
+                    trade.is_winner = True if realised_pl > 0 else False
+                    await self.uow.trade_repository.save(trade)
 
         if debug_task == DebugEnum.TestCloseTrade:
             return await self.uow.fxcm_connection.close_trade("252", 3839671)

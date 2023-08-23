@@ -286,5 +286,7 @@ class OandaConnect(BaseTradeConnect):
             TradeDetailResponse, response
         )
         if response_model.trade is not None:
-            return response_model.trade.state
+            return response_model.trade.state, float(
+                response_model.trade.realizedPL
+            )
         return None

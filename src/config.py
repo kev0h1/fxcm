@@ -124,3 +124,4 @@ class DebugEnum(Enum):
     TestManageTrade = "Test Manage Trade"
     LoadData = "Load Data"
     TestModifyTrade = "Test Modify Trade"
+    GetTradeState = "Get Trade State"

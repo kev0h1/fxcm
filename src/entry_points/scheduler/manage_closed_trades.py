@@ -19,12 +19,15 @@ async def manage_closed_trades(
     async with uow:
         open_trades: list[Trade] = await uow.trade_repository.get_open_trades()
         for trade in open_trades:
-            state = await uow.fxcm_connection.get_trade_state(trade.trade_id)
+            state, realised_pl = await uow.fxcm_connection.get_trade_state(
+                trade.trade_id
+            )
             if state is None:
                 logger.error(f"Trade %s is not a valid trade" % trade.trade_id)
 
             if state != "OPEN":
                 trade.position = PositionEnum.CLOSED
+                trade.is_winner = True if realised_pl > 0 else False
                 logger.warning(
                     f"Trade %s closed by the broker" % trade.trade_id
                 )

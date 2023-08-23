@@ -450,8 +450,8 @@ class TestOpenTradeHandler:
                     SentimentEnum.BULLISH,
                     True,
                     int(
-                        100000
-                        * (100000 * 0.03)
+                        10000
+                        * (100000 * 0.05)
                         / (
                             (
                                 abs(0.8784 - 0.8804)
@@ -471,8 +471,8 @@ class TestOpenTradeHandler:
                     SentimentEnum.BEARISH,
                     False,
                     int(
-                        100000
-                        * (100000 * 0.03)
+                        10000
+                        * (100000 * 0.05)
                         / (
                             (
                                 abs(145.748 - 145.81)

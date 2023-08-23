@@ -189,11 +189,18 @@ async def get_trade_parameters(
     therefore for a standard lot of 100,000 units, the pip value is 10 for non-yen pairs = 0.0001 * 100,000
     and 1000 for yen pairs = 0.01 * 100,000
 
+    100000
+        * (float(await uow.fxcm_connection.get_account_balance()) * risk)
+        / (
+            stop_loss_pips
+            * (100000 * (pip_value * 1 / quoted_currency_exchange_rate))
+        )
+
     """
     is_buy = True if event.sentiment == SentimentEnum.BULLISH else False
 
     pip_value = 0.0001 if "JPY" not in currencies else 0.01
-    risk = 3 / 100
+    risk = 5 / 100
 
     stop_loss_pips = abs(event.close - event.stop) / pip_value
 
@@ -201,14 +208,13 @@ async def get_trade_parameters(
         conversion_map[event.forex_pair]
     )
 
-    units = (
-        100000
-        * (float(await uow.fxcm_connection.get_account_balance()) * risk)
-        / (
-            stop_loss_pips
-            * (100000 * (pip_value * 1 / quoted_currency_exchange_rate))
-        )
-    )
+    balance = float(await uow.fxcm_connection.get_account_balance())
+    risk_amount = balance * risk
+    adjusted_pip_value = 100000 * pip_value * 1 / quoted_currency_exchange_rate
+    stop_loss_in_account_currency = stop_loss_pips * adjusted_pip_value
+    desired_trade_size = risk_amount / stop_loss_in_account_currency
+
+    units = desired_trade_size * 10000  # trading a mini lot
 
     stop_loss = round(event.stop, count_decimal_places(pip_value))
 
