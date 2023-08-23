@@ -37,13 +37,13 @@ async def get_technical_signal(
 
             refined_data = await indicator.get_simple_moving_average(
                 refined_data,
-                period=5,
+                period=10,
                 col="close",
                 column_name="ShortTerm_MA",
             )
             refined_data = await indicator.get_simple_moving_average(
                 refined_data,
-                period=20,
+                period=50,
                 col="close",
                 column_name="MediumTerm_MA",
             )
