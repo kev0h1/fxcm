@@ -50,6 +50,7 @@ class TradeSchema(Base):
     quote_currency: CurrencyEnum
     forex_currency_pair: ForexPairEnum
     new_close: float = Field(default=None)
+    realised_pl: float = Field(default=None)
     is_winner: bool = Field(default=False)
     initiated_date: datetime
     position: PositionEnum

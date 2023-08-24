@@ -125,6 +125,7 @@ class DebugResource(Resource):
                     )
                     if state != "OPEN":
                         trade.position = PositionEnum.CLOSED
+                        trade.realised_pl = realised_pl
                         trade.is_winner = True if realised_pl > 0 else False
                         await self.uow.trade_repository.save(trade)
 

@@ -86,12 +86,13 @@ async def generate_event(
                 "Initiating close trade event for currency %s and sentiments that are not %s"
                 % (data.currency, data.aggregate_sentiment)
             )
-            await uow.publish(
-                CloseTradeEvent(
-                    currency=currency,
-                    sentiment=data.aggregate_sentiment,
+            if data.aggregate_sentiment != SentimentEnum.FLAT:
+                await uow.publish(
+                    CloseTradeEvent(
+                        currency=currency,
+                        sentiment=data.aggregate_sentiment,
+                    )
                 )
-            )
             data.processed = True
             await uow.fundamental_data_repository.save(data)
 

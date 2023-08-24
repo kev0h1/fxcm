@@ -19,6 +19,7 @@ class Trade:
     quote_currency: CurrencyEnum
     forex_currency_pair: ForexPairEnum
     new_close: float = field(default=None)
+    realised_pl: float = field(default=None)
     is_winner: bool = field(default=False)
     initiated_date: datetime = field(default=datetime.now())
     position: PositionEnum = field(default=PositionEnum.OPEN)
