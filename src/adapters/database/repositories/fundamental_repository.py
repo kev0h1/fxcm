@@ -54,3 +54,7 @@ class FundamentalDataRepository:
                 .first()
             )
         )
+
+    async def delete_all(self) -> None:
+        """Deletes all fundamental data"""
+        FundamentalData.objects().delete()

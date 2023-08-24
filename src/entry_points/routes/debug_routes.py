@@ -6,7 +6,13 @@ from fastapi_restful import set_responses, Resource
 import pytz
 from tzlocal import get_localzone
 from src.adapters.database.mongo.mongo_connect import Database
-from src.config import CurrencyEnum, ForexPairEnum, PeriodEnum, SentimentEnum
+from src.config import (
+    CurrencyEnum,
+    ForexPairEnum,
+    PeriodEnum,
+    PositionEnum,
+    SentimentEnum,
+)
 from src.domain.events import CloseTradeEvent
 from src.entry_points.scheduler import manage_trades
 from src.entry_points.scheduler.get_fundamental_data import process_data
@@ -108,18 +114,19 @@ class DebugResource(Resource):
                 trade_id="295", stop=0.87844
             )
         if debug_task == DebugEnum.GetTradeState:
-            trades = await self.uow.trade_repository.get_all()
-            for trade in trades:
-                (
-                    state,
-                    realised_pl,
-                ) = await self.uow.fxcm_connection.get_trade_state(
-                    trade_id=trade.trade_id
-                )
-                if state != "OPEN":
-                    trade.position = "CLOSED"
-                    trade.is_winner = True if realised_pl > 0 else False
-                    await self.uow.trade_repository.save(trade)
+            async with self.uow:
+                trades = await self.uow.trade_repository.get_all()
+                for trade in trades:
+                    (
+                        state,
+                        realised_pl,
+                    ) = await self.uow.fxcm_connection.get_trade_state(
+                        trade_id=trade.trade_id
+                    )
+                    if state != "OPEN":
+                        trade.position = PositionEnum.CLOSED
+                        trade.is_winner = True if realised_pl > 0 else False
+                        await self.uow.trade_repository.save(trade)
 
         if debug_task == DebugEnum.TestCloseTrade:
             return await self.uow.fxcm_connection.close_trade("252", 3839671)
@@ -136,6 +143,8 @@ class DebugResource(Resource):
                     date_ = datetime.now(
                         pytz.timezone("America/New_York")
                     ) - timedelta(days=i)
+                else:
+                    date_ = datetime.now(pytz.utc) - timedelta(days=i)
                 if date_.weekday() < 5:
                     logger.info(f"Getting fundamental data for {date_}")
                     await process_data(date_=date_, load_data=True)

@@ -42,3 +42,11 @@ class FundamentalResource(Resource):
                 FundamentalData
             ] = await self.service.get_all_fundamental_data(**kwargs)
             return data
+
+    @set_responses(str, 200)
+    async def delete(self):
+        """Deletes the database"""
+        async with self._uow:
+            logger.info("Deleting fundamental data")
+            await self.service.delete_all_fundamental_data()
+            return "Deleted all fundamental data"

@@ -55,14 +55,11 @@ async def process_data(
                     fundamental_data.calendar_events.append(
                         scraped_calendar_event
                     )
-                elif (
-                    not calender_event.actual
-                    or not calender_event.previous
-                    or not calender_event.forecast
-                ) and fundamental_data.processed is False:
+                elif fundamental_data.processed is False or load_data:
                     calender_event.actual = scraped_calendar_event.actual
                     calender_event.previous = scraped_calendar_event.previous
                     calender_event.forecast = scraped_calendar_event.forecast
+                    calender_event.sentiment = scraped_calendar_event.sentiment
 
                 logger.info("Calculating aggregate score")
                 await fundamental_data_service.calculate_aggregate_score(
@@ -84,11 +81,7 @@ async def generate_event(
 ) -> None:
     for data in fundamental_data_list:
         can_process_close_event = await calendar_updates_complete(data)
-        if (
-            data.processed is False
-            and data.aggregate_sentiment != SentimentEnum.FLAT
-            and can_process_close_event
-        ):
+        if data.processed is False and can_process_close_event:
             logger.info(
                 "Initiating close trade event for currency %s and sentiments that are not %s"
                 % (data.currency, data.aggregate_sentiment)

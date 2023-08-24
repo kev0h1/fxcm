@@ -62,3 +62,7 @@ class FundamentalDataService:
             fundamental_data.aggregate_sentiment = SentimentEnum.BEARISH
         else:
             fundamental_data.aggregate_sentiment = SentimentEnum.FLAT
+
+    async def delete_all_fundamental_data(self):
+        """Delete all fundamental data"""
+        return await self._uow.fundamental_data_repository.delete_all()
