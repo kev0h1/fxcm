@@ -16,3 +16,7 @@ class TradeService:
     async def get_all_trade_data(self, **kwargs) -> Iterator[Trade]:
         """Get the trade data"""
         return await self._uow.trade_repository.get_all(**kwargs)
+
+    async def get_sum_of_realised_pl(self) -> Iterator[Trade]:
+        """Get the trade data"""
+        return await self._uow.trade_repository.get_sum_of_realised_pl()

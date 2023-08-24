@@ -1,3 +1,4 @@
+import math
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.config import ForexPairEnum
@@ -29,13 +30,16 @@ async def manage_trades_handler(
             currencies = forex_pair.value.split("/")
             pip_value = 0.0001 if "JPY" not in currencies else 0.01
             modified = False
+
             for trade in trades:
+                sl_pips = math.inf if trade.sl_pips is None else trade.sl_pips
+                break_even_pips = min(10, sl_pips)
                 if trade.is_buy and close > trade.close:
                     diff = round((close - trade.close) / pip_value)
-                    if diff >= 15:
+                    if diff >= break_even_pips:
                         if trade.new_close is None:
                             trade.new_close = close
-                            trade.stop += 10 * pip_value
+                            trade.stop += break_even_pips * pip_value
                             modified = True
 
                         else:
@@ -49,10 +53,10 @@ async def manage_trades_handler(
 
                 elif not trade.is_buy and close < trade.close:
                     diff = round((trade.close - close) / pip_value)
-                    if diff >= 15:
+                    if diff >= break_even_pips:
                         if trade.new_close is None:
                             trade.new_close = close
-                            trade.stop -= 10 * pip_value
+                            trade.stop -= break_even_pips * pip_value
 
                             modified = True
                         else:

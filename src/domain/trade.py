@@ -23,6 +23,7 @@ class Trade:
     is_winner: bool = field(default=False)
     initiated_date: datetime = field(default=datetime.now())
     position: PositionEnum = field(default=PositionEnum.OPEN)
+    sl_pips: float = field(default=None)
 
     def __post_init__(self) -> None:
         currencies = self.forex_currency_pair.value.split("/")

@@ -121,7 +121,7 @@ async def open_trade_handler(
         % (event.forex_pair, event.sentiment)
     )
     currencies = event.forex_pair.value.split("/")
-    is_buy, units, stop_loss = await get_trade_parameters(
+    is_buy, units, stop_loss, stop_loss_in_pips = await get_trade_parameters(
         event=event, uow=uow, currencies=currencies
     )
 
@@ -167,6 +167,7 @@ async def open_trade_handler(
             initiated_date=datetime.now(),
             position=PositionEnum.OPEN,
             close=event.close,
+            sl_pips=stop_loss_in_pips,
         )
 
         await uow.trade_repository.save(trade)
@@ -178,7 +179,7 @@ async def open_trade_handler(
 
 async def get_trade_parameters(
     event: events.OpenTradeEvent, uow: MongoUnitOfWork, currencies: list[str]
-) -> tuple[bool, int, float]:
+) -> tuple[bool, int, float, float]:
     """Gets the trade parameters for a given event
 
     units= Risk per unit in GBP/ Amount at risk in GBP
@@ -218,7 +219,7 @@ async def get_trade_parameters(
 
     stop_loss = round(event.stop, count_decimal_places(pip_value))
 
-    return is_buy, int(units), stop_loss
+    return is_buy, int(units), stop_loss, stop_loss_pips
 
 
 async def close_forex_pair_handler(

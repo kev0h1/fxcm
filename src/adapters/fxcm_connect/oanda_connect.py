@@ -264,7 +264,7 @@ class OandaConnect(BaseTradeConnect):
                 },
             }
         }
-
+        logger.info("Modifying trade %s" % trade_id)
         trade_modify_request = TradeCRCDO(
             accountID=self.account_id, tradeID=trade_id, data=data
         )
@@ -280,6 +280,7 @@ class OandaConnect(BaseTradeConnect):
         trade_details_request = TradeDetails(
             accountID=self.account_id, tradeID=trade_id
         )
+        logger.info("Getting trade details for %s" % trade_id)
         response = self.client.request(trade_details_request)
 
         response_model: TradeDetailResponse = parse_obj_as(

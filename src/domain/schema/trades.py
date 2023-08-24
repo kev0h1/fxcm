@@ -47,8 +47,8 @@ class TransactionDetails(BaseModel):
 
 
 class StopLossOrderCancelTransaction(TransactionDetails):
-    orderID: str
-    clientOrderID: str
+    orderID: Optional[str]
+    clientOrderID: Optional[str]
 
 
 class StopLossOrderTransaction(TransactionDetails):

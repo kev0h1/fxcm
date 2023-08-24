@@ -32,6 +32,7 @@ class Trade(Document):
         close: float,
         limit: float = None,
         realised_pl: float = None,
+        sl_pips: float = None,
         *args,
         **values
     ) -> None:
@@ -49,6 +50,7 @@ class Trade(Document):
         self.position = position
         self.close = close
         self.realised_pl = realised_pl
+        self.sl_pips = sl_pips
 
     trade_id = StringField(primary_key=True)
     units = FloatField()
@@ -56,6 +58,7 @@ class Trade(Document):
     close = FloatField()
     new_close = FloatField()
     realised_pl = FloatField()
+    sl_pips = FloatField()
     limit = FloatField(allow_none=True)
     is_buy = BooleanField()
     is_winner = BooleanField()
@@ -92,6 +95,7 @@ async def map_to_db_model(trade: TradeDomain) -> Union[Trade, None]:
         close=trade.close,
         new_close=trade.new_close,
         realised_pl=trade.realised_pl,
+        sl_pips=trade.sl_pips,
     )
 
 
@@ -121,4 +125,5 @@ async def map_to_domain_model(trade: Trade) -> Union[TradeDomain, None]:
         close=trade.close,
         new_close=trade.new_close,
         realised_pl=trade.realised_pl,
+        sl_pips=trade.sl_pips,
     )

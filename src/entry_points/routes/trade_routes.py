@@ -36,3 +36,26 @@ class TradeResource(Resource):
             logger.info(f"Getting fundamental data with kwargs: {kwargs}")
             data: List[Trade] = await self.service.get_all_trade_data(**kwargs)
             return data
+
+
+class TradePl(Resource):
+    @inject
+    def __init__(
+        self,
+        trade_service: TradeService = Depends(
+            Provide[Container.trade_service],
+        ),
+        uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
+    ) -> None:
+        super().__init__()
+        self.service = trade_service
+        self._uow = uow
+
+    @set_responses(Any, 200)
+    async def get(self):
+        """Deletes the database"""
+
+        async with self._uow:
+            logger.info(f"")
+            data: float = await self.service.get_sum_of_realised_pl()
+            return data

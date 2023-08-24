@@ -109,3 +109,7 @@ class TradeRepository:
             ForexPairEnum(obj)
             for obj in TradeModel.objects().distinct("forex_currency_pair")
         ]
+
+    async def get_sum_of_realised_pl(self) -> float:
+        """Get sum of realised pl"""
+        return TradeModel.objects().sum("realised_pl")
