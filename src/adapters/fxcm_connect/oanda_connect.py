@@ -6,8 +6,9 @@ from src.domain.schema.trades import (
     TradeInfo,
     TradeCRDCOSchema,
     TradeDetailResponse,
+    StopLossOrder,
 )
-from src.domain.schema.transaction import OrderSchema
+from src.domain.schema.transaction import OrderSchema, OrderTransaction
 from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
 from src.config import ForexPairEnum, OrderTypeEnum, PeriodEnum
 import oandapyV20
@@ -291,3 +292,24 @@ class OandaConnect(BaseTradeConnect):
                 response_model.trade.realizedPL
             )
         return None
+
+    @error_handler
+    async def get_pending_orders(self) -> list[StopLossOrder]:
+        r = orders.OrderList(self.account_id)
+
+        # Send the request
+        response = self.client.request(r)
+
+        # Extract and display pending orders
+        pending_orders = response["orders"]
+        pending_orders = parse_obj_as(list[StopLossOrder], pending_orders)
+        return pending_orders
+
+    @error_handler
+    async def cancel_pending_order(self, order_id: str):
+        r = orders.OrderCancel(self.account_id, order_id)
+        response = self.client.request(r)
+        response_model: OrderTransaction = parse_obj_as(
+            OrderTransaction, response["orderCancelTransaction"]
+        )
+        return response_model

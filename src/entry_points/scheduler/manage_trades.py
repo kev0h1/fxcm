@@ -8,6 +8,7 @@ from src.domain.trade import Trade
 from src.service_layer.uow import MongoUnitOfWork
 from src.logger import get_logger
 from src.utils import count_decimal_places
+from src.entry_points.scheduler.manage_closed_trades import update_trade_state
 
 logger = get_logger(__name__)
 
@@ -69,12 +70,6 @@ async def manage_trades_handler(
                                 modified = True
 
                 if modified:
-                    await uow.fxcm_connection.modify_trade(
-                        trade_id=trade.trade_id,
-                        stop=round(
-                            trade.stop, count_decimal_places(pip_value)
-                        ),
-                    )
                     logger.warning(
                         "Modified trade %s with signal of %s to have a new stop of %s"
                         % (
@@ -84,3 +79,12 @@ async def manage_trades_handler(
                         )
                     )
                     await uow.trade_repository.save(trade)
+                if (trade.is_buy and trade.stop < close) or (
+                    not trade.is_buy and trade.stop > close
+                ):
+                    await uow.fxcm_connection.close_trade(
+                        trade_id=trade.trade_id,
+                        amount=trade.units,
+                    )
+
+                    await update_trade_state(uow, trade)

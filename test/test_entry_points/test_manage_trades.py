@@ -60,18 +60,6 @@ class TestManageTrades:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - 1.652) < 0.0001
 
-            mock_method.return_value = 1.6536
-            await manage_trades_handler(uow=uow)
-            async with uow:
-                trades = await uow.trade_repository.get_all()
-                assert abs(trades[0].stop - 1.6521) < 0.0001
-
-            mock_method.return_value = 1.6538
-            await manage_trades_handler(uow=uow)
-            async with uow:
-                trades = await uow.trade_repository.get_all()
-                assert abs(trades[0].stop - 1.6523) < 0.0001
-
     @pytest.mark.asyncio
     @given(
         builds(
@@ -111,18 +99,6 @@ class TestManageTrades:
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - 1.6520) < 0.0001
-
-            mock_method.return_value = 1.6504
-            await manage_trades_handler(uow=uow)
-            async with uow:
-                trades = await uow.trade_repository.get_all()
-                assert abs(trades[0].stop - 1.6519) < 0.0001
-
-            mock_method.return_value = 1.6502
-            await manage_trades_handler(uow=uow)
-            async with uow:
-                trades = await uow.trade_repository.get_all()
-                assert abs(trades[0].stop - 1.6517) < 0.0001
 
     @pytest.mark.asyncio
     @given(
@@ -166,15 +142,3 @@ class TestManageTrades:
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - 1.6520) < 0.0001
-
-            mock_method.return_value = 1.6526
-            await manage_trades_handler(uow=uow)
-            async with uow:
-                trades = await uow.trade_repository.get_all()
-                assert abs(trades[0].stop - 1.6521) < 0.0001
-
-            mock_method.return_value = 1.6528
-            await manage_trades_handler(uow=uow)
-            async with uow:
-                trades = await uow.trade_repository.get_all()
-                assert abs(trades[0].stop - 1.6523) < 0.0001

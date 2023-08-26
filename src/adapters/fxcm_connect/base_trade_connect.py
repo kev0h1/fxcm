@@ -115,3 +115,11 @@ class BaseTradeConnect(ABC):
     async def get_trade_state(self, trade_id: str):
         """Gets the trade details"""
         raise NotImplementedError
+
+    async def get_pending_orders(self):
+        """Gets the pending orders"""
+        raise NotImplementedError
+
+    async def cancel_pending_order(self):
+        """Gets the pending orders"""
+        raise NotImplementedError

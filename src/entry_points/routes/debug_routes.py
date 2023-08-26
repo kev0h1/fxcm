@@ -111,7 +111,7 @@ class DebugResource(Resource):
             )
         if debug_task == DebugEnum.TestModifyTrade:
             return await self.uow.fxcm_connection.modify_trade(
-                trade_id="295", stop=0.87844
+                trade_id="511", stop=1.07944
             )
         if debug_task == DebugEnum.GetTradeState:
             async with self.uow:
@@ -137,6 +137,14 @@ class DebugResource(Resource):
 
         if debug_task == DebugEnum.TestManageTrade:
             return await manage_trades()
+
+        if debug_task == DebugEnum.TestGetPendingOrders:
+            return await self.uow.fxcm_connection.get_pending_orders()
+
+        if debug_task == DebugEnum.TestCancelPendingOrder:
+            orders = await self.uow.fxcm_connection.get_pending_orders()
+            for order in orders:
+                await self.uow.fxcm_connection.cancel_pending_order(order.id)
 
         if debug_task == DebugEnum.LoadData:
             for i in range(1, 120):
