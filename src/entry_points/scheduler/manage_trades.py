@@ -79,8 +79,8 @@ async def manage_trades_handler(
                         )
                     )
                     await uow.trade_repository.save(trade)
-                if (trade.is_buy and trade.stop < close) or (
-                    not trade.is_buy and trade.stop > close
+                if (trade.is_buy and trade.stop > close) or (
+                    not trade.is_buy and trade.stop < close
                 ):
                     await uow.fxcm_connection.close_trade(
                         trade_id=trade.trade_id,

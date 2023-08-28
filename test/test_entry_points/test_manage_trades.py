@@ -33,7 +33,8 @@ class TestManageTrades:
             quote_currency=sampled_from([CurrencyEnum.CHF]),
             forex_currency_pair=sampled_from([ForexPairEnum.USDCHF]),
             position=sampled_from([PositionEnum.OPEN]),
-            close=sampled_from([1.6520]),
+            close=sampled_from([1.6515]),
+            sl_pips=sampled_from([5]),
         )
     )
     @settings(
@@ -51,14 +52,32 @@ class TestManageTrades:
         with mock.patch.object(
             uow.fxcm_connection, "get_latest_close"
         ) as mock_method:
-            mock_method.return_value = 1.6535
+            mock_method.return_value = 1.6520
             async with uow:
                 await uow.trade_repository.save(trade)
             await manage_trades_handler(uow=uow)
 
             async with uow:
                 trades = await uow.trade_repository.get_all()
-                assert abs(trades[0].stop - 1.652) < 0.0001
+                assert abs(trades[0].stop - 1.6515) < 0.0001
+
+            mock_method.return_value = 1.6521
+            await manage_trades_handler(uow=uow)
+            async with uow:
+                trades = await uow.trade_repository.get_all()
+                assert abs(trades[0].stop - 1.6516) < 0.0001
+
+            mock_method.return_value = 1.6523
+            await manage_trades_handler(uow=uow)
+            async with uow:
+                trades = await uow.trade_repository.get_all()
+                assert abs(trades[0].stop - 1.6518) < 0.0001
+
+            mock_method.return_value = 1.6516
+            await manage_trades_handler(uow=uow)
+            async with uow:
+                trades = await uow.trade_repository.get_open_trades()
+                assert len(trades) == 0
 
     @pytest.mark.asyncio
     @given(
@@ -66,7 +85,7 @@ class TestManageTrades:
             Trade,
             trade_id=text(min_size=2),
             units=floats(),
-            stop=sampled_from([1.6530]),
+            stop=sampled_from([1.6529]),
             limit=floats(),
             is_buy=sampled_from([False]),
             base_currency=sampled_from([CurrencyEnum.USD]),
@@ -74,6 +93,7 @@ class TestManageTrades:
             forex_currency_pair=sampled_from([ForexPairEnum.USDCHF]),
             position=sampled_from([PositionEnum.OPEN]),
             close=sampled_from([1.6520]),
+            sl_pips=sampled_from([9]),
         )
     )
     @settings(
@@ -91,7 +111,7 @@ class TestManageTrades:
         with mock.patch.object(
             uow.fxcm_connection, "get_latest_close"
         ) as mock_method:
-            mock_method.return_value = 1.6505
+            mock_method.return_value = 1.6511
             async with uow:
                 await uow.trade_repository.save(trade)
             await manage_trades_handler(uow=uow)
@@ -99,6 +119,24 @@ class TestManageTrades:
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - 1.6520) < 0.0001
+
+            mock_method.return_value = 1.6510
+            await manage_trades_handler(uow=uow)
+            async with uow:
+                trades = await uow.trade_repository.get_all()
+                assert abs(trades[0].stop - 1.6519) < 0.0001
+
+            mock_method.return_value = 1.6508
+            await manage_trades_handler(uow=uow)
+            async with uow:
+                trades = await uow.trade_repository.get_all()
+                assert abs(trades[0].stop - 1.6517) < 0.0001
+
+            mock_method.return_value = 1.6520
+            await manage_trades_handler(uow=uow)
+            async with uow:
+                trades = await uow.trade_repository.get_open_trades()
+                assert len(trades) == 0
 
     @pytest.mark.asyncio
     @given(
@@ -142,3 +180,15 @@ class TestManageTrades:
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - 1.6520) < 0.0001
+
+            mock_method.return_value = 1.6526
+            await manage_trades_handler(uow=uow)
+            async with uow:
+                trades = await uow.trade_repository.get_all()
+                assert abs(trades[0].stop - 1.6521) < 0.0001
+
+            mock_method.return_value = 1.6528
+            await manage_trades_handler(uow=uow)
+            async with uow:
+                trades = await uow.trade_repository.get_all()
+                assert abs(trades[0].stop - 1.6523) < 0.0001

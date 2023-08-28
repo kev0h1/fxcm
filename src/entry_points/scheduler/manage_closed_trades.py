@@ -33,5 +33,5 @@ async def update_trade_state(uow, trade):
         trade.position = PositionEnum.CLOSED
         trade.realised_pl = realised_pl
         trade.is_winner = True if realised_pl > 0 else False
-        logger.warning(f"Trade %s closed by the broker" % trade.trade_id)
+        logger.warning(f"Trade %s closed" % trade.trade_id)
         await uow.trade_repository.save(trade)
