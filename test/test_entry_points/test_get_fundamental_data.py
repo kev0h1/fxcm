@@ -1,4 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+
+import pytz
 from src.adapters.fxcm_connect.mock_trade_connect import MockTradeConnect
 from src.adapters.scraper.mock_scraper import MockScraper
 from src.config import CurrencyEnum, SentimentEnum
@@ -9,6 +11,7 @@ from src.entry_points.scheduler.get_fundamental_data import (
     process_data,
     get_calendar_event,
     calendar_updates_complete,
+    process_fundamental_data,
 )
 import pytest
 from src.domain.events import CloseTradeEvent
@@ -197,3 +200,52 @@ class TestCalendarUpdatesComplete:
         )
 
         assert await calendar_updates_complete(fundamental_data) is False
+
+
+class TestProcessFundamentalEvent:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("time_delta, expected", [(0, False), (20, True)])
+    async def test_process_fundamental_event(
+        self, get_db, time_delta, expected
+    ) -> None:
+        uow = MongoUnitOfWork(
+            fxcm_connection=MockTradeConnect(),
+            scraper=MockScraper(
+                sentiment=SentimentEnum.BULLISH, is_processed=True
+            ),
+            db_name=get_db,
+        )
+
+        test_event = CalendarEvent(
+            calendar_event="mock_event",
+            sentiment=SentimentEnum.FLAT,
+            forecast=1.2,
+            actual=None,
+            previous=1.1,
+        )
+
+        test_event_2 = CalendarEvent(
+            calendar_event="t2",
+            sentiment=SentimentEnum.FLAT,
+            forecast=1.2,
+            actual=None,
+            previous=1.1,
+        )
+        fundamental_data = FundamentalData(
+            currency=CurrencyEnum.USD,
+            last_updated=datetime.now(tz=pytz.utc)
+            - timedelta(minutes=time_delta),
+            calendar_events=[test_event, test_event_2],
+            processed=False,
+        )
+        async with uow:
+            await uow.fundamental_data_repository.save(fundamental_data)
+        await process_fundamental_data(
+            date_=datetime.now(tz=pytz.utc),
+            uow=uow,
+            fundamental_data_service=FundamentalDataService(uow=uow),
+        )
+        async with uow:
+            data = await uow.fundamental_data_repository.get_all()
+            assert len(data) == 1
+            assert data[0].processed is expected

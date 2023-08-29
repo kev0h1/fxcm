@@ -2,7 +2,10 @@ from datetime import datetime, timedelta, timezone
 import os
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from tzlocal import get_localzone
-from src.entry_points.scheduler.get_fundamental_data import process_data
+from src.entry_points.scheduler.get_fundamental_data import (
+    process_data,
+    process_fundamental_data,
+)
 from src.entry_points.scheduler.get_technical_signal import (
     get_technical_signal,
 )
@@ -53,3 +56,11 @@ async def manage_closed_trades_job():
     if date_.weekday() < 5:
         logger.info(f"Manage closed trades for date {date_}")
         await manage_closed_trades()
+
+
+@scheduler.scheduled_job("interval", seconds=305)
+async def process_fundamental_events():
+    date_: datetime = datetime.now(timezone.utc)
+    if date_.weekday() < 5:
+        logger.info(f"Process fundamental events for date {date_}")
+        await process_fundamental_data(date_=date_)

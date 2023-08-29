@@ -127,3 +127,4 @@ class DebugEnum(Enum):
     GetTradeState = "Get Trade State"
     TestGetPendingOrders = "Test Get Pending Orders"
     TestCancelPendingOrder = "Test Cancel Pending Order"
+    TestProcessEvents = "Test Process Events"

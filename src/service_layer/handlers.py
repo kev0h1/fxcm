@@ -73,6 +73,9 @@ async def get_combined_techincal_and_fundamental_sentiment(
         )
     )
 
+    if latest_object.processed == False:
+        return SentimentEnum.FLAT
+
     if event.sentiment == SentimentEnum.BULLISH and (
         (
             base_currency_fundamentals == latest_object

@@ -52,5 +52,6 @@ class TradeSchema(Base):
     new_close: float = Field(default=None)
     realised_pl: float = Field(default=None)
     is_winner: bool = Field(default=False)
+    sl_pips: float = Field(default=None)
     initiated_date: datetime
     position: PositionEnum

@@ -29,7 +29,7 @@ async def update_trade_state(uow, trade):
     if state is None:
         logger.error(f"Trade %s is not a valid trade" % trade.trade_id)
 
-    if state != "OPEN":
+    if state is not None and state != "OPEN":
         trade.position = PositionEnum.CLOSED
         trade.realised_pl = realised_pl
         trade.is_winner = True if realised_pl > 0 else False

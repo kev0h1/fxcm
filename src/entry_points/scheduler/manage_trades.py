@@ -41,6 +41,10 @@ async def manage_trades_handler(
                         if trade.new_close is None:
                             trade.new_close = close
                             trade.stop += break_even_pips * pip_value
+                            logger.info(
+                                "Changed stop to %s for trade %s"
+                                % (trade.stop, trade.trade_id),
+                            )
                             modified = True
 
                         else:
@@ -50,6 +54,10 @@ async def manage_trades_handler(
                             if new_diff >= 1:
                                 trade.new_close = close
                                 trade.stop += new_diff * pip_value
+                                logger.info(
+                                    "Changed stop to %s for trade %s"
+                                    % (trade.stop, trade.trade_id),
+                                )
                                 modified = True
 
                 elif not trade.is_buy and close < trade.close:
@@ -58,7 +66,10 @@ async def manage_trades_handler(
                         if trade.new_close is None:
                             trade.new_close = close
                             trade.stop -= break_even_pips * pip_value
-
+                            logger.info(
+                                "Changed stop to %s for trade %s"
+                                % (trade.stop, trade.trade_id),
+                            )
                             modified = True
                         else:
                             new_diff = round(
@@ -67,6 +78,10 @@ async def manage_trades_handler(
                             if new_diff >= 1:
                                 trade.new_close = close
                                 trade.stop -= new_diff * pip_value
+                                logger.info(
+                                    "Changed stop to %s for trade %s"
+                                    % (trade.stop, trade.trade_id),
+                                )
                                 modified = True
 
                 if modified:
@@ -82,6 +97,10 @@ async def manage_trades_handler(
                 if (trade.is_buy and trade.stop > close) or (
                     not trade.is_buy and trade.stop < close
                 ):
+                    logger.info(
+                        "Trade crossed stop loss for trade %s, with stop of %s and is buy is %s"
+                        % (trade.trade_id, trade.stop, trade.is_buy),
+                    )
                     await uow.fxcm_connection.close_trade(
                         trade_id=trade.trade_id,
                         amount=trade.units,

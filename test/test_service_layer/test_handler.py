@@ -228,14 +228,23 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
         deadline=None,
     )
     @pytest.mark.parametrize(
-        "base_sentiment, quoted_sentiment, event_sentiment, delay_quoted, expected",
+        "base_sentiment, quoted_sentiment, event_sentiment, delay_quoted, expected, processed",
         [
             (
                 SentimentEnum.BULLISH,
                 SentimentEnum.BULLISH,
                 SentimentEnum.BULLISH,
                 True,
+                SentimentEnum.FLAT,
+                False,
+            ),
+            (
                 SentimentEnum.BULLISH,
+                SentimentEnum.BULLISH,
+                SentimentEnum.BULLISH,
+                True,
+                SentimentEnum.BULLISH,
+                True,
             ),
             (
                 SentimentEnum.BULLISH,
@@ -243,6 +252,7 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
                 SentimentEnum.BULLISH,
                 False,
                 SentimentEnum.FLAT,
+                True,
             ),
             (
                 SentimentEnum.BULLISH,
@@ -250,6 +260,7 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
                 SentimentEnum.BULLISH,
                 False,
                 SentimentEnum.BULLISH,
+                True,
             ),
             (
                 SentimentEnum.BEARISH,
@@ -257,6 +268,7 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
                 SentimentEnum.BEARISH,
                 True,
                 SentimentEnum.BEARISH,
+                True,
             ),
             (
                 SentimentEnum.BEARISH,
@@ -264,6 +276,7 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
                 SentimentEnum.BEARISH,
                 False,
                 SentimentEnum.BEARISH,
+                True,
             ),
             (
                 SentimentEnum.BEARISH,
@@ -271,6 +284,7 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
                 SentimentEnum.BEARISH,
                 False,
                 SentimentEnum.FLAT,
+                True,
             ),
             (
                 SentimentEnum.BULLISH,
@@ -278,6 +292,7 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
                 SentimentEnum.BEARISH,
                 True,
                 SentimentEnum.FLAT,
+                True,
             ),
             (
                 SentimentEnum.BEARISH,
@@ -285,9 +300,11 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
                 SentimentEnum.BULLISH,
                 True,
                 SentimentEnum.FLAT,
+                True,
             ),
         ],
         ids=[
+            "test_when_sentiment_is_bullish_and_base_latest_and_not_processed",
             "test_when_sentiment_is_bullish_and_base_latest",
             "test_when_sentiment_is_bullish_but_quoted_is_latest_and_bullish",
             "test_when_sentiment_is_bullish_but_quoted_is_latest_and_bearish",
@@ -305,6 +322,7 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
         event_sentiment,
         delay_quoted,
         expected,
+        processed,
         get_db,
         fundamentals: list[FundamentalData],
     ):
@@ -319,6 +337,7 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
                 if index == 0:
                     fundamental.currency = CurrencyEnum.USD
                     fundamental.aggregate_sentiment = base_sentiment
+                    fundamental.processed = processed
                     fundamental.last_updated = (
                         datetime.now()
                         if delay_quoted
@@ -327,6 +346,7 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
 
                 else:
                     fundamental.currency = CurrencyEnum.CAD
+                    fundamental.processed = processed
                     fundamental.aggregate_sentiment = quoted_sentiment
                     fundamental.last_updated = (
                         datetime.now() - timedelta(minutes=1)
@@ -422,6 +442,7 @@ class TestOpenTradeHandler:
                 if index == 0:
                     fundamental.currency = CurrencyEnum.USD
                     fundamental.aggregate_sentiment = base_sentiment
+                    fundamental.processed = True
                     fundamental.last_updated = (
                         datetime.now()
                         if delay_quoted
@@ -431,6 +452,7 @@ class TestOpenTradeHandler:
                 else:
                     fundamental.currency = CurrencyEnum.CAD
                     fundamental.aggregate_sentiment = quoted_sentiment
+                    fundamental.processed = True
                     fundamental.last_updated = (
                         datetime.now() - timedelta(minutes=1)
                         if delay_quoted

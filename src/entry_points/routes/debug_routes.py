@@ -16,7 +16,10 @@ from src.config import (
 from src.domain.events import CloseTradeEvent
 from src.entry_points.scheduler import manage_trades
 from src.entry_points.scheduler.get_fundamental_data import process_data
-from src.entry_points.scheduler.scheduler import get_fundamental_trend_data
+from src.entry_points.scheduler.scheduler import (
+    get_fundamental_trend_data,
+    process_fundamental_events,
+)
 from src.entry_points.scheduler.manage_trades import manage_trades_handler
 from src.entry_points.scheduler.get_technical_signal import (
     get_technical_signal,
@@ -137,6 +140,9 @@ class DebugResource(Resource):
 
         if debug_task == DebugEnum.TestManageTrade:
             return await manage_trades()
+
+        if debug_task == DebugEnum.TestProcessEvents:
+            return await process_fundamental_events()
 
         if debug_task == DebugEnum.TestGetPendingOrders:
             return await self.uow.fxcm_connection.get_pending_orders()
