@@ -33,6 +33,11 @@ jobs:
     steps:
       - aws-cli/setup
       - run:
+          name: Print environment variables
+          command: |
+            echo "ACCESS_KEY: $ACCESS_KEY"
+            echo "ACCESS_SECRET: $ACCESS_SECRET"
+      - run:
           name: Configure AWS CLI
           command: |
             aws configure set aws_access_key_id $ACCESS_KEY
