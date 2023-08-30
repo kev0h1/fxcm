@@ -62,7 +62,9 @@ jobs:
           command: cd ~/cdk_deploy
       - run:
           name: Deploy with CDK
-          command: cdk deploy
+          command: |
+            source .venv/bin/activate
+            cdk deploy
 
 workflows:
   version: 2
