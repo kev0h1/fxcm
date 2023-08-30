@@ -61,6 +61,7 @@ jobs:
           name: Setup and deploy cdk
           command: |
             cd ~/cdk_deploy
+            touch README.md
             poetry install
             source .venv/bin/activate
             cdk deploy
