@@ -24,8 +24,53 @@ jobs:
           name: Run tests
           command: poetry run pytest
 
+  deploy:
+    docker:
+      - image: cimg/python:3.11.5
+    steps:
+      - aws-cli/setup
+      - run:
+        name: Configure AWS CLI
+        command: |
+          aws configure set aws_access_key_id $ACCESS_KEY
+          aws configure set aws_secret_access_key $ACCESS_SECRET
+          aws configure set region us-east-1
+      - run:
+          name: Checkout fxcm repo
+          command: |
+            git clone https://github.com/kev0h1/fxcm.git ~/fxcm
+
+      - run:
+          name: Checkout cdk repo
+          command: |
+            git clone https://github.com/kev0h1/cdk_deploy.git ~/cdk_deploy
+
+      - run:
+          name: CD into cdk and run deployment script
+          command: |
+            cd ~/cdk
+      - run :
+          name: Install Poetry
+          command: |
+            curl -sSL https://install.python-poetry.org | python -
+            echo 'export PATH=$HOME/.poetry/bin:$PATH' >> $BASH_ENV
+      - run:
+          name: Install dependencies
+          command: poetry install
+      - run:
+          name: CD into cdk and run deployment script
+          command: |
+            cdk deploy
+
 workflows:
   version: 2
   build-deploy:
     jobs:
       - build
+      - hold-for-approval:
+          type: approval
+          requires:
+            - build
+      - deploy:
+          requires:
+            - hold-for-approval
