@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  aws-cli: circleci/aws-cli@1.3.0
+
 jobs:
   build:
     docker:
@@ -28,28 +31,23 @@ jobs:
     docker:
       - image: cimg/python:3.11.5
     steps:
-      - aws-cli/setup
+      - run: aws-cli/setup
       - run:
-        name: Configure AWS CLI
-        command: |
-          aws configure set aws_access_key_id $ACCESS_KEY
-          aws configure set aws_secret_access_key $ACCESS_SECRET
-          aws configure set region us-east-1
+          name: Configure AWS CLI
+          command: |
+            aws configure set aws_access_key_id $ACCESS_KEY
+            aws configure set aws_secret_access_key $ACCESS_SECRET
+            aws configure set region us-east-1
       - run:
           name: Checkout fxcm repo
-          command: |
-            git clone https://github.com/kev0h1/fxcm.git ~/fxcm
-
+          command: git clone https://github.com/kev0h1/fxcm.git ~/fxcm
       - run:
           name: Checkout cdk repo
-          command: |
-            git clone https://github.com/kev0h1/cdk_deploy.git ~/cdk_deploy
-
+          command: git clone https://github.com/kev0h1/cdk_deploy.git ~/cdk_deploy
       - run:
-          name: CD into cdk and run deployment script
-          command: |
-            cd ~/cdk
-      - run :
+          name: Change to cdk directory
+          command: cd ~/cdk_deploy
+      - run:
           name: Install Poetry
           command: |
             curl -sSL https://install.python-poetry.org | python -
@@ -58,9 +56,8 @@ jobs:
           name: Install dependencies
           command: poetry install
       - run:
-          name: CD into cdk and run deployment script
-          command: |
-            cdk deploy
+          name: Deploy with CDK
+          command: cdk deploy
 
 workflows:
   version: 2
