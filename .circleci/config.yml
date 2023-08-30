@@ -31,7 +31,7 @@ jobs:
     docker:
       - image: cimg/python:3.11.5
     steps:
-      - run: aws-cli/setup
+      - aws-cli/setup
       - run:
           name: Configure AWS CLI
           command: |
