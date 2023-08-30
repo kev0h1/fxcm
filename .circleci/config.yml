@@ -40,7 +40,10 @@ jobs:
             aws configure set region us-east-1
       - run:
           name: Checkout fxcm repo
-          command: git clone https://github.com/kev0h1/fxcm.git ~/fxcm
+          command: |
+            git clone https://github.com/kev0h1/fxcm.git ~/fxcm
+            cd ~/fxcm
+            git checkout $CIRCLE_BRANCH
       - run:
           name: Checkout cdk repo
           command: git clone https://github.com/kev0h1/cdk_deploy.git ~/cdk_deploy
