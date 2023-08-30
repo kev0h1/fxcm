@@ -1,6 +1,4 @@
 version: 2.1
-orbs:
-  poetry: talkiq/poetry@4.0.1
 
 jobs:
   build:
@@ -14,6 +12,8 @@ jobs:
     steps:
       - checkout
       - poetry/install
+      - python/install-packages:
+            pkg-manager: poetry
       - run:
           name: Install dependencies
           command: poetry install
