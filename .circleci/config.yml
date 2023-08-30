@@ -63,8 +63,7 @@ jobs:
             cd ~/cdk_deploy
             touch README.md
             poetry install
-            source .venv/bin/activate
-            cdk deploy
+            poetry run cdk deploy
 
 workflows:
   version: 2
