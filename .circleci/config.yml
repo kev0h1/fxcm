@@ -35,8 +35,8 @@ jobs:
       - run:
           name: Print environment variables
           command: |
-            echo "ACCESS_KEY: $ACCESS_KEY"
-            echo "ACCESS_SECRET: $ACCESS_SECRET"
+            echo $ACCESS_KEY
+            echo $ACCESS_SECRET
       - run:
           name: Configure AWS CLI
           command: |
@@ -55,14 +55,6 @@ jobs:
       - run:
           name: Change to cdk directory
           command: cd ~/cdk_deploy
-      - run:
-          name: Install Poetry
-          command: |
-            curl -sSL https://install.python-poetry.org | python -
-            echo 'export PATH=$HOME/.poetry/bin:$PATH' >> $BASH_ENV
-      - run:
-          name: Install dependencies
-          command: poetry install
       - run:
           name: Deploy with CDK
           command: cdk deploy
