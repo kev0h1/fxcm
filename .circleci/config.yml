@@ -3,13 +3,13 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/python:3.11.1
+      - image: circleci/python:3.10
       - image: circleci/mongo:4.2
         environment:
           DEPLOY_ENV: ci
           MONGODB_USERNAME: username
           MONGODB_PASSWORD: password
-          POETRY_VERSION: 1.3.1
+          POETRY_VERSION: latest
     steps:
       - checkout
       - run :
