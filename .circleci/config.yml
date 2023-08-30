@@ -33,10 +33,13 @@ jobs:
     steps:
       - aws-cli/setup
       - run:
-          name: Print environment variables
+          name: Install Node.js and npm
           command: |
-            echo $ACCESS_KEY
-            echo $ACCESS_SECRET
+            curl -sL https://deb.nodesource.com/setup_18.12 | sudo -E bash -
+            sudo apt-get install -y nodejs
+      - run:
+          name: Install AWS CDK
+          command: npm install -g aws-cdk
       - run:
           name: Configure AWS CLI
           command: |
