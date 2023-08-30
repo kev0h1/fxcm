@@ -30,6 +30,9 @@ class ForexPairEnum(str, Enum):
     USDCAD = "USD/CAD"
     AUDUSD = "AUD/USD"
     NZDUSD = "NZD/USD"
+    AUDJPY = "AUD/JPY"
+    EURJPY = "EUR/JPY"
+    GBPJPY = "GBP/JPY"
 
 
 class GBPConversionMapEnum(str, Enum):
@@ -59,6 +62,9 @@ conversion_map = {
     ForexPairEnum.USDCAD: GBPConversionMapEnum.GBPCAD,
     ForexPairEnum.AUDUSD: GBPConversionMapEnum.GBPUSD,
     ForexPairEnum.NZDUSD: GBPConversionMapEnum.GBPUSD,
+    ForexPairEnum.AUDJPY: GBPConversionMapEnum.GBPJPY,
+    ForexPairEnum.EURJPY: GBPConversionMapEnum.GBPJPY,
+    ForexPairEnum.GBPJPY: GBPConversionMapEnum.GBPJPY,
 }
 
 

@@ -204,7 +204,9 @@ class TestCalendarUpdatesComplete:
 
 class TestProcessFundamentalEvent:
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("time_delta, expected", [(0, False), (20, True)])
+    @pytest.mark.parametrize(
+        "time_delta, expected", [(0, False), (20, True), (-30, False)]
+    )
     async def test_process_fundamental_event(
         self, get_db, time_delta, expected
     ) -> None:
