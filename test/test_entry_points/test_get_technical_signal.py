@@ -24,7 +24,7 @@ class TestGetTechnicalSignal:
                     "LongTerm_MA": 0.1,
                     "Prev_ShortTerm_MA": 0.4,
                     "Prev_MediumTerm_MA": 0.5,
-                    "rsi": 51,
+                    "rsi": 29,
                 }
             ]
         )
@@ -41,7 +41,7 @@ class TestGetTechnicalSignal:
                     "LongTerm_MA": 0.1,
                     "Prev_ShortTerm_MA": 0.4,
                     "Prev_MediumTerm_MA": 0.5,
-                    "rsi": 51,
+                    "rsi": 29,
                     "close": 1.2,
                 }
             ]
@@ -75,7 +75,7 @@ class TestGetTechnicalSignal:
                     "LongTerm_MA": 0.9,
                     "Prev_ShortTerm_MA": 0.5,
                     "Prev_MediumTerm_MA": 0.4,
-                    "rsi": 45,
+                    "rsi": 89,
                 }
             ]
         )
@@ -92,7 +92,7 @@ class TestGetTechnicalSignal:
                     "LongTerm_MA": 0.9,
                     "Prev_ShortTerm_MA": 0.5,
                     "Prev_MediumTerm_MA": 0.4,
-                    "rsi": 45,
+                    "rsi": 89,
                     "close": 1.2,
                 }
             ]

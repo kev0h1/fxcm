@@ -102,7 +102,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         )
         & (refined_data["ShortTerm_MA"] > refined_data["MediumTerm_MA"])
         & (refined_data["MediumTerm_MA"] > refined_data["LongTerm_MA"])
-        & (refined_data["rsi"] > 50)
+        & (refined_data["rsi"] < 30)
     )
 
     # Create a Sell_Signal column that checks if the short term MA has just crossed below the other two MAs and RSI has just crossed below 50
@@ -113,7 +113,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         )
         & (refined_data["ShortTerm_MA"] < refined_data["MediumTerm_MA"])
         & (refined_data["MediumTerm_MA"] < refined_data["LongTerm_MA"])
-        & (refined_data["rsi"] < 50)
+        & (refined_data["rsi"] > 70)
     )
 
     # Combine the Buy_Signal and Sell_Signal into a single Signal column
