@@ -130,6 +130,17 @@ async def open_trade_handler(
 
     trade_id = None
 
+    trades_open = await uow.trade_repository.get_open_trades_by_forex_pair(
+        event.forex_pair
+    )
+
+    if len(trades_open) != 0:
+        logger.info(
+            "There are %s open trades for forex pair %s"
+            % (len(trades_open), event.forex_pair)
+        )
+        return
+
     if (
         await get_combined_techincal_and_fundamental_sentiment(
             event=event, uow=uow, currencies=currencies

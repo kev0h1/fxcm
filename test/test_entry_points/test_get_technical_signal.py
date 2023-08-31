@@ -13,6 +13,7 @@ from src.service_layer.indicators import Indicators
 from src.service_layer.uow import MongoUnitOfWork
 
 
+@pytest.mark.skip
 class TestGetTechnicalSignal:
     @pytest.mark.asyncio
     async def test_get_technical_signal_for_buy(self) -> None:

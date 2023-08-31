@@ -41,27 +41,24 @@ async def get_technical_signal(
                 col="close",
                 column_name="ShortTerm_MA",
             )
-            refined_data = await indicator.get_simple_moving_average(
-                refined_data,
-                period=50,
-                col="close",
-                column_name="MediumTerm_MA",
-            )
-            refined_data = await indicator.get_simple_moving_average(
-                refined_data,
-                period=100,
-                col="close",
-                column_name="LongTerm_MA",
-            )
+
+            refined_data = await indicator.get_macd(refined_data, "close")
 
             refined_data = await indicator.get_rsi(refined_data, period=14)
+
+            refined_data = await indicator.get_atr(refined_data, period=14)
 
             refined_data["Prev_ShortTerm_MA"] = refined_data[
                 "ShortTerm_MA"
             ].shift(1)
-            refined_data["Prev_MediumTerm_MA"] = refined_data[
-                "MediumTerm_MA"
-            ].shift(1)
+
+            refined_data["prev_close"] = refined_data["close"].shift(1)
+
+            refined_data["prev_rsi"] = refined_data["rsi"].shift(1)
+
+            refined_data["prev_macd"] = refined_data["macd"].shift(1)
+            refined_data["prev_macd_h"] = refined_data["macd_h"].shift(1)
+            refined_data["prev_macd_s"] = refined_data["macd_s"].shift(1)
 
             refined_data = await get_signal(refined_data)
             if refined_data.iloc[-1]["Signal"] > 0:
@@ -74,7 +71,7 @@ async def get_technical_signal(
                     OpenTradeEvent(
                         forex_pair=forex_pair,
                         sentiment=SentimentEnum.BULLISH,
-                        stop=refined_data.iloc[-1]["LongTerm_MA"],
+                        stop=refined_data.iloc[-1]["ATR_Stop"],
                         close=refined_data.iloc[-1]["close"],
                     )
                 )
@@ -88,32 +85,105 @@ async def get_technical_signal(
                     OpenTradeEvent(
                         forex_pair=forex_pair,
                         sentiment=SentimentEnum.BEARISH,
-                        stop=refined_data.iloc[-1]["LongTerm_MA"],
+                        stop=refined_data.iloc[-1]["ATR_Stop"],
                         close=refined_data.iloc[-1]["close"],
                     )
                 )
 
 
 async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
+    # Buy Signal Conditions
+    condition_close_above_MA = (
+        refined_data["close"] > refined_data["ShortTerm_MA"]
+    )
+    condition_macd_above_signal = refined_data["macd"] > refined_data["macd_s"]
+    condition_rsi_above_35 = refined_data["rsi"] > 35
+
+    condition_close_below_MA_previous = (
+        refined_data["prev_close"] < refined_data["Prev_ShortTerm_MA"]
+    )
+    condition_macd_below_signal_previous = (
+        refined_data["prev_macd"] < refined_data["prev_macd_s"]
+    )
+    condition_rsi_below_35_previous = refined_data["prev_rsi"] < 35
+
+    # Sell Signal Conditions
+    condition_close_below_MA = (
+        refined_data["close"] < refined_data["ShortTerm_MA"]
+    )
+    condition_macd_below_signal = refined_data["macd"] < refined_data["macd_s"]
+    condition_rsi_below_65 = (
+        refined_data["rsi"] < 65
+    )  # Assuming you want to use 65 here
+
+    condition_close_above_MA_previous = (
+        refined_data["prev_close"] > refined_data["Prev_ShortTerm_MA"]
+    )
+    condition_macd_above_signal_previous = (
+        refined_data["prev_macd"] > refined_data["prev_macd_s"]
+    )
+    condition_rsi_above_65_previous = (
+        refined_data["prev_rsi"] > 65
+    )  # Assuming you want to use 65 here
+
+    window_size = 3  # Number of candles for sequential confirmation
+
+    # For Buy Signals
+    rolling_close_above_MA = condition_close_above_MA.rolling(
+        window_size
+    ).sum()
+    rolling_macd_above_signal = condition_macd_above_signal.rolling(
+        window_size
+    ).sum()
+    rolling_rsi_above_35 = condition_rsi_above_35.rolling(window_size).sum()
+
+    rolling_close_below_MA_previous = (
+        condition_close_below_MA_previous.rolling(window_size).sum()
+    )
+    rolling_macd_below_signal_previous = (
+        condition_macd_below_signal_previous.rolling(window_size).sum()
+    )
+    rolling_rsi_below_35_previous = condition_rsi_below_35_previous.rolling(
+        window_size
+    ).sum()
+
+    # For Sell Signals
+    rolling_close_below_MA = condition_close_below_MA.rolling(
+        window_size
+    ).sum()
+    rolling_macd_below_signal = condition_macd_below_signal.rolling(
+        window_size
+    ).sum()
+    rolling_rsi_below_65 = condition_rsi_below_65.rolling(window_size).sum()
+
+    rolling_close_above_MA_previous = (
+        condition_close_above_MA_previous.rolling(window_size).sum()
+    )
+    rolling_macd_above_signal_previous = (
+        condition_macd_above_signal_previous.rolling(window_size).sum()
+    )
+    rolling_rsi_above_65_previous = condition_rsi_above_65_previous.rolling(
+        window_size
+    ).sum()
+
+    # For Buy Signal
     refined_data["Buy_Signal"] = (
-        (
-            refined_data["Prev_ShortTerm_MA"]
-            <= refined_data["Prev_MediumTerm_MA"]
-        )
-        & (refined_data["ShortTerm_MA"] > refined_data["MediumTerm_MA"])
-        & (refined_data["MediumTerm_MA"] > refined_data["LongTerm_MA"])
-        & (refined_data["rsi"] < 30)
+        (rolling_close_above_MA > 0)
+        & (rolling_macd_above_signal > 0)
+        & (rolling_rsi_above_35 > 0)
+        & (rolling_close_below_MA_previous > 0)
+        & (rolling_macd_below_signal_previous > 0)
+        & (rolling_rsi_below_35_previous > 0)
     )
 
-    # Create a Sell_Signal column that checks if the short term MA has just crossed below the other two MAs and RSI has just crossed below 50
+    # For Sell Signal
     refined_data["Sell_Signal"] = (
-        (
-            refined_data["Prev_ShortTerm_MA"]
-            >= refined_data["Prev_MediumTerm_MA"]
-        )
-        & (refined_data["ShortTerm_MA"] < refined_data["MediumTerm_MA"])
-        & (refined_data["MediumTerm_MA"] < refined_data["LongTerm_MA"])
-        & (refined_data["rsi"] > 70)
+        (rolling_close_below_MA > 0)
+        & (rolling_macd_below_signal > 0)
+        & (rolling_rsi_below_65 > 0)
+        & (rolling_close_above_MA_previous > 0)
+        & (rolling_macd_above_signal_previous > 0)
+        & (rolling_rsi_above_65_previous > 0)
     )
 
     # Combine the Buy_Signal and Sell_Signal into a single Signal column
@@ -122,5 +192,19 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     ) - refined_data["Sell_Signal"].replace({True: 1, False: 0})
 
     refined_data = refined_data.drop(columns=["Buy_Signal", "Sell_Signal"])
+
+    def calculate_stop(row):
+        if row["Signal"] == 1:  # Buy
+            return (
+                row["close"] - 1 * row["atr"]
+            )  # Adjust the multiplier as needed
+        elif row["Signal"] == -1:  # Sell
+            return (
+                row["close"] + 1 * row["atr"]
+            )  # Adjust the multiplier as needed
+        else:  # No signal
+            return None
+
+    refined_data["ATR_Stop"] = refined_data.apply(calculate_stop, axis=1)
 
     return refined_data
