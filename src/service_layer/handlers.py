@@ -73,6 +73,13 @@ async def get_combined_techincal_and_fundamental_sentiment(
         )
     )
 
+    if latest_object.processed == False:
+        logger.warning(
+            "Latest object is not processed %s and last updated time of %s"
+            % (latest_object.currency, latest_object.last_updated)
+        )
+        return SentimentEnum.FLAT
+
     if event.sentiment == SentimentEnum.BULLISH and (
         (
             base_currency_fundamentals == latest_object
@@ -85,6 +92,9 @@ async def get_combined_techincal_and_fundamental_sentiment(
             != SentimentEnum.BULLISH
         )
     ):
+        logger.warning(
+            "Combined sentiment is bullish for %s" % event.forex_pair
+        )
         return SentimentEnum.BULLISH
 
     if event.sentiment == SentimentEnum.BEARISH and (
@@ -99,8 +109,12 @@ async def get_combined_techincal_and_fundamental_sentiment(
             != SentimentEnum.BEARISH
         )
     ):
+        logger.warning(
+            "Combined sentiment is bearish for %s" % event.forex_pair
+        )
         return SentimentEnum.BEARISH
 
+    logger.warning("Combined sentiment is flat for %s" % event.forex_pair)
     return SentimentEnum.FLAT
 
 
@@ -126,6 +140,17 @@ async def open_trade_handler(
     )
 
     trade_id = None
+
+    trades_open = await uow.trade_repository.get_open_trades_by_forex_pair(
+        event.forex_pair
+    )
+
+    if len(trades_open) != 0:
+        logger.info(
+            "There are %s open trades for forex pair %s"
+            % (len(trades_open), event.forex_pair)
+        )
+        return
 
     if (
         await get_combined_techincal_and_fundamental_sentiment(

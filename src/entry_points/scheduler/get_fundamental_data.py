@@ -137,3 +137,22 @@ async def get_calendar_event(
         ),
         None,
     )
+
+
+async def process_fundamental_data(
+    date_: datetime,
+    uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
+    fundamental_data_service: FundamentalDataService = Depends(
+        Provide[Container.fundamental_data_service]
+    ),
+) -> None:
+    """Processes the fundamental data for a given date"""
+    async with uow:
+        fundamental_data = (
+            await fundamental_data_service.get_fundamental_data_for_unprocessed_events()
+        )
+        for data in fundamental_data:
+            timedelta = date_ - data.last_updated
+            if timedelta.total_seconds() > (60 * 10):
+                data.processed = True
+                await uow.fundamental_data_repository.save(data)

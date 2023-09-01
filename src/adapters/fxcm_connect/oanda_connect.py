@@ -7,6 +7,7 @@ from src.domain.schema.trades import (
     TradeCRDCOSchema,
     TradeDetailResponse,
     StopLossOrder,
+    NotFoundResponse,
 )
 from src.domain.schema.transaction import OrderSchema, OrderTransaction
 from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
@@ -287,11 +288,14 @@ class OandaConnect(BaseTradeConnect):
         response_model: TradeDetailResponse = parse_obj_as(
             TradeDetailResponse, response
         )
-        if response_model.trade is not None:
+        if (
+            not isinstance(response_model, NotFoundResponse)
+            and response_model.trade is not None
+        ):
             return response_model.trade.state, float(
                 response_model.trade.realizedPL
             )
-        return None
+        return None, None
 
     @error_handler
     async def get_pending_orders(self) -> list[StopLossOrder]:

@@ -30,6 +30,27 @@ class ForexPairEnum(str, Enum):
     USDCAD = "USD/CAD"
     AUDUSD = "AUD/USD"
     NZDUSD = "NZD/USD"
+    AUDJPY = "AUD/JPY"
+    EURJPY = "EUR/JPY"
+    GBPJPY = "GBP/JPY"
+    CADCHF = "CAD/CHF"
+    CADJPY = "CAD/JPY"
+    CHFJPY = "CHF/JPY"
+    EURCAD = "EUR/CAD"
+    EURCHF = "EUR/CHF"
+    EURGBP = "EUR/GBP"
+    EURAUD = "EUR/AUD"
+    EURNZD = "EUR/NZD"
+    GBPCAD = "GBP/CAD"
+    GBPCHF = "GBP/CHF"
+    GBPAUD = "GBP/AUD"
+    GBPNZD = "GBP/NZD"
+    AUDCAD = "AUD/CAD"
+    AUDCHF = "AUD/CHF"
+    AUDNZD = "AUD/NZD"
+    NZDCAD = "NZD/CAD"
+    NZDCHF = "NZD/CHF"
+    NZDJPY = "NZD/JPY"
 
 
 class GBPConversionMapEnum(str, Enum):
@@ -59,6 +80,27 @@ conversion_map = {
     ForexPairEnum.USDCAD: GBPConversionMapEnum.GBPCAD,
     ForexPairEnum.AUDUSD: GBPConversionMapEnum.GBPUSD,
     ForexPairEnum.NZDUSD: GBPConversionMapEnum.GBPUSD,
+    ForexPairEnum.AUDJPY: GBPConversionMapEnum.GBPJPY,
+    ForexPairEnum.EURJPY: GBPConversionMapEnum.GBPJPY,
+    ForexPairEnum.GBPJPY: GBPConversionMapEnum.GBPJPY,
+    ForexPairEnum.CADCHF: GBPConversionMapEnum.GBPCHF,
+    ForexPairEnum.CADJPY: GBPConversionMapEnum.GBPJPY,
+    ForexPairEnum.CHFJPY: GBPConversionMapEnum.GBPJPY,
+    ForexPairEnum.EURCAD: GBPConversionMapEnum.GBPCAD,
+    ForexPairEnum.EURCHF: GBPConversionMapEnum.GBPCHF,
+    ForexPairEnum.EURGBP: GBPConversionMapEnum.GBPEUR,
+    ForexPairEnum.EURAUD: GBPConversionMapEnum.GBPAUD,
+    ForexPairEnum.EURNZD: GBPConversionMapEnum.GBPNZD,
+    ForexPairEnum.GBPCAD: GBPConversionMapEnum.GBPCAD,
+    ForexPairEnum.GBPCHF: GBPConversionMapEnum.GBPCHF,
+    ForexPairEnum.GBPAUD: GBPConversionMapEnum.GBPAUD,
+    ForexPairEnum.GBPNZD: GBPConversionMapEnum.GBPNZD,
+    ForexPairEnum.AUDCAD: GBPConversionMapEnum.GBPCAD,
+    ForexPairEnum.AUDCHF: GBPConversionMapEnum.GBPCHF,
+    ForexPairEnum.AUDNZD: GBPConversionMapEnum.GBPNZD,
+    ForexPairEnum.NZDCAD: GBPConversionMapEnum.GBPCAD,
+    ForexPairEnum.NZDCHF: GBPConversionMapEnum.GBPCHF,
+    ForexPairEnum.NZDJPY: GBPConversionMapEnum.GBPJPY,
 }
 
 
@@ -127,3 +169,4 @@ class DebugEnum(Enum):
     GetTradeState = "Get Trade State"
     TestGetPendingOrders = "Test Get Pending Orders"
     TestCancelPendingOrder = "Test Cancel Pending Order"
+    TestProcessEvents = "Test Process Events"

@@ -54,7 +54,11 @@ class MongoUnitOfWork(AbstractUnitOfWork):
             docdb_cluster_endpoint = "mydbcluster.cluster-cj2g1svpqisv.us-east-1.docdb.amazonaws.com"
             self.pem_path = "./global-bundle.pem"
             self.host = f"mongodb://{username}:{password}@{docdb_cluster_endpoint}:27017/?tls=true&tlsCAFile={self.pem_path}&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
-
+        elif os.environ.get("DEPLOY_ENV", "local") == "ci":
+            logger.info("Using Circle CLI")
+            mongodb_username = os.environ["MONGODB_USERNAME"]
+            mongodb_password = os.environ["MONGODB_PASSWORD"]
+            self.host = f"mongodb://{mongodb_username}:{mongodb_password}@localhost:27017"
         else:
             logger.info("Using local MongoDB")
             self.host = f"mongodb://localhost"

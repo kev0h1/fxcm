@@ -37,6 +37,18 @@ class FundamentalDataService:
             fundamental_data=fundamental_data
         )
 
+    async def get_all_data_older_than_given_date(self, date_: datetime.date):
+        """Get all data older than a given date"""
+        return await self._uow.fundamental_data_repository.get_all_data_older_than_given_date(
+            date_=date_
+        )
+
+    async def get_fundamental_data_for_unprocessed_events(self):
+        """Get fundamental data for unprocessed events"""
+        return (
+            await self._uow.fundamental_data_repository.get_fundamental_data_for_unprocessed_events()
+        )
+
     async def get_latest_fundamental_data_for_currency(
         self, currency: CurrencyEnum
     ):
