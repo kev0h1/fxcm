@@ -62,6 +62,7 @@ async def get_technical_signal(
 
             refined_data = await get_signal(refined_data)
             if refined_data.iloc[-1]["Signal"] > 0:
+                logger.warning("Bullish Signal generated for %s" % forex_pair)
                 await uow.publish(
                     CloseForexPairEvent(
                         forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
@@ -76,6 +77,7 @@ async def get_technical_signal(
                     )
                 )
             elif refined_data.iloc[-1]["Signal"] < 0:
+                logger.warning("Bearish Signal generated for %s" % forex_pair)
                 await uow.publish(
                     CloseForexPairEvent(
                         forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH

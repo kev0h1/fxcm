@@ -74,6 +74,10 @@ async def get_combined_techincal_and_fundamental_sentiment(
     )
 
     if latest_object.processed == False:
+        logger.warning(
+            "Latest object is not processed %s and last updated time of %s"
+            % (latest_object.currency, latest_object.last_updated)
+        )
         return SentimentEnum.FLAT
 
     if event.sentiment == SentimentEnum.BULLISH and (
@@ -88,6 +92,9 @@ async def get_combined_techincal_and_fundamental_sentiment(
             != SentimentEnum.BULLISH
         )
     ):
+        logger.warning(
+            "Combined sentiment is bullish for %s" % event.forex_pair
+        )
         return SentimentEnum.BULLISH
 
     if event.sentiment == SentimentEnum.BEARISH and (
@@ -102,8 +109,12 @@ async def get_combined_techincal_and_fundamental_sentiment(
             != SentimentEnum.BEARISH
         )
     ):
+        logger.warning(
+            "Combined sentiment is bearish for %s" % event.forex_pair
+        )
         return SentimentEnum.BEARISH
 
+    logger.warning("Combined sentiment is flat for %s" % event.forex_pair)
     return SentimentEnum.FLAT
 
 
