@@ -33,8 +33,15 @@ jobs:
       - image: cimg/python:3.11.5
     steps:
       - aws-cli/setup
-      - node/install:
-          install-npm: true
+      - run:
+          name: Install NVM
+          command: |
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+      - run:
+          name: Install Node.js and npm
+          command: nvm install 18.12
       - run:
           name: Install AWS CDK
           command: npm install -g aws-cdk
