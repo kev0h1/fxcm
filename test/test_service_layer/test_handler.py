@@ -473,7 +473,7 @@ class TestOpenTradeHandler:
                     True,
                     int(
                         10000
-                        * (100000 * 0.05)
+                        * (100000 * 0.02)
                         / (
                             (
                                 abs(0.8784 - 0.8804)
@@ -494,7 +494,7 @@ class TestOpenTradeHandler:
                     False,
                     int(
                         10000
-                        * (100000 * 0.05)
+                        * (100000 * 0.02)
                         / (
                             (
                                 abs(145.748 - 145.81)
