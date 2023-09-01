@@ -226,7 +226,7 @@ async def get_trade_parameters(
     is_buy = True if event.sentiment == SentimentEnum.BULLISH else False
 
     pip_value = 0.0001 if "JPY" not in currencies else 0.01
-    risk = 5 / 100
+    risk = 2 / 100
 
     stop_loss_pips = abs(event.close - event.stop) / pip_value
 
