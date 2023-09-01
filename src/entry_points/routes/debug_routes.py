@@ -61,7 +61,11 @@ class DebugResource(Resource):
     async def get(self):
         """Deletes the database"""
         logger.info("Get system info")
-        return {"time": datetime.now(tz=get_localzone()), "system": "ok"}
+        return {
+            "time": datetime.now(tz=get_localzone()),
+            "system": "ok",
+            "version": "1.0.0",
+        }
 
     @set_responses(Any, 200)
     async def put(self, debug_task: DebugEnum):
