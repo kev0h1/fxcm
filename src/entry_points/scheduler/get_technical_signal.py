@@ -48,6 +48,8 @@ async def get_technical_signal(
 
             refined_data = await indicator.get_atr(refined_data, period=14)
 
+            refined_data = await indicator.get_adx(refined_data, period=14)
+
             refined_data["Prev_ShortTerm_MA"] = refined_data[
                 "ShortTerm_MA"
             ].shift(1)
@@ -94,6 +96,10 @@ async def get_technical_signal(
 
 
 async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
+    condition_adx_gt_25 = refined_data["adx"] > 25
+
+    rolling_adx_25 = condition_adx_gt_25.rolling(1).sum()
+
     # Buy Signal Conditions
     condition_close_above_MA = (
         refined_data["close"] > refined_data["ShortTerm_MA"]
@@ -108,6 +114,10 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         refined_data["prev_macd"] < refined_data["prev_macd_s"]
     )
     condition_rsi_below_35_previous = refined_data["prev_rsi"] < 35
+
+    condition_di_plus_gt_di_minus = (
+        refined_data["plus_di"] > refined_data["minus_di"]
+    )
 
     # Sell Signal Conditions
     condition_close_below_MA = (
@@ -127,6 +137,10 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     condition_rsi_above_65_previous = (
         refined_data["prev_rsi"] > 65
     )  # Assuming you want to use 65 here
+
+    condition_di_plus_lt_di_minus = (
+        refined_data["plus_di"] < refined_data["minus_di"]
+    )
 
     window_size = 3  # Number of candles for sequential confirmation
 
@@ -149,6 +163,10 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         window_size
     ).sum()
 
+    rolling_di_plus_gt_di_minus = condition_di_plus_gt_di_minus.rolling(
+        1
+    ).sum()
+
     # For Sell Signals
     rolling_close_below_MA = condition_close_below_MA.rolling(
         window_size
@@ -168,6 +186,10 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         window_size
     ).sum()
 
+    rolling_di_plus_lt_di_minus = condition_di_plus_lt_di_minus.rolling(
+        1
+    ).sum()
+
     # For Buy Signal
     refined_data["Buy_Signal"] = (
         (rolling_close_above_MA > 0)
@@ -176,6 +198,8 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (rolling_close_below_MA_previous > 0)
         & (rolling_macd_below_signal_previous > 0)
         & (rolling_rsi_below_35_previous > 0)
+        & (rolling_di_plus_gt_di_minus > 0)
+        & (rolling_adx_25 > 0)
     )
 
     # For Sell Signal
@@ -186,6 +210,8 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (rolling_close_above_MA_previous > 0)
         & (rolling_macd_above_signal_previous > 0)
         & (rolling_rsi_above_65_previous > 0)
+        & (rolling_di_plus_lt_di_minus > 0)
+        & (rolling_adx_25 > 0)
     )
 
     # Combine the Buy_Signal and Sell_Signal into a single Signal column

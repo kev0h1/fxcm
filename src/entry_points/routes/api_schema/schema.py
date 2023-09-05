@@ -55,3 +55,11 @@ class TradeSchema(Base):
     sl_pips: float = Field(default=None)
     initiated_date: datetime
     position: PositionEnum
+
+
+class TradeStatistic(Base):
+    pnl: float = Field(default=None)
+    number_of_winners: int = Field(default=None)
+    number_of_losers: int = Field(default=None)
+    number_of_trades: int = Field(default=None)
+    trades: list[TradeSchema] = Field(default=None)

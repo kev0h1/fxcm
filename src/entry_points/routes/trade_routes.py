@@ -6,6 +6,10 @@ from fastapi import Depends
 from src.domain.trade import Trade
 from src.container.container import Container
 from src.service_layer.trade_service import TradeService
+from src.entry_points.routes.api_schema.schema import (
+    TradeSchema,
+    TradeStatistic,
+)
 from src.service_layer.uow import MongoUnitOfWork
 from src.logger import get_logger
 
@@ -25,7 +29,7 @@ class TradeResource(Resource):
         self.service = trade_service
         self._uow = uow
 
-    @set_responses(List[Any], 200)
+    @set_responses(TradeStatistic, 200)
     async def get(self, date: date = None):
         """Deletes the database"""
         kwargs = {}
@@ -46,16 +50,16 @@ class TradeResource(Resource):
                     num_losers += 1
 
             number_of_trades = len(data)
-
+            trade_schemas = [TradeSchema(**vars(trade)) for trade in data]
             trade_statistics = {
                 "pnl": pnl,
                 "number_of_winners": num_winners,
                 "number_of_losers": num_losers,
                 "number_of_trades": number_of_trades,
-                "trades": data,
+                "trades": trade_schemas,
             }
 
-            return trade_statistics
+            return TradeStatistic(**trade_statistics)
 
 
 class TradePl(Resource):
