@@ -38,7 +38,8 @@ class TradeResource(Resource):
             num_winners = 0
             num_losers = 0
             for trade in data:
-                pnl += trade.realised_pl
+                if trade.realised_pl is not None:
+                    pnl += trade.realised_pl
                 if trade.is_winner:
                     num_winners += 1
                 else:
