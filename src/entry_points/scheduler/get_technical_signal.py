@@ -96,7 +96,7 @@ async def get_technical_signal(
 
 
 async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
-    condition_adx_gt_25 = refined_data["adx"] > 25
+    condition_adx_gt_25 = refined_data["adx"] > 20
 
     rolling_adx_25 = condition_adx_gt_25.rolling(1).sum()
 

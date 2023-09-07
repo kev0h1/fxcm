@@ -34,55 +34,26 @@ async def manage_trades_handler(
 
             for trade in trades:
                 sl_pips = math.inf if trade.sl_pips is None else trade.sl_pips
-                break_even_pips = min(10, sl_pips)
+                break_even_pips = min(5, sl_pips)
                 if trade.is_buy and close > trade.close:
                     diff = round((close - trade.close) / pip_value)
                     if diff >= break_even_pips:
-                        if trade.new_close is None:
-                            trade.new_close = close
-                            trade.stop += break_even_pips * pip_value
-                            logger.info(
-                                "Changed stop to %s for trade %s"
-                                % (trade.stop, trade.trade_id),
-                            )
-                            modified = True
-
-                        else:
-                            new_diff = round(
-                                (close - trade.new_close) / pip_value
-                            )
-                            if new_diff >= 1:
-                                trade.new_close = close
-                                trade.stop += new_diff * pip_value
-                                logger.info(
-                                    "Changed stop to %s for trade %s"
-                                    % (trade.stop, trade.trade_id),
-                                )
-                                modified = True
+                        trade.stop = close - break_even_pips * pip_value
+                        logger.info(
+                            "Changed stop to %s for trade %s"
+                            % (trade.stop, trade.trade_id),
+                        )
+                        modified = True
 
                 elif not trade.is_buy and close < trade.close:
                     diff = round((trade.close - close) / pip_value)
                     if diff >= break_even_pips:
-                        if trade.new_close is None:
-                            trade.new_close = close
-                            trade.stop -= break_even_pips * pip_value
-                            logger.info(
-                                "Changed stop to %s for trade %s"
-                                % (trade.stop, trade.trade_id),
-                            )
-                            modified = True
-                        else:
-                            new_diff = round(
-                                (trade.new_close - close) / pip_value
-                            )
-                            if new_diff >= 1:
-                                trade.new_close = close
-                                trade.stop -= new_diff * pip_value
-                                logger.info(
-                                    "Changed stop to %s for trade %s"
-                                    % (trade.stop, trade.trade_id),
-                                )
-                                modified = True
+                        trade.stop = close + break_even_pips * pip_value
+                        logger.info(
+                            "Changed stop to %s for trade %s"
+                            % (trade.stop, trade.trade_id),
+                        )
+                        modified = True
 
                 if modified:
                     logger.warning(
