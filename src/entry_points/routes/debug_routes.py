@@ -143,7 +143,7 @@ class DebugResource(Resource):
             return await self.uow.fxcm_connection.get_open_positions()
 
         if debug_task == DebugEnum.TestManageTrade:
-            return "hi"
+            return await manage_trades_handler()
 
         if debug_task == DebugEnum.TestProcessEvents:
             return await process_fundamental_events()

@@ -1,9 +1,10 @@
 import math
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
-from src.config import ForexPairEnum
+from src.config import ForexPairEnum, PeriodEnum
 from src.container.container import Container
 from src.domain.trade import Trade
+from src.service_layer.indicators import Indicators
 
 from src.service_layer.uow import MongoUnitOfWork
 from src.logger import get_logger
@@ -16,43 +17,38 @@ logger = get_logger(__name__)
 @inject
 async def manage_trades_handler(
     uow: MongoUnitOfWork = Depends(Provide[Container.uow]),
+    indicator: Indicators = Depends(Provide[Container.indicator_service]),
 ) -> None:  # type: ignore
     async with uow:
         forex_pairs: list[
             ForexPairEnum
         ] = await uow.trade_repository.get_distinct_forex_pairs()
         for forex_pair in forex_pairs:
-            close = await uow.fxcm_connection.get_latest_close(forex_pair)
+            data = await uow.fxcm_connection.get_candle_data(
+                forex_pair, PeriodEnum.MINUTE_1, 20
+            )
+            data = await indicator.get_atr(data, 14)
+            close = data.iloc[-1]["close"]
+            atr = data.iloc[-1]["atr"]
             trades: list[
                 Trade
             ] = await uow.trade_repository.get_open_trades_by_forex_pair(
                 forex_pair=forex_pair
             )
-            currencies = forex_pair.value.split("/")
-            pip_value = 0.0001 if "JPY" not in currencies else 0.01
-            modified = False
 
             for trade in trades:
-                sl_pips = math.inf if trade.sl_pips is None else trade.sl_pips
-                break_even_pips = min(5, sl_pips)
-                if trade.is_buy and close > trade.close:
-                    diff = round((close - trade.close) / pip_value)
-                    if diff >= break_even_pips:
-                        trade.stop = close - break_even_pips * pip_value
-                        logger.info(
-                            "Changed stop to %s for trade %s"
-                            % (trade.stop, trade.trade_id),
-                        )
-                        modified = True
+                modified = False
 
-                elif not trade.is_buy and close < trade.close:
-                    diff = round((trade.close - close) / pip_value)
-                    if diff >= break_even_pips:
-                        trade.stop = close + break_even_pips * pip_value
-                        logger.info(
-                            "Changed stop to %s for trade %s"
-                            % (trade.stop, trade.trade_id),
-                        )
+                if trade.is_buy:
+                    new_stop = close - 2.5 * atr
+                    if new_stop > trade.stop:
+                        trade.stop = new_stop
+
+                        modified = True
+                else:
+                    new_stop = close + 2.5 * atr
+                    if new_stop < trade.stop:
+                        trade.stop = new_stop
                         modified = True
 
                 if modified:
@@ -65,6 +61,7 @@ async def manage_trades_handler(
                         )
                     )
                     await uow.trade_repository.save(trade)
+
                 if (trade.is_buy and trade.stop > close) or (
                     not trade.is_buy and trade.stop < close
                 ):

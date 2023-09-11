@@ -31,7 +31,7 @@ async def get_technical_signal(
                 await uow.fxcm_connection.get_candle_data(
                     instrument=ForexPairEnum(forex_pair),
                     period=PeriodEnum.MINUTE_5,
-                    number=250,
+                    number=1000,
                 )
             )
 
@@ -50,17 +50,9 @@ async def get_technical_signal(
 
             refined_data = await indicator.get_adx(refined_data, period=14)
 
-            refined_data["Prev_ShortTerm_MA"] = refined_data[
-                "ShortTerm_MA"
-            ].shift(1)
-
-            refined_data["prev_close"] = refined_data["close"].shift(1)
-
-            refined_data["prev_rsi"] = refined_data["rsi"].shift(1)
-
-            refined_data["prev_macd"] = refined_data["macd"].shift(1)
-            refined_data["prev_macd_h"] = refined_data["macd_h"].shift(1)
-            refined_data["prev_macd_s"] = refined_data["macd_s"].shift(1)
+            refined_data = await indicator.get_bollinger(
+                refined_data, period=5
+            )
 
             refined_data = await get_signal(refined_data)
             if refined_data.iloc[-1]["Signal"] > 0:
@@ -96,123 +88,43 @@ async def get_technical_signal(
 
 
 async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
-    condition_adx_gt_25 = refined_data["adx"] > 25
-
-    rolling_adx_25 = condition_adx_gt_25.rolling(1).sum()
-
-    # Buy Signal Conditions
-    condition_close_above_MA = (
-        refined_data["close"] > refined_data["ShortTerm_MA"]
+    refined_data["macd"] = (
+        refined_data["close"] - refined_data["close"].rolling(window=10).mean()
     )
-    condition_macd_above_signal = refined_data["macd"] > refined_data["macd_s"]
-    condition_rsi_above_35 = refined_data["rsi"] > 35
-
-    condition_close_below_MA_previous = (
-        refined_data["prev_close"] < refined_data["Prev_ShortTerm_MA"]
-    )
-    condition_macd_below_signal_previous = (
-        refined_data["prev_macd"] < refined_data["prev_macd_s"]
-    )
-    condition_rsi_below_35_previous = refined_data["prev_rsi"] < 35
-
-    condition_di_plus_gt_di_minus = (
-        refined_data["plus_di"] > refined_data["minus_di"]
-    )
-
-    # Sell Signal Conditions
-    condition_close_below_MA = (
-        refined_data["close"] < refined_data["ShortTerm_MA"]
-    )
-    condition_macd_below_signal = refined_data["macd"] < refined_data["macd_s"]
-    condition_rsi_below_65 = (
-        refined_data["rsi"] < 65
-    )  # Assuming you want to use 65 here
-
-    condition_close_above_MA_previous = (
-        refined_data["prev_close"] > refined_data["Prev_ShortTerm_MA"]
-    )
-    condition_macd_above_signal_previous = (
-        refined_data["prev_macd"] > refined_data["prev_macd_s"]
-    )
-    condition_rsi_above_65_previous = (
-        refined_data["prev_rsi"] > 65
-    )  # Assuming you want to use 65 here
-
-    condition_di_plus_lt_di_minus = (
-        refined_data["plus_di"] < refined_data["minus_di"]
-    )
-
-    window_size = 3  # Number of candles for sequential confirmation
-
-    # For Buy Signals
-    rolling_close_above_MA = condition_close_above_MA.rolling(
-        window_size
-    ).sum()
-    rolling_macd_above_signal = condition_macd_above_signal.rolling(
-        window_size
-    ).sum()
-    rolling_rsi_above_35 = condition_rsi_above_35.rolling(window_size).sum()
-
-    rolling_close_below_MA_previous = (
-        condition_close_below_MA_previous.rolling(window_size).sum()
-    )
-    rolling_macd_below_signal_previous = (
-        condition_macd_below_signal_previous.rolling(window_size).sum()
-    )
-    rolling_rsi_below_35_previous = condition_rsi_below_35_previous.rolling(
-        window_size
-    ).sum()
-
-    rolling_di_plus_gt_di_minus = condition_di_plus_gt_di_minus.rolling(
+    refined_data["rsi"] = 100 - 100 / (
         1
-    ).sum()
-
-    # For Sell Signals
-    rolling_close_below_MA = condition_close_below_MA.rolling(
-        window_size
-    ).sum()
-    rolling_macd_below_signal = condition_macd_below_signal.rolling(
-        window_size
-    ).sum()
-    rolling_rsi_below_65 = condition_rsi_below_65.rolling(window_size).sum()
-
-    rolling_close_above_MA_previous = (
-        condition_close_above_MA_previous.rolling(window_size).sum()
-    )
-    rolling_macd_above_signal_previous = (
-        condition_macd_above_signal_previous.rolling(window_size).sum()
-    )
-    rolling_rsi_above_65_previous = condition_rsi_above_65_previous.rolling(
-        window_size
-    ).sum()
-
-    rolling_di_plus_lt_di_minus = condition_di_plus_lt_di_minus.rolling(
-        1
-    ).sum()
-
-    # For Buy Signal
-    refined_data["Buy_Signal"] = (
-        (rolling_close_above_MA > 0)
-        & (rolling_macd_above_signal > 0)
-        & (rolling_rsi_above_35 > 0)
-        & (rolling_close_below_MA_previous > 0)
-        & (rolling_macd_below_signal_previous > 0)
-        & (rolling_rsi_below_35_previous > 0)
-        & (rolling_di_plus_gt_di_minus > 0)
-        & (rolling_adx_25 > 0)
+        + (
+            refined_data["close"]
+            .diff()
+            .dropna()
+            .apply(lambda x: x if x > 0 else 0)
+            .rolling(window=14)
+            .mean()
+            / refined_data["close"]
+            .diff()
+            .dropna()
+            .apply(lambda x: -x if x < 0 else 0)
+            .rolling(window=14)
+            .mean()
+        )
     )
 
-    # For Sell Signal
-    refined_data["Sell_Signal"] = (
-        (rolling_close_below_MA > 0)
-        & (rolling_macd_below_signal > 0)
-        & (rolling_rsi_below_65 > 0)
-        & (rolling_close_above_MA_previous > 0)
-        & (rolling_macd_above_signal_previous > 0)
-        & (rolling_rsi_above_65_previous > 0)
-        & (rolling_di_plus_lt_di_minus > 0)
-        & (rolling_adx_25 > 0)
+    # Define divergence conditions
+    condition_bullish_divergence = (
+        (refined_data["close"] < refined_data["close"].shift(1))
+        & (refined_data["macd"] > refined_data["macd"].shift(1))
+        & (refined_data["rsi"] < 30)
     )
+
+    condition_bearish_divergence = (
+        (refined_data["close"] > refined_data["close"].shift(1))
+        & (refined_data["macd"] < refined_data["macd"].shift(1))
+        & (refined_data["rsi"] > 70)
+    )
+
+    # Create signals
+    refined_data["Buy_Signal"] = condition_bullish_divergence
+    refined_data["Sell_Signal"] = condition_bearish_divergence
 
     # Combine the Buy_Signal and Sell_Signal into a single Signal column
     refined_data["Signal"] = refined_data["Buy_Signal"].replace(
@@ -224,11 +136,11 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     def calculate_stop(row):
         if row["Signal"] == 1:  # Buy
             return (
-                row["close"] - 3 * row["atr"]
+                row["close"] - 2.5 * row["atr"]
             )  # Adjust the multiplier as needed
         elif row["Signal"] == -1:  # Sell
             return (
-                row["close"] + 3 * row["atr"]
+                row["close"] + 2.5 * row["atr"]
             )  # Adjust the multiplier as needed
         else:  # No signal
             return None
