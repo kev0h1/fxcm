@@ -40,6 +40,7 @@ def error_handler(func):
             return await func(*args, **kwargs)
         except V20Error as e:
             logger.error(e)
+            raise e
 
     return wrapper
 

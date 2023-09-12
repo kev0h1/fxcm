@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import os
 from typing import Any, Union
 from fastapi_restful import set_responses, Resource
+from oandapyV20 import V20Error
 import pytz
 from tzlocal import get_localzone
 from src.adapters.database.mongo.mongo_connect import Database
@@ -121,23 +122,29 @@ class DebugResource(Resource):
                 trade_id="511", stop=1.07944
             )
         if debug_task == DebugEnum.GetTradeState:
-            async with self.uow:
-                trades = await self.uow.trade_repository.get_all()
-                for trade in trades:
-                    (
-                        state,
-                        realised_pl,
-                    ) = await self.uow.fxcm_connection.get_trade_state(
-                        trade_id=trade.trade_id
-                    )
-                    if state != "OPEN":
-                        trade.position = PositionEnum.CLOSED
-                        trade.realised_pl = realised_pl
-                        trade.is_winner = True if realised_pl > 0 else False
-                        await self.uow.trade_repository.save(trade)
+            try:
+                (
+                    state,
+                    realised_pl,
+                ) = await self.uow.fxcm_connection.get_trade_state(
+                    trade_id="1757"
+                )
+                if state != "OPEN":
+                    pass
+                    # trade.position = PositionEnum.CLOSED
+                    # trade.realised_pl = realised_pl
+                    # trade.is_winner = True if realised_pl > 0 else False
+                    # await self.uow.trade_repository.save(trade)
+            except Exception as e:
+                logger.error(e)
 
         if debug_task == DebugEnum.TestCloseTrade:
-            return await self.uow.fxcm_connection.close_trade("252", 3839671)
+            try:
+                return await self.uow.fxcm_connection.close_trade(
+                    "1718", 3839671
+                )
+            except Exception as e:
+                pass
 
         if debug_task == DebugEnum.TestGetTrades:
             return await self.uow.fxcm_connection.get_open_positions()

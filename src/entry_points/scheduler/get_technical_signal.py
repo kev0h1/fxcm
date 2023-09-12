@@ -31,7 +31,7 @@ async def get_technical_signal(
                 await uow.fxcm_connection.get_candle_data(
                     instrument=ForexPairEnum(forex_pair),
                     period=PeriodEnum.MINUTE_5,
-                    number=1000,
+                    number=250,
                 )
             )
 
@@ -88,6 +88,12 @@ async def get_technical_signal(
 
 
 async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
+    condition_adx_gt_25 = refined_data["adx"] > 25
+
+    window_size = 1
+
+    rolling_adx_25 = condition_adx_gt_25.rolling(window_size).sum()
+
     refined_data["macd"] = (
         refined_data["close"] - refined_data["close"].rolling(window=10).mean()
     )
@@ -114,12 +120,14 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         (refined_data["close"] < refined_data["close"].shift(1))
         & (refined_data["macd"] > refined_data["macd"].shift(1))
         & (refined_data["rsi"] < 30)
+        & (rolling_adx_25 > 0)
     )
 
     condition_bearish_divergence = (
         (refined_data["close"] > refined_data["close"].shift(1))
         & (refined_data["macd"] < refined_data["macd"].shift(1))
         & (refined_data["rsi"] > 70)
+        & (rolling_adx_25 > 0)
     )
 
     # Create signals

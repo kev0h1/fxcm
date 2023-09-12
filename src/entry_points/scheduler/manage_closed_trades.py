@@ -23,15 +23,22 @@ async def manage_closed_trades(
 
 
 async def update_trade_state(uow, trade):
-    state, realised_pl = await uow.fxcm_connection.get_trade_state(
-        trade.trade_id
-    )
-    if state is None:
-        logger.error(f"Trade %s is not a valid trade" % trade.trade_id)
+    try:
+        state, realised_pl = await uow.fxcm_connection.get_trade_state(
+            trade.trade_id
+        )
+        if state is None:
+            logger.error(f"Trade %s is not a valid trade" % trade.trade_id)
+            trade.position = PositionEnum.CLOSED
+            await uow.trade_repository.save(trade)
 
-    if state is not None and state != "OPEN":
+        if state is not None and state != "OPEN":
+            trade.position = PositionEnum.CLOSED
+            trade.realised_pl = realised_pl
+            trade.is_winner = True if realised_pl > 0 else False
+            logger.warning(f"Trade %s closed" % trade.trade_id)
+            await uow.trade_repository.save(trade)
+    except Exception as e:
+        logger.error(e)
+        logger.error(f"Trade %s is not a valid trade" % trade.trade_id)
         trade.position = PositionEnum.CLOSED
-        trade.realised_pl = realised_pl
-        trade.is_winner = True if realised_pl > 0 else False
-        logger.warning(f"Trade %s closed" % trade.trade_id)
-        await uow.trade_repository.save(trade)

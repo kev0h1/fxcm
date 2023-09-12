@@ -69,9 +69,12 @@ async def manage_trades_handler(
                         "Trade crossed stop loss for trade %s, with stop of %s and is buy is %s"
                         % (trade.trade_id, trade.stop, trade.is_buy),
                     )
-                    await uow.fxcm_connection.close_trade(
-                        trade_id=trade.trade_id,
-                        amount=trade.units,
-                    )
+                    try:
+                        await uow.fxcm_connection.close_trade(
+                            trade_id=trade.trade_id,
+                            amount=trade.units,
+                        )
+                    except Exception as e:
+                        logger.error(e)
 
                     await update_trade_state(uow, trade)
