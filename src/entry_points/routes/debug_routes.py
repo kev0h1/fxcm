@@ -127,7 +127,7 @@ class DebugResource(Resource):
                     state,
                     realised_pl,
                 ) = await self.uow.fxcm_connection.get_trade_state(
-                    trade_id="1757"
+                    trade_id="2174"
                 )
                 if state != "OPEN":
                     pass
