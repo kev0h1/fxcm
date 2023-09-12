@@ -42,3 +42,4 @@ async def update_trade_state(uow, trade):
         logger.error(e)
         logger.error(f"Trade %s is not a valid trade" % trade.trade_id)
         trade.position = PositionEnum.CLOSED
+        await uow.trade_repository.save(trade)
