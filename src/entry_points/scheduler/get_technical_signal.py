@@ -31,7 +31,7 @@ async def get_technical_signal(
                 await uow.fxcm_connection.get_candle_data(
                     instrument=ForexPairEnum(forex_pair),
                     period=PeriodEnum.MINUTE_5,
-                    number=1000,
+                    number=250,
                 )
             )
 
@@ -90,7 +90,7 @@ async def get_technical_signal(
 async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     condition_adx_gt_25 = refined_data["adx"] > 25
 
-    refined_data["ema_50"] = refined_data["close"].ewm(span=100).mean()
+    atr_threshold = 1.5 * refined_data["atr"].rolling(window=100).mean()
 
     window_size = 1
 
@@ -123,7 +123,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (refined_data["macd"] > refined_data["macd"].shift(1))
         & (refined_data["rsi"] < 30)
         & (rolling_adx_25 > 0)
-        & (refined_data["close"] > refined_data["ema_50"])
+        & (refined_data["atr"] < atr_threshold)
     )
 
     condition_bearish_divergence = (
@@ -131,7 +131,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (refined_data["macd"] < refined_data["macd"].shift(1))
         & (refined_data["rsi"] > 70)
         & (rolling_adx_25 > 0)
-        & (refined_data["close"] < refined_data["ema_50"])
+        & (refined_data["atr"] < atr_threshold)
     )
 
     # Create signals
