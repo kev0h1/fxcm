@@ -101,12 +101,12 @@ class DebugResource(Resource):
             event = OpenTradeEvent(
                 forex_pair=ForexPairEnum.AUDUSD,
                 sentiment=SentimentEnum.BULLISH,
-                stop=0.67500,
+                stop=0.64300,
                 close=float(close),
                 limit=None,
             )
 
-            is_buy, units = await get_trade_parameters(
+            is_buy, units, _, _ = await get_trade_parameters(
                 event, self.uow, ForexPairEnum.AUDUSD.value.split("_")
             )
 
@@ -127,7 +127,7 @@ class DebugResource(Resource):
                     state,
                     realised_pl,
                 ) = await self.uow.fxcm_connection.get_trade_state(
-                    trade_id="2174"
+                    trade_id=2834
                 )
                 if state != "OPEN":
                     pass
@@ -140,9 +140,7 @@ class DebugResource(Resource):
 
         if debug_task == DebugEnum.TestCloseTrade:
             try:
-                return await self.uow.fxcm_connection.close_trade(
-                    "1718", 3839671
-                )
+                return await self.uow.fxcm_connection.close_trade("2831", 20)
             except Exception as e:
                 pass
 

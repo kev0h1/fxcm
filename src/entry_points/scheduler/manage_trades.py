@@ -1,7 +1,7 @@
 import math
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
-from src.config import ForexPairEnum, PeriodEnum
+from src.config import ForexPairEnum, PeriodEnum, PositionEnum
 from src.container.container import Container
 from src.domain.trade import Trade
 from src.service_layer.indicators import Indicators
@@ -70,11 +70,15 @@ async def manage_trades_handler(
                         % (trade.trade_id, trade.stop, trade.is_buy),
                     )
                     try:
-                        await uow.fxcm_connection.close_trade(
+                        _, pl = await uow.fxcm_connection.close_trade(
                             trade_id=trade.trade_id,
                             amount=trade.units,
                         )
+
+                        trade.position = PositionEnum.CLOSED
+                        if pl is not None:
+                            trade.realised_pl = pl
+                            trade.is_winner = True if pl > 0 else False
+
                     except Exception as e:
                         logger.error(e)
-
-                    await update_trade_state(uow, trade)

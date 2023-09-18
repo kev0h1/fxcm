@@ -202,13 +202,17 @@ class OandaConnect(BaseTradeConnect):
             )
 
     @error_handler
-    async def close_trade(self, trade_id: str, amount: int):
+    async def close_trade(
+        self, trade_id: str, amount: int
+    ) -> tuple[str, float]:
         """closes a trade position"""
         trade_close_endpoint = TradeClose(self.account_id, trade_id)
         response = self.client.request(trade_close_endpoint)
         response_model: OrderSchema = parse_obj_as(OrderSchema, response)
         if response_model.orderFillTransaction is not None:
-            return response_model.orderFillTransaction.id
+            return response_model.orderFillTransaction.id, float(
+                response_model.orderFillTransaction.pl
+            )
         else:
             if response_model.orderCancelTransaction is not None:
                 reason = response_model.orderCancelTransaction.reason
@@ -219,6 +223,7 @@ class OandaConnect(BaseTradeConnect):
                 "Failed to close trade for id %s. The reason was %s"
                 % (trade_id, reason)
             )
+        return None, None
 
     @error_handler
     async def close_all_trades(self, trade_ids: list[str]):
@@ -283,19 +288,14 @@ class OandaConnect(BaseTradeConnect):
         trade_details_request = TradeDetails(
             accountID=self.account_id, tradeID=trade_id
         )
-        logger.info("Getting trade details for %s" % trade_id)
-        response = self.client.request(trade_details_request)
 
-        response_model: TradeDetailResponse = parse_obj_as(
-            TradeDetailResponse, response
-        )
-        if (
-            not isinstance(response_model, NotFoundResponse)
-            and response_model.trade is not None
-        ):
-            return response_model.trade.state, float(
-                response_model.trade.realizedPL
-            )
+        r = TradesList(self.account_id, params={"state": "CLOSED"})
+        rv = self.client.request(r)
+        for trade in rv["trades"]:
+            if trade["id"] == trade_id:
+                logger.info("Getting trade details for %s" % trade_id)
+                return trade["state"], float(trade["realizedPL"])
+
         return None, None
 
     @error_handler
