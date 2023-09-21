@@ -283,13 +283,24 @@ class OandaConnect(BaseTradeConnect):
     @error_handler
     async def get_trade_state(self, trade_id: str):
         """get the trade state"""
-        trade_details_request = TradeDetails(
-            accountID=self.account_id, tradeID=trade_id
+        trades = []
+        r = TradesList(
+            self.account_id,
+            params={
+                "state": "OPEN",
+            },
         )
-
-        r = TradesList(self.account_id, params={"state": "CLOSED"})
         rv = self.client.request(r)
-        for trade in rv["trades"]:
+        trades.extend(rv["trades"])
+        r = TradesList(
+            self.account_id,
+            params={
+                "state": "CLOSED",
+            },
+        )
+        rv = self.client.request(r)
+        trades.extend(rv["trades"])
+        for trade in trades:
             if trade["id"] == trade_id:
                 logger.info("Getting trade details for %s" % trade_id)
                 return trade["state"], float(trade["realizedPL"])
