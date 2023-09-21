@@ -109,7 +109,6 @@ class OandaConnect(BaseTradeConnect):
                     "volume": float(i["volume"]),
                 }
             )
-        logger.info("Refining candle data")
         return pd.DataFrame(list_of_candles)
 
     @error_handler
