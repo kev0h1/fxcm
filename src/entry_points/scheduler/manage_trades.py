@@ -8,8 +8,6 @@ from src.service_layer.indicators import Indicators
 
 from src.service_layer.uow import MongoUnitOfWork
 from src.logger import get_logger
-from src.utils import count_decimal_places
-from src.entry_points.scheduler.manage_closed_trades import update_trade_state
 
 logger = get_logger(__name__)
 

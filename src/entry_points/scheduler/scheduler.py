@@ -38,7 +38,7 @@ async def get_fundamental_trend_data():
 async def get_fundamental_technical_data():
     date_: datetime = datetime.now(timezone.utc)
     if date_.weekday() < 5:
-        logger.info(f"Getting fundamental data for {date_}")
+        logger.info(f"Getting trading signal for {date_}")
         await get_technical_signal()
 
 

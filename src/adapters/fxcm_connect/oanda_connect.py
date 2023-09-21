@@ -92,7 +92,6 @@ class OandaConnect(BaseTradeConnect):
         r = instruments.InstrumentsCandles(
             instrument=instrument, params=params
         )
-        logger.info("Getting candle data for %s" % instrument)
         return await self.get_refined_data(self.client.request(r))
 
     @error_handler

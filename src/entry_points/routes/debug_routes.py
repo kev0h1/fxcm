@@ -65,7 +65,7 @@ class DebugResource(Resource):
         return {
             "time": datetime.now(tz=get_localzone()),
             "system": "ok",
-            "version": "1.0.0",
+            "version": "1.0.1",
         }
 
     @set_responses(Any, 200)
