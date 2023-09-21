@@ -71,7 +71,7 @@ class FundamentalData(Document):
     processed = BooleanField()
 
 
-async def map_to_db_model(
+def map_to_db_model(
     fundamental_data: FundamentalDataDomain,
 ) -> Union[None, FundamentalData]:
     """Maps fundamental data domain model to database model
@@ -104,7 +104,7 @@ async def map_to_db_model(
     )
 
 
-async def map_to_domain_model(
+def map_to_domain_model(
     fundamental_data: FundamentalData,
 ) -> Union[None, FundamentalDataDomain]:
     """Map from database model to domain model

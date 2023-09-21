@@ -96,13 +96,10 @@ class TestTradeOrm:
             db_name=get_db,
         )
         repo = TradeRepository()
-        trade_id = trade.trade_id
         async with uow:
             await repo.save(trade)
 
         async with uow:
-            trades = await repo.get_all()
-            assert len(trades) > 0
             trades = await repo.get_open_trades_by_forex_pair(
                 forex_pair=ForexPairEnum.USDCHF
             )

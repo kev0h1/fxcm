@@ -12,7 +12,7 @@ from src.adapters.database.mongo.fundamental_models import (
 class FundamentalDataRepository:
     async def save(self, obj: FundamentalDataDomain) -> FundamentalDataDomain:
         """Add an object"""
-        model: FundamentalData = await map_to_db_model(fundamental_data=obj)
+        model: FundamentalData = map_to_db_model(fundamental_data=obj)
         model.save()
         return obj
 
@@ -24,16 +24,16 @@ class FundamentalDataRepository:
         objs = FundamentalData.objects(**kwargs)
         if date:
             return [
-                await map_to_domain_model(obj)
+                map_to_domain_model(obj)
                 for obj in objs.filter(
                     last_updated__gte=date, last_updated__lte=next_day
                 )
             ]
-        return [await map_to_domain_model(obj) for obj in objs]
+        return [map_to_domain_model(obj) for obj in objs]
 
     async def get_all_data_older_than_given_date(self, date_: datetime.date):
         return [
-            await map_to_domain_model(obj)
+            map_to_domain_model(obj)
             for obj in FundamentalData.objects(
                 last_updated__lte=date_, processed=False
             )
@@ -42,7 +42,7 @@ class FundamentalDataRepository:
     async def get_fundamental_data(
         self, currency: CurrencyEnum, last_updated: datetime.datetime
     ) -> FundamentalDataDomain:
-        return await map_to_domain_model(
+        return map_to_domain_model(
             FundamentalData.objects(
                 currency=currency, last_updated=last_updated
             ).first()
@@ -52,7 +52,7 @@ class FundamentalDataRepository:
         self, currency: CurrencyEnum
     ) -> FundamentalDataDomain:
         """Gets the latest fundamental data for a currency"""
-        return await map_to_domain_model(
+        return map_to_domain_model(
             (
                 FundamentalData.objects(
                     currency=currency,
@@ -65,7 +65,7 @@ class FundamentalDataRepository:
     async def get_fundamental_data_for_unprocessed_events(self):
         """Gets fundamental data for unprocessed events"""
         return [
-            await map_to_domain_model(obj)
+            map_to_domain_model(obj)
             for obj in FundamentalData.objects(processed=False)
         ]
 

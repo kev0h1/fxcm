@@ -7,12 +7,17 @@ from src.adapters.database.mongo.trade_model import (
     map_to_domain_model,
 )
 from mongoengine import Q
+from src.logger import get_logger
+from datetime import datetime
+
+
+logger = get_logger(__name__)
 
 
 class TradeRepository:
     async def save(self, obj: TradeDomain) -> None:
         """Add an object"""
-        trade_model = await map_to_db_model(obj)
+        trade_model = map_to_db_model(obj)
         trade_model.save()
         return obj
 
@@ -25,18 +30,15 @@ class TradeRepository:
         objs = TradeModel.objects()
 
         if date:
-            return [
-                await map_to_domain_model(obj)
-                for obj in objs.filter(
-                    initiated_date__gte=date, initiated_date__lte=next_day
-                )
-            ]
+            objs = objs.filter(
+                initiated_date__gte=date, initiated_date__lte=next_day
+            )
 
-        return [await map_to_domain_model(obj) for obj in objs]
+        return [map_to_domain_model(obj) for obj in objs]
 
     async def get_trade_by_trade_id(self, trade_id: str) -> TradeDomain:
         """Get a single trade"""
-        return await map_to_domain_model(
+        return map_to_domain_model(
             TradeModel.objects(trade_id=trade_id).first()
         )
 
@@ -44,71 +46,63 @@ class TradeRepository:
         self, currency: CurrencyEnum
     ) -> list[TradeDomain]:
         """Get all bullish trades"""
-        return [
-            await map_to_domain_model(obj)
-            for obj in TradeModel.objects(
-                (
-                    Q(is_buy=True) & Q(base_currency=currency)
-                    | Q(is_buy=False) & Q(quote_currency=currency)
-                )
-                & Q(position=PositionEnum.OPEN)
+        trades = TradeModel.objects(
+            (
+                Q(is_buy=True) & Q(base_currency=currency)
+                | Q(is_buy=False) & Q(quote_currency=currency)
             )
-        ]
+            & Q(position=PositionEnum.OPEN)
+        )
+        return [map_to_domain_model(obj) for obj in trades]
 
     async def get_bearish_trades(
         self, currency: CurrencyEnum
     ) -> list[TradeDomain]:
         """Get all bearish trades"""
-        return [
-            await map_to_domain_model(obj)
-            for obj in TradeModel.objects(
-                (
-                    Q(is_buy=False) & Q(base_currency=currency)
-                    | Q(is_buy=True) & Q(quote_currency=currency)
-                )
-                & Q(position=PositionEnum.OPEN)
+        trades = TradeModel.objects(
+            (
+                Q(is_buy=False) & Q(base_currency=currency)
+                | Q(is_buy=True) & Q(quote_currency=currency)
             )
-        ]
+            & Q(position=PositionEnum.OPEN)
+        )
+        return [map_to_domain_model(obj) for obj in trades]
 
     async def get_open_trades_by_forex_pair_for_buy_or_sell(
         self, forex_pair: ForexPairEnum, is_buy: bool
     ) -> list[TradeDomain]:
         """Get all open trades by forex pair"""
-        return [
-            await map_to_domain_model(obj)
-            for obj in TradeModel.objects(
-                forex_currency_pair=forex_pair,
-                position=PositionEnum.OPEN,
-                is_buy=is_buy,
-            )
-        ]
+        trades = TradeModel.objects(
+            forex_currency_pair=forex_pair,
+            position=PositionEnum.OPEN,
+            is_buy=is_buy,
+        )
+        return [map_to_domain_model(obj) for obj in trades]
 
     async def get_open_trades_by_forex_pair(
         self, forex_pair: ForexPairEnum
     ) -> list[TradeDomain]:
         """Get all open trades by forex pair"""
-        return [
-            await map_to_domain_model(obj)
-            for obj in TradeModel.objects(
-                forex_currency_pair=forex_pair, position=PositionEnum.OPEN
-            )
-        ]
+        trades = TradeModel.objects(
+            forex_currency_pair=forex_pair, position=PositionEnum.OPEN
+        )
+        logger.info(
+            "number of open trades for %s: %s" % (forex_pair, len(trades))
+        )
+        return [map_to_domain_model(obj) for obj in trades]
 
     async def get_open_trades(self) -> list[TradeDomain]:
         """Get all open trades"""
-        return [
-            await map_to_domain_model(obj)
-            for obj in TradeModel.objects(
-                position=PositionEnum.OPEN,
-            )
-        ]
+        trades = TradeModel.objects(
+            position=PositionEnum.OPEN,
+        )
+        logger.info("number of open trades: %s" % len(trades))
+        return [map_to_domain_model(obj) for obj in trades]
 
     async def get_distinct_forex_pairs(self) -> list[ForexPairEnum]:
         """Get all distinct forex pairs"""
-        return [
-            ForexPairEnum(obj)
-            for obj in TradeModel.objects().distinct("forex_currency_pair")
-        ]
+        trades = TradeModel.objects().distinct("forex_currency_pair")
+        return [ForexPairEnum(obj) for obj in trades]
 
     async def get_sum_of_realised_pl(self) -> float:
         """Get sum of realised pl"""

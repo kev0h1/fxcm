@@ -253,6 +253,7 @@ async def close_forex_pair_handler(
 ):
     """Close all trades for a given forex pair"""
     is_buy = True if event.sentiment == SentimentEnum.BULLISH else False
+    logger.info("closing trades for forex pair %s" % event.forex_pair)
     trades = await uow.trade_repository.get_open_trades_by_forex_pair_for_buy_or_sell(
         event.forex_pair, is_buy
     )
