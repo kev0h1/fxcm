@@ -23,7 +23,7 @@ async def manage_trades_handler(
         ] = await uow.trade_repository.get_distinct_forex_pairs()
         for forex_pair in forex_pairs:
             data = await uow.fxcm_connection.get_candle_data(
-                forex_pair, PeriodEnum.MINUTE_1, 20
+                forex_pair, PeriodEnum.MINUTE_5, 20
             )
             data = await indicator.get_atr(data, 14)
             close = data.iloc[-1]["close"]
@@ -38,13 +38,13 @@ async def manage_trades_handler(
                 modified = False
 
                 if trade.is_buy:
-                    new_stop = close - 3 * atr
+                    new_stop = close - 2.5 * atr
                     if new_stop > trade.stop:
                         trade.stop = new_stop
 
                         modified = True
                 else:
-                    new_stop = close + 3 * atr
+                    new_stop = close + 2.5 * atr
                     if new_stop < trade.stop:
                         trade.stop = new_stop
                         modified = True
