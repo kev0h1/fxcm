@@ -7,11 +7,7 @@ from src.adapters.database.mongo.trade_model import (
     map_to_domain_model,
 )
 from mongoengine import Q
-from src.logger import get_logger
 from datetime import datetime
-
-
-logger = get_logger(__name__)
 
 
 class TradeRepository:
@@ -86,9 +82,6 @@ class TradeRepository:
         trades = TradeModel.objects(
             forex_currency_pair=forex_pair, position=PositionEnum.OPEN
         )
-        logger.info(
-            "number of open trades for %s: %s" % (forex_pair, len(trades))
-        )
         return [map_to_domain_model(obj) for obj in trades]
 
     async def get_open_trades(self) -> list[TradeDomain]:
@@ -96,7 +89,6 @@ class TradeRepository:
         trades = TradeModel.objects(
             position=PositionEnum.OPEN,
         )
-        logger.info("number of open trades: %s" % len(trades))
         return [map_to_domain_model(obj) for obj in trades]
 
     async def get_distinct_forex_pairs(self) -> list[ForexPairEnum]:

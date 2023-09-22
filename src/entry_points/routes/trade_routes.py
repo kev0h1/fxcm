@@ -12,6 +12,7 @@ from src.entry_points.routes.api_schema.schema import (
 )
 from src.service_layer.uow import MongoUnitOfWork
 from src.logger import get_logger
+from src.config import PositionEnum
 
 logger = get_logger(__name__)
 
@@ -44,9 +45,10 @@ class TradeResource(Resource):
             for trade in data:
                 if trade.realised_pl is not None:
                     pnl += trade.realised_pl
+
                 if trade.is_winner:
                     num_winners += 1
-                else:
+                elif trade.position == PositionEnum.CLOSED:
                     num_losers += 1
 
             number_of_trades = len(data)

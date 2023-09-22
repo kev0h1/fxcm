@@ -5,9 +5,7 @@ from pydantic import parse_obj_as
 from src.domain.schema.trades import (
     TradeInfo,
     TradeCRDCOSchema,
-    TradeDetailResponse,
     StopLossOrder,
-    NotFoundResponse,
 )
 from src.domain.schema.transaction import OrderSchema, OrderTransaction
 from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
@@ -22,7 +20,6 @@ from oandapyV20.endpoints.trades import (
     TradeClose,
     TradesList,
     TradeCRCDO,
-    TradeDetails,
 )
 
 from oandapyV20.exceptions import V20Error
