@@ -42,7 +42,7 @@ async def get_fundamental_technical_data():
         await get_technical_signal()
 
 
-@scheduler.scheduled_job("interval", seconds=300)
+@scheduler.scheduled_job("interval", seconds=120)
 async def manage_trades():
     date_: datetime = datetime.now(timezone.utc)
     if date_.weekday() < 5:
