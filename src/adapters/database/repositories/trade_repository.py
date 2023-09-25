@@ -1,4 +1,3 @@
-import datetime
 from src.config import CurrencyEnum, ForexPairEnum, PositionEnum
 from src.domain.trade import Trade as TradeDomain
 from src.adapters.database.mongo.trade_model import (
@@ -7,7 +6,7 @@ from src.adapters.database.mongo.trade_model import (
     map_to_domain_model,
 )
 from mongoengine import Q
-from datetime import datetime
+from datetime import timedelta
 
 
 class TradeRepository:
@@ -22,7 +21,7 @@ class TradeRepository:
         date = None
         if "last_updated" in kwargs:
             date = kwargs.pop("last_updated")
-            next_day = date + datetime.timedelta(days=1)
+            next_day = date + timedelta(days=1)
         objs = TradeModel.objects()
 
         if date:
