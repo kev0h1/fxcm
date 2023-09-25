@@ -8,6 +8,7 @@ from src.service_layer.indicators import Indicators
 
 from src.service_layer.uow import MongoUnitOfWork
 from src.logger import get_logger
+from src.entry_points.scheduler.manage_closed_trades import update_trade_state
 
 logger = get_logger(__name__)
 
@@ -79,4 +80,8 @@ async def manage_trades_handler(
                             trade.is_winner = True if pl > 0 else False
 
                     except Exception as e:
-                        logger.error(e)
+                        logger.error(
+                            f"Oanda threw and exception, trade %s is not a valid trade"
+                            % trade.trade_id
+                        )
+                        update_trade_state(uow, trade)
