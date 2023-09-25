@@ -84,4 +84,4 @@ async def manage_trades_handler(
                             f"Oanda threw and exception, trade %s is not a valid trade"
                             % trade.trade_id
                         )
-                        update_trade_state(uow, trade)
+                        await update_trade_state(uow, trade)
