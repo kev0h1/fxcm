@@ -39,13 +39,13 @@ async def manage_trades_handler(
                 modified = False
 
                 if trade.is_buy:
-                    new_stop = close - 5 * atr
+                    new_stop = close - 3.75 * atr
                     if new_stop > trade.stop:
                         trade.stop = new_stop
 
                         modified = True
                 else:
-                    new_stop = close + 5 * atr
+                    new_stop = close + 3.75 * atr
                     if new_stop < trade.stop:
                         trade.stop = new_stop
                         modified = True
@@ -81,7 +81,7 @@ async def manage_trades_handler(
 
                     except Exception as e:
                         logger.error(
-                            f"Oanda threw and exception, trade %s is not a valid trade"
+                            f"Manage trades: Oanda threw and exception, trade %s is not a valid trade"
                             % trade.trade_id
                         )
                         await update_trade_state(uow, trade)

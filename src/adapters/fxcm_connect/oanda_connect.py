@@ -298,7 +298,7 @@ class OandaConnect(BaseTradeConnect):
         rv = self.client.request(r)
         trades.extend(rv["trades"])
         for trade in trades:
-            if trade["id"] == trade_id:
+            if str(trade["id"]) == str(trade_id):
                 logger.info("Getting trade details for %s" % trade_id)
                 return trade["state"], float(trade["realizedPL"])
 
