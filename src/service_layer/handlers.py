@@ -135,9 +135,13 @@ async def open_trade_handler(
         % (event.forex_pair, event.sentiment)
     )
     currencies = event.forex_pair.value.split("/")
-    is_buy, units, stop_loss, stop_loss_in_pips = await get_trade_parameters(
-        event=event, uow=uow, currencies=currencies
-    )
+    (
+        is_buy,
+        units,
+        stop_loss,
+        stop_loss_in_pips,
+        limit,
+    ) = await get_trade_parameters(event=event, uow=uow, currencies=currencies)
 
     trade_id = None
 
@@ -157,7 +161,7 @@ async def open_trade_handler(
                 is_buy=is_buy,
                 amount=units,
                 stop=stop_loss,
-                limit=None,
+                limit=limit,
             )
         elif (
             await get_combined_techincal_and_fundamental_sentiment(
@@ -170,14 +174,14 @@ async def open_trade_handler(
                 is_buy=is_buy,
                 amount=units,
                 stop=stop_loss,
-                limit=None,
+                limit=limit,
             )
         if trade_id:
             trade = Trade(
                 trade_id=trade_id,
                 units=units,
                 stop=stop_loss,
-                limit=event.limit,
+                limit=limit,
                 is_buy=True
                 if event.sentiment == SentimentEnum.BULLISH
                 else False,
@@ -205,7 +209,7 @@ async def open_trade_handler(
 
 async def get_trade_parameters(
     event: events.OpenTradeEvent, uow: MongoUnitOfWork, currencies: list[str]
-) -> tuple[bool, int, float, float]:
+) -> tuple[bool, int, float, float, float]:
     """Gets the trade parameters for a given event
 
     units= Risk per unit in GBP/ Amount at risk in GBP
@@ -245,7 +249,13 @@ async def get_trade_parameters(
 
     stop_loss = round(event.stop, count_decimal_places(pip_value))
 
-    return is_buy, int(units), stop_loss, stop_loss_pips
+    limit = (
+        round(event.limit, count_decimal_places(pip_value))
+        if event.limit is not None
+        else None
+    )
+
+    return is_buy, int(units), stop_loss, stop_loss_pips, limit
 
 
 async def close_forex_pair_handler(

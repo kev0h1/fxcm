@@ -58,6 +58,7 @@ async def get_technical_signal(
                         sentiment=SentimentEnum.BULLISH,
                         stop=refined_data.iloc[-1]["ATR_Stop"],
                         close=refined_data.iloc[-1]["close"],
+                        limit=refined_data.iloc[-1]["ATR_Limit"],
                     )
                 )
             elif refined_data.iloc[-1]["Signal"] < 0:
@@ -73,14 +74,15 @@ async def get_technical_signal(
                         sentiment=SentimentEnum.BEARISH,
                         stop=refined_data.iloc[-1]["ATR_Stop"],
                         close=refined_data.iloc[-1]["close"],
+                        limit=refined_data.iloc[-1]["ATR_Limit"],
                     )
                 )
 
 
 async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
-    condition_adx_gt_25 = refined_data["adx"] > 30
+    condition_adx_gt_25 = refined_data["adx"] > 25
 
-    # atr_threshold = 1.5 * refined_data["atr"].rolling(window=100).mean()
+    atr_threshold = 1.5 * refined_data["atr"].rolling(window=100).mean()
 
     window_size = 1
 
@@ -137,6 +139,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (refined_data["macd"] > refined_data["macd_at_trough"])
         & (refined_data["rsi"] < 30)
         & (rolling_adx_25 > 0)
+        & (refined_data["atr"] < atr_threshold)
     )
 
     condition_bearish_divergence = (
@@ -144,6 +147,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (refined_data["macd"] < refined_data["macd_at_peak"])
         & (refined_data["rsi"] > 70)
         & (rolling_adx_25 > 0)
+        & (refined_data["atr"] < atr_threshold)
     )
 
     # Create signals
@@ -169,6 +173,19 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         else:  # No signal
             return None
 
+    def calculate_limit(row):
+        if row["Signal"] == 1:  # Buy
+            return (
+                row["close"] + 3 * row["atr"]
+            )  # Adjust the multiplier as needed
+        elif row["Signal"] == -1:  # Sell
+            return (
+                row["close"] - 3 * row["atr"]
+            )  # Adjust the multiplier as needed
+        else:  # No signal
+            return None
+
     refined_data["ATR_Stop"] = refined_data.apply(calculate_stop, axis=1)
+    refined_data["ATR_Limit"] = refined_data.apply(calculate_limit, axis=1)
 
     return refined_data

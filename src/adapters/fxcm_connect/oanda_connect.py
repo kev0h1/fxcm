@@ -151,7 +151,10 @@ class OandaConnect(BaseTradeConnect):
 
         stops = {}
         if limit is not None:
-            stops["takeProfitOnFill"] = {"price": str(limit)}
+            stops["takeProfitOnFill"] = {
+                "price": str(limit),
+                "timeInForce": time_in_force,
+            }
         if stop is not None:
             stops["stopLossOnFill"] = {
                 "timeInForce": time_in_force,

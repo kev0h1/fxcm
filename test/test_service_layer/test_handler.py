@@ -546,6 +546,7 @@ class TestOpenTradeHandler:
                     amount,
                     stop_loss,
                     sl_pips,
+                    limit,
                 ) = await get_trade_parameters(
                     event, uow, forex_pair.value.split("/")
                 )
