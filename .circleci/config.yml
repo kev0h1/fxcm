@@ -71,6 +71,7 @@ jobs:
             cd ~/cdk_deploy
             touch README.md
             poetry install
+            poetry run cdk bootstrap
             poetry run cdk deploy
 
 workflows:
