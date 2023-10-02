@@ -33,6 +33,14 @@ async def update_trade_state(uow, trade):
             trade.is_winner = True if realised_pl > 0 else False
             logger.warning(f"Trade %s closed" % trade.trade_id)
             await uow.trade_repository.save(trade)
+        else:
+            logger.warning(
+                f"Update trade state: Oanda returned a state of %s for trade %s, closing trade"
+                % (state, trade.trade_id)
+            )
+            trade.position = PositionEnum.CLOSED
+            await uow.trade_repository.save(trade)
+
     except Exception as e:
         logger.error(e)
         logger.error(
