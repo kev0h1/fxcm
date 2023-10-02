@@ -79,7 +79,7 @@ async def manage_trades_handler(
                             trade.realised_pl = pl
                             trade.is_winner = True if pl > 0 else False
 
-                    except Exception as e:
+                    except Exception:
                         logger.error(
                             f"Manage trades: Oanda threw and exception, trade %s is not a valid trade"
                             % trade.trade_id
