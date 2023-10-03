@@ -41,5 +41,4 @@ async def update_trade_state(uow, trade):
             % trade.trade_id
         )
         trade.position = PositionEnum.CLOSED
-
         await uow.trade_repository.save(trade)
