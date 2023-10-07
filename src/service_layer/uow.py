@@ -51,7 +51,7 @@ class MongoUnitOfWork(AbstractUnitOfWork):
             logger.info("Using AWS DocDB")
             secret = get_secret("DocumentDBSecret")
             username, password = secret["username"], secret["pass"]
-            docdb_cluster_endpoint = "mydbcluster.cluster-cj2g1svpqisv.us-east-1.docdb.amazonaws.com"
+            docdb_cluster_endpoint = os.environ.get("DOCDB_CLUSTER_ENDPOINT")
             self.pem_path = "./global-bundle.pem"
             self.host = f"mongodb://{username}:{password}@{docdb_cluster_endpoint}:27017/?tls=true&tlsCAFile={self.pem_path}&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
         elif os.environ.get("DEPLOY_ENV", "local") == "ci":
