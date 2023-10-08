@@ -40,6 +40,3 @@ async def update_trade_state(uow, trade):
             f"Update trade state: Oanda threw and exception, trade %s is not a valid trade"
             % trade.trade_id
         )
-        trade.position = PositionEnum.CLOSED
-
-        await uow.trade_repository.save(trade)
