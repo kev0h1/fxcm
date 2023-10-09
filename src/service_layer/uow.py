@@ -46,6 +46,12 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         scraper: "BaseScraper",
         db_name: str = "my_db",
     ):
+        self.init_db(fxcm_connection, scraper, db_name)
+
+        for event, handler in handlers.items():
+            self.event_bus.subscribe(event, handler)
+
+    def init_db(self, fxcm_connection, scraper, db_name):
         self.db_name = db_name
         if os.environ.get("DEPLOY_ENV", "local") == "aws":
             logger.info("Using AWS DocDB")
@@ -70,8 +76,17 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         self.fxcm_connection: BaseTradeConnect = fxcm_connection
         self.scraper: "BaseScraper" = scraper
 
-        for event, handler in handlers.items():
-            self.event_bus.subscribe(event, handler)
+    def refresh_connection_id(self):
+        while True:
+            # Your logic to refresh the connection ID goes here...
+
+            logger.info("Refreshing connection ID...")
+
+            # Example: If using a client object with a method to refresh
+            # self.some_client_object.refresh_connection_id()
+
+            # Sleep for 30 minutes
+            time.sleep(30 * 60)
 
     async def __aenter__(self):
         self.client = connect(self.db_name, host=self.host)
