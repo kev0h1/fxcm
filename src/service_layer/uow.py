@@ -73,6 +73,7 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         self.fundamental_data_repository: FundamentalDataRepository = (
             FundamentalDataRepository()
         )
+
         self.trade_repository: TradeRepository = TradeRepository()
         self.fxcm_connection: BaseTradeConnect = fxcm_connection
         self.scraper: "BaseScraper" = scraper
