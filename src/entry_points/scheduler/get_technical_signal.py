@@ -31,7 +31,7 @@ async def get_technical_signal(
             refined_data: pd.DataFrame = (
                 await uow.fxcm_connection.get_candle_data(
                     instrument=ForexPairEnum(forex_pair),
-                    period=PeriodEnum.MINUTE_15,
+                    period=PeriodEnum.MINUTE_5,
                     number=250,
                 )
             )
