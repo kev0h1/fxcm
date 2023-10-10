@@ -16,7 +16,6 @@ from src.logger import get_logger
 
 logger = get_logger(__name__)
 
-
 from src.utils import get_secret
 
 if TYPE_CHECKING:
