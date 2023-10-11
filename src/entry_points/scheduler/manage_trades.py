@@ -71,4 +71,5 @@ async def manage_trades_handler(
                     )
                     trade.position = PositionEnum.CLOSED
                     await close_trade_in_oanda_util(uow, trade)
+                    # there reason this didnt work is because you didnt save
                     await uow.trade_repository.save(trade)
