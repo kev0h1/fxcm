@@ -30,6 +30,7 @@ async def manage_trades_handler(
             data = await indicator.get_atr(data, 14)
             close = data.iloc[-1]["close"]
             atr = data.iloc[-1]["atr"]
+
             trades: list[
                 Trade
             ] = await uow.trade_repository.get_open_trades_by_forex_pair(
