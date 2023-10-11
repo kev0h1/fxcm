@@ -117,6 +117,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (refined_data["ShortTerm_MA"] > refined_data["MediumTerm_MA"])
         & (refined_data["close"] > refined_data["LongTerm_MA"])
         & (refined_data["adx"] > 25)
+        & (refined_data["plus_di"] > refined_data["minus_di"])
     )
 
     condition_bearish_divergence = (
@@ -127,7 +128,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (refined_data["ShortTerm_MA"] < refined_data["MediumTerm_MA"])
         & (refined_data["close"] > refined_data["LongTerm_MA"])
         & (refined_data["adx"] > 25)
-        # & (refined_data["rsi"] > 70)
+        & (refined_data["plus_di"] < refined_data["minus_di"])
     )
 
     # Create signals

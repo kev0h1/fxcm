@@ -603,8 +603,10 @@ class TestOpenTradeHandler:
                 forex_pair=ForexPairEnum.USDCHF, sentiment=sentiment
             )
             async with uow:
-                assert len(
-                    await uow.trade_repository.get_open_trades()
-                ) == len(trades)
+                trade_repos = await uow.trade_repository.get_open_trades()
+                assert len(trade_repos) == len(trades)
                 await close_forex_pair_handler(event, uow)
-                assert len(await uow.trade_repository.get_open_trades()) == 0
+
+            async with uow:
+                trade_repos = await uow.trade_repository.get_open_trades()
+                assert len(trade_repos) == 0

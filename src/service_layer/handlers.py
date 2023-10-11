@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from src.domain.fundamental import FundamentalData
 
 from src.domain.trade import Trade
-from src.utils import count_decimal_places
+from src.utils import close_trade_in_oanda_util, count_decimal_places
 
 if TYPE_CHECKING:
     from src.service_layer.uow import MongoUnitOfWork
@@ -269,10 +269,8 @@ async def close_forex_pair_handler(
     )
     for trade in trades:
         if trade.forex_currency_pair == event.forex_pair:
-            await uow.fxcm_connection.close_trade(
-                trade_id=trade.trade_id, amount=trade.units
-            )
             trade.position = PositionEnum.CLOSED
+            await close_trade_in_oanda_util(uow, trade)
             await uow.trade_repository.save(trade)
 
 

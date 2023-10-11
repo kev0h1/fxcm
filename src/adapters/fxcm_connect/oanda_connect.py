@@ -187,6 +187,9 @@ class OandaConnect(BaseTradeConnect):
                     stop,
                 )
             )
+            logger.info(
+                "trade id is %s" % response_model.orderFillTransaction.id
+            )
             return response_model.orderFillTransaction.id
         else:
             if response_model.orderCancelTransaction is not None:
@@ -208,9 +211,7 @@ class OandaConnect(BaseTradeConnect):
         response = self.client.request(trade_close_endpoint)
         response_model: OrderSchema = parse_obj_as(OrderSchema, response)
         if response_model.orderFillTransaction is not None:
-            return response_model.orderFillTransaction.id, float(
-                response_model.orderFillTransaction.pl
-            )
+            return "CLOSED", float(response_model.orderFillTransaction.pl)
         else:
             if response_model.orderCancelTransaction is not None:
                 reason = response_model.orderCancelTransaction.reason

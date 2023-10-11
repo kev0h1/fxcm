@@ -86,6 +86,7 @@ class MockTradeConnect(BaseTradeConnect):
 
     async def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""
+        return "CLOSED", float(10)
 
     async def close_all_trades(self, trade_ids: list[str]):
         """closes all open trades"""

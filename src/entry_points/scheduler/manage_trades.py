@@ -9,6 +9,7 @@ from src.service_layer.indicators import Indicators
 from src.service_layer.uow import MongoUnitOfWork
 from src.logger import get_logger
 from src.entry_points.scheduler.manage_closed_trades import update_trade_state
+from src.utils import close_trade_in_oanda_util
 
 logger = get_logger(__name__)
 
@@ -34,17 +35,17 @@ async def manage_trades_handler(
             ] = await uow.trade_repository.get_open_trades_by_forex_pair(
                 forex_pair=forex_pair
             )
-
+            multiplier = 3.5
             for trade in trades:
                 modified = False
 
                 if trade.is_buy:
-                    new_stop = close - 4.5 * atr
+                    new_stop = close - multiplier * atr
                     if new_stop > trade.stop:
                         trade.stop = new_stop
                         modified = True
                 else:
-                    new_stop = close + 4.5 * atr
+                    new_stop = close + multiplier * atr
                     if new_stop < trade.stop:
                         trade.stop = new_stop
                         modified = True
@@ -67,20 +68,6 @@ async def manage_trades_handler(
                         "Trade crossed stop loss for trade %s, with stop of %s and is buy is %s"
                         % (trade.trade_id, trade.stop, trade.is_buy),
                     )
-                    try:
-                        _, pl = await uow.fxcm_connection.close_trade(
-                            trade_id=trade.trade_id,
-                            amount=trade.units,
-                        )
-
-                        trade.position = PositionEnum.CLOSED
-                        if pl is not None:
-                            trade.realised_pl = pl
-                            trade.is_winner = True if pl > 0 else False
-
-                    except Exception:
-                        logger.error(
-                            f"Manage trades: Oanda threw and exception, trade %s is not a valid trade"
-                            % trade.trade_id
-                        )
-                        await update_trade_state(uow, trade)
+                    trade.position = PositionEnum.CLOSED
+                    await close_trade_in_oanda_util(uow, trade)
+                    await uow.trade_repository.save(trade)
