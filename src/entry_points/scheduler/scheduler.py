@@ -46,7 +46,7 @@ async def get_fundamental_technical_data():
 async def manage_trades():
     date_: datetime = datetime.now(timezone.utc)
     if date_.weekday() < 5:
-        logger.info(f"Manage trades for date{date_}")
+        logger.info(f"Manage trades for date {date_}")
         await manage_trades_handler()
 
 
