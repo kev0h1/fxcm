@@ -37,6 +37,7 @@ async def manage_trades_handler(
                 forex_pair=forex_pair
             )
             multiplier = 3
+
             for trade in trades:
                 modified = False
 
