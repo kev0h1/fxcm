@@ -101,7 +101,7 @@ class DebugResource(Resource):
             event = OpenTradeEvent(
                 forex_pair=ForexPairEnum.AUDUSD,
                 sentiment=SentimentEnum.BULLISH,
-                stop=0.64100,
+                stop=0.63181,
                 close=float(close),
                 limit=None,
             )

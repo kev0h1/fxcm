@@ -137,7 +137,7 @@ class OandaConnect(BaseTradeConnect):
         is_pips: bool = False,
         order_type: OrderTypeEnum = OrderTypeEnum.MARKET,
         time_in_force: str = "GTC",
-    ) -> str:
+    ) -> tuple[str, float]:
         """
         Opens a trade postion.
 
@@ -179,18 +179,22 @@ class OandaConnect(BaseTradeConnect):
         response_model: OrderSchema = parse_obj_as(OrderSchema, response)
         if response_model.orderFillTransaction is not None:
             logger.info(
-                "Opened trade %s for %s units for currency pair %s, with a stop of %s"
+                "Opened trade %s for %s units for currency pair %s, with a stop of %s and an entry prices of %s"
                 % (
                     response_model.orderFillTransaction.id,
                     amount,
                     instrument,
                     stop,
+                    response_model.orderFillTransaction.price,
                 )
             )
             logger.info(
                 "trade id is %s" % response_model.orderFillTransaction.id
             )
-            return response_model.orderFillTransaction.id
+            return (
+                response_model.orderFillTransaction.id,
+                float(response_model.orderFillTransaction.price),
+            )
         else:
             if response_model.orderCancelTransaction is not None:
                 reason = response_model.orderCancelTransaction.reason
@@ -201,6 +205,7 @@ class OandaConnect(BaseTradeConnect):
                 "Failed to open trade for %s units for currency pair %s, with a stop of %s. The reason was %s"
                 % (amount, instrument, stop, reason)
             )
+            return None, None
 
     @error_handler
     async def close_trade(

@@ -156,7 +156,7 @@ async def open_trade_handler(
             )
             == SentimentEnum.BULLISH
         ):
-            trade_id = await uow.fxcm_connection.open_trade(
+            trade_id, entry_price = await uow.fxcm_connection.open_trade(
                 instrument=event.forex_pair,
                 is_buy=is_buy,
                 amount=units,
@@ -169,7 +169,7 @@ async def open_trade_handler(
             )
             == SentimentEnum.BEARISH
         ):
-            trade_id = await uow.fxcm_connection.open_trade(
+            trade_id, entry_price = await uow.fxcm_connection.open_trade(
                 instrument=event.forex_pair,
                 is_buy=is_buy,
                 amount=units,
@@ -191,7 +191,7 @@ async def open_trade_handler(
                 is_winner=False,
                 initiated_date=datetime.now(),
                 position=PositionEnum.OPEN,
-                close=event.close,
+                close=entry_price,
                 sl_pips=stop_loss_in_pips,
             )
 
