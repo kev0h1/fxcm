@@ -152,7 +152,10 @@ class Indicators:
         low_close = np.abs(data[low] - data[close].shift())
         ranges = concat([high_low, high_close, low_close], axis=1)
         true_range = np.max(ranges, axis=1)
-        atr = true_range.rolling(14).sum() / period
+
+        # Corrected the ATR calculation here
+        atr = true_range.rolling(window=period).mean()
+
         data["atr"] = atr
         return data
 
