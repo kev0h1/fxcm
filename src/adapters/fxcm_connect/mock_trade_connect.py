@@ -82,7 +82,7 @@ class MockTradeConnect(BaseTradeConnect):
         open_trade(symbol, is_buy, amount, time_in_force, order_type, rate=0, is_in_pips=True,
         limit=None, at_market=0, stop=None, trailing_step=None, account_id=None)
         """
-        return str(uuid.uuid4()), 0.0123
+        return str(uuid.uuid4()), 0.0123, 0.001
 
     async def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""

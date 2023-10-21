@@ -37,6 +37,7 @@ class TestManageTrades:
             position=sampled_from([PositionEnum.OPEN]),
             close=sampled_from([1.6515]),
             sl_pips=sampled_from([5]),
+            half_spread_cost=sampled_from([0.0001]),
         )
     )
     @settings(
@@ -68,7 +69,9 @@ class TestManageTrades:
                 await uow.trade_repository.save(trade)
             await manage_trades_handler(uow=uow, indicator=Indicators())
 
-            expected_stop = close - multiplier * 0.0001
+            expected_stop = (
+                close - trade.half_spread_cost - multiplier * 0.0001
+            )
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - expected_stop) < 0.0001
@@ -97,7 +100,9 @@ class TestManageTrades:
                 ]
             )
             await manage_trades_handler(uow=uow, indicator=Indicators())
-            expected_stop = close - multiplier * 0.0001
+            expected_stop = (
+                close - trade.half_spread_cost - multiplier * 0.0001
+            )
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - expected_stop) < 0.0001
@@ -130,8 +135,9 @@ class TestManageTrades:
             quote_currency=sampled_from([CurrencyEnum.CHF]),
             forex_currency_pair=sampled_from([ForexPairEnum.USDCHF]),
             position=sampled_from([PositionEnum.OPEN]),
-            close=sampled_from([1.6520]),
+            close=sampled_from([1.6521]),
             sl_pips=sampled_from([9]),
+            half_spread_cost=sampled_from([0.0001]),
         )
     )
     @settings(
@@ -164,7 +170,9 @@ class TestManageTrades:
                 await uow.trade_repository.save(trade)
             await manage_trades_handler(uow=uow, indicator=Indicators())
 
-            expected_close = close + multiplier * 0.0001
+            expected_close = (
+                close + trade.half_spread_cost + multiplier * 0.0001
+            )
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - expected_close) < 0.0001
@@ -192,7 +200,9 @@ class TestManageTrades:
                 ]
             )
             await manage_trades_handler(uow=uow, indicator=Indicators())
-            expected_close = close + multiplier * 0.0001
+            expected_close = (
+                close + trade.half_spread_cost + multiplier * 0.0001
+            )
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - expected_close) < 0.0001

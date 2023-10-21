@@ -42,12 +42,14 @@ async def manage_trades_handler(
                 modified = False
 
                 if trade.is_buy:
-                    new_stop = close - multiplier * atr
+                    adjusted_close_long = close - trade.half_spread_cost
+                    new_stop = adjusted_close_long - multiplier * atr
                     if new_stop > trade.stop and new_stop > trade.close:
                         trade.stop = new_stop
                         modified = True
                 else:
-                    new_stop = close + multiplier * atr
+                    adjusted_close_short = close + trade.half_spread_cost
+                    new_stop = adjusted_close_short + multiplier * atr
                     if new_stop < trade.stop and new_stop < trade.close:
                         trade.stop = new_stop
                         modified = True

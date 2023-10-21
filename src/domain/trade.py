@@ -18,6 +18,7 @@ class Trade:
     base_currency: CurrencyEnum
     quote_currency: CurrencyEnum
     forex_currency_pair: ForexPairEnum
+    half_spread_cost: float
     new_close: float = field(default=None)
     realised_pl: float = field(default=None)
     is_winner: bool = field(default=False)

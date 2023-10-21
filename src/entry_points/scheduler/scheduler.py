@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 import os
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -34,17 +35,21 @@ async def get_fundamental_trend_data():
         await process_data(date_=date_)
 
 
-@scheduler.scheduled_job("interval", seconds=900)
+@scheduler.scheduled_job("cron", minute="0,15,30,45")
 async def get_fundamental_technical_data():
+    await asyncio.sleep(1)
     date_: datetime = datetime.now(timezone.utc)
+    logger.info(f"Getting trading signal for {date_}")
     if date_.weekday() < 5:
         logger.info(f"Getting trading signal for {date_}")
         await get_technical_signal()
 
 
-@scheduler.scheduled_job("interval", seconds=100)
+@scheduler.scheduled_job("cron", minute="*/5")
 async def manage_trades():
+    await asyncio.sleep(1)
     date_: datetime = datetime.now(timezone.utc)
+    logger.info(f"Manage trades for date {date_}")
     if date_.weekday() < 5:
         logger.info(f"Manage trades for date {date_}")
         await manage_trades_handler()

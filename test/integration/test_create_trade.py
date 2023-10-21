@@ -42,6 +42,7 @@ class TestTradeOrm:
             close=floats(),
             new_close=floats(),
             initiated_date=datetimes(),
+            half_spread_cost=sampled_from([0.0001]),
         )
     )
     @settings(
