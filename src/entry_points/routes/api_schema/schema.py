@@ -51,6 +51,7 @@ class TradeSchema(Base):
     forex_currency_pair: ForexPairEnum
     new_close: float = Field(default=None)
     realised_pl: float = Field(default=None)
+    half_spread_cost: float = Field(default=None)
     is_winner: bool = Field(default=False)
     sl_pips: float = Field(default=None)
     initiated_date: datetime
