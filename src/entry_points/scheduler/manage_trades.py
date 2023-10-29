@@ -36,19 +36,19 @@ async def manage_trades_handler(
             ] = await uow.trade_repository.get_open_trades_by_forex_pair(
                 forex_pair=forex_pair
             )
-            multiplier = 3
+            multiplier = 4
 
             for trade in trades:
                 modified = False
 
                 if trade.is_buy:
-                    adjusted_close_long = close - trade.half_spread_cost
+                    adjusted_close_long = close
                     new_stop = adjusted_close_long - multiplier * atr
                     if new_stop > trade.stop and new_stop > trade.close:
                         trade.stop = new_stop
                         modified = True
                 else:
-                    adjusted_close_short = close + trade.half_spread_cost
+                    adjusted_close_short = close
                     new_stop = adjusted_close_short + multiplier * atr
                     if new_stop < trade.stop and new_stop < trade.close:
                         trade.stop = new_stop
