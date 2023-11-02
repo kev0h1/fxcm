@@ -83,11 +83,11 @@ async def manage_trades_handler(
                 if (
                     trade.is_buy
                     and trade.stop > close
-                    and trade.stop > trade.close
+                    and trade.stop > (trade.close + half_spread_pips)
                 ) or (
                     not trade.is_buy
                     and trade.stop < close
-                    and trade.stop < trade.close
+                    and trade.stop < (trade.close - half_spread_pips)
                 ):
                     logger.info(
                         "Trade crossed stop loss for trade %s, with stop of %s and is buy is %s"
