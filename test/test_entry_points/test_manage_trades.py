@@ -37,7 +37,7 @@ class TestManageTrades:
             position=sampled_from([PositionEnum.OPEN]),
             close=sampled_from([1.6515]),
             sl_pips=sampled_from([5]),
-            half_spread_cost=sampled_from([0.0001]),
+            half_spread_cost=sampled_from([0]),
         )
     )
     @settings(
@@ -137,7 +137,7 @@ class TestManageTrades:
             position=sampled_from([PositionEnum.OPEN]),
             close=sampled_from([1.6521]),
             sl_pips=sampled_from([9]),
-            half_spread_cost=sampled_from([0.0001]),
+            half_spread_cost=sampled_from([0]),
         )
     )
     @settings(
