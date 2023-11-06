@@ -45,7 +45,7 @@ async def get_fundamental_technical_data():
         await get_technical_signal()
 
 
-@scheduler.scheduled_job("cron", minute="*/1")
+@scheduler.scheduled_job("cron", minute="*/5")
 async def manage_trades():
     await asyncio.sleep(1)
     date_: datetime = datetime.now(timezone.utc)

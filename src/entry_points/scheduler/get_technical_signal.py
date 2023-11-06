@@ -145,11 +145,11 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     def calculate_stop(row):
         if row["Signal"] == 1:  # Buy
             return (
-                row["close"] - 2.5 * row["atr"]
+                row["close"] - 3 * row["atr"]
             )  # Adjust the multiplier as needed
         elif row["Signal"] == -1:  # Sell
             return (
-                row["close"] + 2.5 * row["atr"]
+                row["close"] + 3 * row["atr"]
             )  # Adjust the multiplier as needed
         else:  # No signal
             return None
@@ -157,11 +157,11 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     def calculate_limit(row):
         if row["Signal"] == 1:  # Buy
             return (
-                row["close"] + 3 * row["atr"]
+                row["close"] + 4 * row["atr"]
             )  # Adjust the multiplier as needed
         elif row["Signal"] == -1:  # Sell
             return (
-                row["close"] - 3 * row["atr"]
+                row["close"] - 4 * row["atr"]
             )  # Adjust the multiplier as needed
         else:  # No signal
             return None
