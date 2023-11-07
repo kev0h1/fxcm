@@ -152,7 +152,10 @@ class Indicators:
         low_close = np.abs(data[low] - data[close].shift())
         ranges = concat([high_low, high_close, low_close], axis=1)
         true_range = np.max(ranges, axis=1)
-        atr = true_range.rolling(14).sum() / period
+
+        # Corrected the ATR calculation here
+        atr = true_range.rolling(window=period).mean()
+
         data["atr"] = atr
         return data
 
@@ -195,3 +198,38 @@ class Indicators:
         data["ad"] = ad
 
         return data
+
+    async def calculate_pivot_points(self, df: DataFrame) -> DataFrame:
+        """
+        Calculate Pivot Points, Supports and Resistances for data
+        """
+        df["Pivot"] = (df["high"] + df["low"] + df["close"]) / 3
+        df["R1"] = df["Pivot"] + 0.618 * (df["Pivot"] - df["low"])
+        df["S1"] = df["Pivot"] - 0.618 * (df["high"] - df["Pivot"])
+        df["R2"] = df["Pivot"] + (df["high"] - df["low"])
+        df["S2"] = df["Pivot"] - (df["high"] - df["low"])
+        df["R3"] = df["high"] + 2 * (df["Pivot"] - df["low"])
+        df["S3"] = df["low"] - 2 * (df["high"] - df["Pivot"])
+        return df
+
+    async def fibonacci_retracements(
+        self,
+        frame: DataFrame,
+        low_column: str = "low",
+        high_column: str = "high",
+    ) -> DataFrame:
+        """
+        Calculate Fibonacci retracement levels
+        """
+        # Find the highest high and lowest low over some period
+        recent_low = frame[low_column].min()
+        recent_high = frame[high_column].max()
+
+        # Define Fibonacci levels
+        diff = recent_high - recent_low
+        frame["Fib_23.6"] = recent_high - 0.236 * diff
+        frame["Fib_38.2"] = recent_high - 0.382 * diff
+        frame["Fib_50.0"] = recent_high - 0.50 * diff
+        frame["Fib_61.8"] = recent_high - 0.618 * diff
+
+        return frame

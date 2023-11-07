@@ -75,17 +75,18 @@ class MockTradeConnect(BaseTradeConnect):
         is_pips: bool = False,
         order_type: OrderTypeEnum = OrderTypeEnum.AT_MARKET,
         time_in_force: str = "GTC",
-    ):
+    ) -> tuple[str, float]:
         """
         Opens a trade postion.
 
         open_trade(symbol, is_buy, amount, time_in_force, order_type, rate=0, is_in_pips=True,
         limit=None, at_market=0, stop=None, trailing_step=None, account_id=None)
         """
-        return str(uuid.uuid4())
+        return str(uuid.uuid4()), 0.0123, 0.001
 
     async def close_trade(self, trade_id: str, amount: int):
         """Closes the trade position"""
+        return "CLOSED", float(10)
 
     async def close_all_trades(self, trade_ids: list[str]):
         """closes all open trades"""

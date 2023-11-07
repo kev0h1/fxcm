@@ -16,7 +16,6 @@ from src.logger import get_logger
 
 logger = get_logger(__name__)
 
-
 from src.utils import get_secret
 
 if TYPE_CHECKING:
@@ -46,14 +45,21 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         scraper: "BaseScraper",
         db_name: str = "my_db",
     ):
+        self.init_db(fxcm_connection, scraper, db_name)
+
+        for event, handler in handlers.items():
+            self.event_bus.subscribe(event, handler)
+
+    def init_db(self, fxcm_connection, scraper, db_name):
         self.db_name = db_name
         if os.environ.get("DEPLOY_ENV", "local") == "aws":
             logger.info("Using AWS DocDB")
             secret = get_secret("DocumentDBSecret")
             username, password = secret["username"], secret["pass"]
-            docdb_cluster_endpoint = os.environ.get("DOCDB_CLUSTER_ENDPOINT")
+            url_secret = get_secret("DocDBClusterSecret")
+            host = url_secret["DocDBClusterSecret"]
             self.pem_path = "./global-bundle.pem"
-            self.host = f"mongodb://{username}:{password}@{docdb_cluster_endpoint}:27017/?tls=true&tlsCAFile={self.pem_path}&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
+            self.host = f"mongodb://{username}:{password}@{host}:27017/?tls=true&tlsCAFile={self.pem_path}&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
         elif os.environ.get("DEPLOY_ENV", "local") == "ci":
             logger.info("Using Circle CLI")
             mongodb_username = os.environ["MONGODB_USERNAME"]
@@ -66,12 +72,22 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         self.fundamental_data_repository: FundamentalDataRepository = (
             FundamentalDataRepository()
         )
+
         self.trade_repository: TradeRepository = TradeRepository()
         self.fxcm_connection: BaseTradeConnect = fxcm_connection
         self.scraper: "BaseScraper" = scraper
 
-        for event, handler in handlers.items():
-            self.event_bus.subscribe(event, handler)
+    def refresh_connection_id(self):
+        while True:
+            # Your logic to refresh the connection ID goes here...
+
+            logger.info("Refreshing connection ID...")
+
+            # Example: If using a client object with a method to refresh
+            # self.some_client_object.refresh_connection_id()
+
+            # Sleep for 30 minutes
+            time.sleep(30 * 60)
 
     async def __aenter__(self):
         self.client = connect(self.db_name, host=self.host)

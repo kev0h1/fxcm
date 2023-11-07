@@ -91,7 +91,7 @@ class BaseTradeConnect(ABC):
         is_pips: bool = False,
         order_type: OrderTypeEnum = OrderTypeEnum.AT_MARKET,
         time_in_force: str = "GTC",
-    ) -> str:
+    ) -> tuple[str, float]:
         raise NotImplementedError
 
     async def get_account_balance(self) -> str:

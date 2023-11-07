@@ -86,7 +86,7 @@ class TradeRepository:
     async def get_open_trades(self) -> list[TradeDomain]:
         """Get all open trades"""
         trades = TradeModel.objects(
-            position=PositionEnum.OPEN,
+            Q(position=PositionEnum.OPEN) | Q(realised_pl=None)
         )
         return [map_to_domain_model(obj) for obj in trades]
 

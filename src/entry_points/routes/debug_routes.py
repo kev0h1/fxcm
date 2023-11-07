@@ -65,7 +65,7 @@ class DebugResource(Resource):
         return {
             "time": datetime.now(tz=get_localzone()),
             "system": "ok",
-            "version": "1.0.1",
+            "version": "1.1.1 - implement half spread cost",
         }
 
     @set_responses(Any, 200)
@@ -101,12 +101,12 @@ class DebugResource(Resource):
             event = OpenTradeEvent(
                 forex_pair=ForexPairEnum.AUDUSD,
                 sentiment=SentimentEnum.BULLISH,
-                stop=0.64300,
+                stop=0.63181,
                 close=float(close),
                 limit=None,
             )
 
-            is_buy, units, _, _ = await get_trade_parameters(
+            is_buy, _, _, _, _ = await get_trade_parameters(
                 event, self.uow, ForexPairEnum.AUDUSD.value.split("_")
             )
 
@@ -127,7 +127,7 @@ class DebugResource(Resource):
                     state,
                     realised_pl,
                 ) = await self.uow.fxcm_connection.get_trade_state(
-                    trade_id=2834
+                    trade_id=18140
                 )
                 if state != "OPEN":
                     pass
@@ -140,12 +140,14 @@ class DebugResource(Resource):
 
         if debug_task == DebugEnum.TestCloseTrade:
             try:
-                return await self.uow.fxcm_connection.close_trade("2831", 20)
+                return await self.uow.fxcm_connection.close_trade("18152", 20)
             except Exception as e:
                 pass
 
         if debug_task == DebugEnum.TestGetTrades:
-            return await self.uow.fxcm_connection.get_open_positions()
+            async with self.uow:
+                trades = await self.uow.trade_repository.get_open_trades()
+                return await self.uow.fxcm_connection.get_open_positions()
 
         if debug_task == DebugEnum.TestManageTrade:
             return await manage_trades_handler()

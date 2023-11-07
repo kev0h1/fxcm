@@ -30,6 +30,7 @@ class Trade(Document):
         initiated_date: datetime,
         position: PositionEnum,
         close: float,
+        half_spread_cost: float,
         limit: float = None,
         realised_pl: float = None,
         sl_pips: float = None,
@@ -51,6 +52,7 @@ class Trade(Document):
         self.close = close
         self.realised_pl = realised_pl
         self.sl_pips = sl_pips
+        self.half_spread_cost = half_spread_cost
 
     trade_id = StringField(primary_key=True)
     units = FloatField()
@@ -67,6 +69,7 @@ class Trade(Document):
     quote_currency = EnumField(CurrencyEnum)
     forex_currency_pair = EnumField(ForexPairEnum)
     position = EnumField(PositionEnum)
+    half_spread_cost = FloatField()
 
 
 def map_to_db_model(trade: TradeDomain) -> Union[Trade, None]:
@@ -96,6 +99,7 @@ def map_to_db_model(trade: TradeDomain) -> Union[Trade, None]:
         new_close=trade.new_close,
         realised_pl=trade.realised_pl,
         sl_pips=trade.sl_pips,
+        half_spread_cost=trade.half_spread_cost,
     )
 
 
@@ -126,4 +130,5 @@ def map_to_domain_model(trade: Trade) -> Union[TradeDomain, None]:
         new_close=trade.new_close,
         realised_pl=trade.realised_pl,
         sl_pips=trade.sl_pips,
+        half_spread_cost=trade.half_spread_cost,
     )

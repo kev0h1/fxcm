@@ -137,7 +137,7 @@ class OandaConnect(BaseTradeConnect):
         is_pips: bool = False,
         order_type: OrderTypeEnum = OrderTypeEnum.MARKET,
         time_in_force: str = "GTC",
-    ) -> str:
+    ) -> tuple[str, float, float]:
         """
         Opens a trade postion.
 
@@ -179,15 +179,28 @@ class OandaConnect(BaseTradeConnect):
         response_model: OrderSchema = parse_obj_as(OrderSchema, response)
         if response_model.orderFillTransaction is not None:
             logger.info(
-                "Opened trade %s for %s units for currency pair %s, with a stop of %s"
+                "Opened trade %s for %s units for currency pair %s, with a stop of %s and an entry prices of %s"
                 % (
                     response_model.orderFillTransaction.id,
                     amount,
                     instrument,
                     stop,
+                    response_model.orderFillTransaction.price,
                 )
             )
-            return response_model.orderFillTransaction.id
+            logger.info(
+                "trade id is %s with and entry price of %s and half spread cose of %s"
+                % (
+                    response_model.orderFillTransaction.id,
+                    response_model.orderFillTransaction.price,
+                    response_model.orderFillTransaction.halfSpreadCost,
+                )
+            )
+            return (
+                response_model.orderFillTransaction.id,
+                float(response_model.orderFillTransaction.price),
+                float(response_model.orderFillTransaction.halfSpreadCost),
+            )
         else:
             if response_model.orderCancelTransaction is not None:
                 reason = response_model.orderCancelTransaction.reason
@@ -198,6 +211,7 @@ class OandaConnect(BaseTradeConnect):
                 "Failed to open trade for %s units for currency pair %s, with a stop of %s. The reason was %s"
                 % (amount, instrument, stop, reason)
             )
+            return None, None, None
 
     @error_handler
     async def close_trade(
@@ -208,9 +222,7 @@ class OandaConnect(BaseTradeConnect):
         response = self.client.request(trade_close_endpoint)
         response_model: OrderSchema = parse_obj_as(OrderSchema, response)
         if response_model.orderFillTransaction is not None:
-            return response_model.orderFillTransaction.id, float(
-                response_model.orderFillTransaction.pl
-            )
+            return "CLOSED", float(response_model.orderFillTransaction.pl)
         else:
             if response_model.orderCancelTransaction is not None:
                 reason = response_model.orderCancelTransaction.reason
