@@ -69,7 +69,7 @@ class Trade(Document):
     position = EnumField(PositionEnum)
 
 
-async def map_to_db_model(trade: TradeDomain) -> Union[Trade, None]:
+def map_to_db_model(trade: TradeDomain) -> Union[Trade, None]:
     """Maps trade domain model to database model
 
     Args:
@@ -99,7 +99,7 @@ async def map_to_db_model(trade: TradeDomain) -> Union[Trade, None]:
     )
 
 
-async def map_to_domain_model(trade: Trade) -> Union[TradeDomain, None]:
+def map_to_domain_model(trade: Trade) -> Union[TradeDomain, None]:
     """Maps trade database model to domain model
 
     Args:

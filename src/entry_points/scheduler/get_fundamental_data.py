@@ -61,7 +61,6 @@ async def process_data(
                     calender_event.forecast = scraped_calendar_event.forecast
                     calender_event.sentiment = scraped_calendar_event.sentiment
 
-                logger.info("Calculating aggregate score")
                 await fundamental_data_service.calculate_aggregate_score(
                     fundamental_data=fundamental_data
                 )
@@ -108,16 +107,7 @@ async def calendar_updates_complete(data: FundamentalData) -> bool:
                 calendar_event.forecast,
             ]
         ):
-            logger.info(
-                "There are pending calendar updates for calendar event %s"
-                % calendar_event.calendar_event
-            )
             can_process_close_event = False
-        else:
-            logger.info(
-                "There are no pending calendar updates for calendar event %s"
-                % calendar_event.calendar_event
-            )
     return can_process_close_event
 
 

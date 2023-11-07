@@ -60,16 +60,7 @@ class GBPConversionMapEnum(str, Enum):
     GBPCAD = "GBP/CAD"
     GBPCHF = "GBP/CHF"
     GBPNZD = "GBP/NZD"
-    GBPEUR = "GBP/EUR"
-    GBPNOK = "GBP/NOK"
-    GBPSGD = "GBP/SGD"
-    GBPHKD = "GBP/HKD"
-    GBPCNH = "GBP/CNH"
-    GBPMXN = "GBP/MXN"
-    GBPCZK = "GBP/CZK"
-    GBPDKK = "GBP/DKK"
-    GBPHUF = "GBP/HUF"
-    GBPILS = "GBP/ILS"
+    GBPEUR = "EUR/GBP"
 
 
 conversion_map = {

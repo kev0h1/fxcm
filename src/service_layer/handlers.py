@@ -135,9 +135,13 @@ async def open_trade_handler(
         % (event.forex_pair, event.sentiment)
     )
     currencies = event.forex_pair.value.split("/")
-    is_buy, units, stop_loss, stop_loss_in_pips = await get_trade_parameters(
-        event=event, uow=uow, currencies=currencies
-    )
+    (
+        is_buy,
+        units,
+        stop_loss,
+        stop_loss_in_pips,
+        limit,
+    ) = await get_trade_parameters(event=event, uow=uow, currencies=currencies)
 
     trade_id = None
 
@@ -145,66 +149,67 @@ async def open_trade_handler(
         event.forex_pair
     )
 
-    if len(trades_open) != 0:
+    if len(trades_open) == 0:
+        if (
+            await get_combined_techincal_and_fundamental_sentiment(
+                event=event, uow=uow, currencies=currencies
+            )
+            == SentimentEnum.BULLISH
+        ):
+            trade_id = await uow.fxcm_connection.open_trade(
+                instrument=event.forex_pair,
+                is_buy=is_buy,
+                amount=units,
+                stop=stop_loss,
+                limit=limit,
+            )
+        elif (
+            await get_combined_techincal_and_fundamental_sentiment(
+                event=event, uow=uow, currencies=currencies
+            )
+            == SentimentEnum.BEARISH
+        ):
+            trade_id = await uow.fxcm_connection.open_trade(
+                instrument=event.forex_pair,
+                is_buy=is_buy,
+                amount=units,
+                stop=stop_loss,
+                limit=limit,
+            )
+        if trade_id:
+            trade = Trade(
+                trade_id=trade_id,
+                units=units,
+                stop=stop_loss,
+                limit=limit,
+                is_buy=True
+                if event.sentiment == SentimentEnum.BULLISH
+                else False,
+                base_currency=CurrencyEnum(currencies[0]),
+                quote_currency=CurrencyEnum(currencies[1]),
+                forex_currency_pair=event.forex_pair,
+                is_winner=False,
+                initiated_date=datetime.now(),
+                position=PositionEnum.OPEN,
+                close=event.close,
+                sl_pips=stop_loss_in_pips,
+            )
+
+            await uow.trade_repository.save(trade)
+            logger.info(
+                "Created trade with trade id %s units: %s sentiment: %s for currency pair %s"
+                % (trade_id, units, event.sentiment, event.forex_pair)
+            )
+    else:
         logger.info(
             "There are %s open trades for forex pair %s"
             % (len(trades_open), event.forex_pair)
-        )
-        return
-
-    if (
-        await get_combined_techincal_and_fundamental_sentiment(
-            event=event, uow=uow, currencies=currencies
-        )
-        == SentimentEnum.BULLISH
-    ):
-        trade_id = await uow.fxcm_connection.open_trade(
-            instrument=event.forex_pair,
-            is_buy=is_buy,
-            amount=units,
-            stop=stop_loss,
-            limit=None,
-        )
-    elif (
-        await get_combined_techincal_and_fundamental_sentiment(
-            event=event, uow=uow, currencies=currencies
-        )
-        == SentimentEnum.BEARISH
-    ):
-        trade_id = await uow.fxcm_connection.open_trade(
-            instrument=event.forex_pair,
-            is_buy=is_buy,
-            amount=units,
-            stop=stop_loss,
-            limit=None,
-        )
-    if trade_id:
-        trade = Trade(
-            trade_id=trade_id,
-            units=units,
-            stop=stop_loss,
-            limit=event.limit,
-            is_buy=True if event.sentiment == SentimentEnum.BULLISH else False,
-            base_currency=CurrencyEnum(currencies[0]),
-            quote_currency=CurrencyEnum(currencies[1]),
-            forex_currency_pair=event.forex_pair,
-            is_winner=False,
-            initiated_date=datetime.now(),
-            position=PositionEnum.OPEN,
-            close=event.close,
-            sl_pips=stop_loss_in_pips,
-        )
-
-        await uow.trade_repository.save(trade)
-        logger.info(
-            "Created trade with trade id %s units: %s sentiment: %s for currency pair %s"
-            % (trade_id, units, event.sentiment, event.forex_pair)
         )
 
 
 async def get_trade_parameters(
     event: events.OpenTradeEvent, uow: MongoUnitOfWork, currencies: list[str]
-) -> tuple[bool, int, float, float]:
+) -> tuple[bool, int, float, float, float]:
     """Gets the trade parameters for a given event
 
     units= Risk per unit in GBP/ Amount at risk in GBP
@@ -226,7 +231,7 @@ async def get_trade_parameters(
     is_buy = True if event.sentiment == SentimentEnum.BULLISH else False
 
     pip_value = 0.0001 if "JPY" not in currencies else 0.01
-    risk = 5 / 100
+    risk = 2 / 100
 
     stop_loss_pips = abs(event.close - event.stop) / pip_value
 
@@ -244,7 +249,13 @@ async def get_trade_parameters(
 
     stop_loss = round(event.stop, count_decimal_places(pip_value))
 
-    return is_buy, int(units), stop_loss, stop_loss_pips
+    limit = (
+        round(event.limit, count_decimal_places(pip_value))
+        if event.limit is not None
+        else None
+    )
+
+    return is_buy, int(units), stop_loss, stop_loss_pips, limit
 
 
 async def close_forex_pair_handler(
@@ -252,6 +263,7 @@ async def close_forex_pair_handler(
 ):
     """Close all trades for a given forex pair"""
     is_buy = True if event.sentiment == SentimentEnum.BULLISH else False
+    logger.info("closing trades for forex pair %s" % event.forex_pair)
     trades = await uow.trade_repository.get_open_trades_by_forex_pair_for_buy_or_sell(
         event.forex_pair, is_buy
     )

@@ -71,7 +71,8 @@ jobs:
             cd ~/cdk_deploy
             touch README.md
             poetry install
-            poetry run cdk deploy
+            poetry run cdk bootstrap
+            poetry run cdk deploy --require-approval never
 
 workflows:
   version: 2

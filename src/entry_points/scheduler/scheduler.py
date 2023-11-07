@@ -34,15 +34,15 @@ async def get_fundamental_trend_data():
         await process_data(date_=date_)
 
 
-@scheduler.scheduled_job("interval", seconds=300)
+@scheduler.scheduled_job("interval", seconds=900)
 async def get_fundamental_technical_data():
     date_: datetime = datetime.now(timezone.utc)
     if date_.weekday() < 5:
-        logger.info(f"Getting fundamental data for {date_}")
+        logger.info(f"Getting trading signal for {date_}")
         await get_technical_signal()
 
 
-@scheduler.scheduled_job("interval", seconds=75)
+@scheduler.scheduled_job("interval", seconds=120)
 async def manage_trades():
     date_: datetime = datetime.now(timezone.utc)
     if date_.weekday() < 5:

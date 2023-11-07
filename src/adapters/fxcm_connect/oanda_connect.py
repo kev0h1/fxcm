@@ -5,9 +5,7 @@ from pydantic import parse_obj_as
 from src.domain.schema.trades import (
     TradeInfo,
     TradeCRDCOSchema,
-    TradeDetailResponse,
     StopLossOrder,
-    NotFoundResponse,
 )
 from src.domain.schema.transaction import OrderSchema, OrderTransaction
 from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
@@ -22,7 +20,6 @@ from oandapyV20.endpoints.trades import (
     TradeClose,
     TradesList,
     TradeCRCDO,
-    TradeDetails,
 )
 
 from oandapyV20.exceptions import V20Error
@@ -40,6 +37,7 @@ def error_handler(func):
             return await func(*args, **kwargs)
         except V20Error as e:
             logger.error(e)
+            raise e
 
     return wrapper
 
@@ -91,7 +89,6 @@ class OandaConnect(BaseTradeConnect):
         r = instruments.InstrumentsCandles(
             instrument=instrument, params=params
         )
-        logger.info("Getting candle data for %s" % instrument)
         return await self.get_refined_data(self.client.request(r))
 
     @error_handler
@@ -109,7 +106,6 @@ class OandaConnect(BaseTradeConnect):
                     "volume": float(i["volume"]),
                 }
             )
-        logger.info("Refining candle data")
         return pd.DataFrame(list_of_candles)
 
     @error_handler
@@ -155,7 +151,10 @@ class OandaConnect(BaseTradeConnect):
 
         stops = {}
         if limit is not None:
-            stops["takeProfitOnFill"] = {"price": str(limit)}
+            stops["takeProfitOnFill"] = {
+                "price": str(limit),
+                "timeInForce": time_in_force,
+            }
         if stop is not None:
             stops["stopLossOnFill"] = {
                 "timeInForce": time_in_force,
@@ -201,13 +200,17 @@ class OandaConnect(BaseTradeConnect):
             )
 
     @error_handler
-    async def close_trade(self, trade_id: str, amount: int):
+    async def close_trade(
+        self, trade_id: str, amount: int
+    ) -> tuple[str, float]:
         """closes a trade position"""
         trade_close_endpoint = TradeClose(self.account_id, trade_id)
         response = self.client.request(trade_close_endpoint)
         response_model: OrderSchema = parse_obj_as(OrderSchema, response)
         if response_model.orderFillTransaction is not None:
-            return response_model.orderFillTransaction.id
+            return response_model.orderFillTransaction.id, float(
+                response_model.orderFillTransaction.pl
+            )
         else:
             if response_model.orderCancelTransaction is not None:
                 reason = response_model.orderCancelTransaction.reason
@@ -218,6 +221,7 @@ class OandaConnect(BaseTradeConnect):
                 "Failed to close trade for id %s. The reason was %s"
                 % (trade_id, reason)
             )
+        return None, None
 
     @error_handler
     async def close_all_trades(self, trade_ids: list[str]):
@@ -279,22 +283,28 @@ class OandaConnect(BaseTradeConnect):
     @error_handler
     async def get_trade_state(self, trade_id: str):
         """get the trade state"""
-        trade_details_request = TradeDetails(
-            accountID=self.account_id, tradeID=trade_id
+        trades = []
+        r = TradesList(
+            self.account_id,
+            params={
+                "state": "OPEN",
+            },
         )
-        logger.info("Getting trade details for %s" % trade_id)
-        response = self.client.request(trade_details_request)
+        rv = self.client.request(r)
+        trades.extend(rv["trades"])
+        r = TradesList(
+            self.account_id,
+            params={
+                "state": "CLOSED",
+            },
+        )
+        rv = self.client.request(r)
+        trades.extend(rv["trades"])
+        for trade in trades:
+            if str(trade["id"]) == str(trade_id):
+                logger.info("Getting trade details for %s" % trade_id)
+                return trade["state"], float(trade["realizedPL"])
 
-        response_model: TradeDetailResponse = parse_obj_as(
-            TradeDetailResponse, response
-        )
-        if (
-            not isinstance(response_model, NotFoundResponse)
-            and response_model.trade is not None
-        ):
-            return response_model.trade.state, float(
-                response_model.trade.realizedPL
-            )
         return None, None
 
     @error_handler
