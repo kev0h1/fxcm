@@ -136,7 +136,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
                 & (refined_data["close"] < refined_data["Fib_61.8"])
             )
         )
-        & (refined_data["close"] > refined_data["MA"])
+        & (refined_data["close"] < refined_data["MA"])
         & (refined_data["adx"] > 25)
         & (refined_data["plus_di"] < refined_data["minus_di"])
     )
