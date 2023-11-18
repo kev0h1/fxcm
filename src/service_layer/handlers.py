@@ -64,6 +64,8 @@ async def get_combined_techincal_and_fundamental_sentiment(
 
     latest_object = max(fundamentals, key=lambda x: x.last_updated)
 
+    spread = await uow.fxcm_connection.get_spread(event.forex_pair)
+
     logger.info(
         "Latest object is %s, base currency fundamentals is %s, quoted currency fundamentals is %s"
         % (
@@ -73,7 +75,7 @@ async def get_combined_techincal_and_fundamental_sentiment(
         )
     )
 
-    if latest_object.processed == False:
+    if latest_object.processed == False or spread > 12:
         logger.warning(
             "Latest object is not processed %s and last updated time of %s"
             % (latest_object.currency, latest_object.last_updated)

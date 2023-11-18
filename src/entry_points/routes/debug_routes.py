@@ -174,6 +174,12 @@ class DebugResource(Resource):
                 if date_.weekday() < 5:
                     logger.info(f"Getting fundamental data for {date_}")
                     await process_data(date_=date_, load_data=True)
+
+        if debug_task == DebugEnum.TestGetSpread:
+            speard = await self.uow.fxcm_connection.get_spread(
+                ForexPairEnum.USDCAD
+            )
+            return speard
         return "done"
 
 

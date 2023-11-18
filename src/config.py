@@ -161,3 +161,4 @@ class DebugEnum(Enum):
     TestGetPendingOrders = "Test Get Pending Orders"
     TestCancelPendingOrder = "Test Cancel Pending Order"
     TestProcessEvents = "Test Process Events"
+    TestGetSpread = "Test Get Spread"

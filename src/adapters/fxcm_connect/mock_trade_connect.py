@@ -110,3 +110,7 @@ class MockTradeConnect(BaseTradeConnect):
     async def get_trade_state(self, trade_id: str):
         """get the trade state"""
         return "CLOSED", 500
+
+    async def get_spread(self, instrument: ForexPairEnum) -> float:
+        """returns the spread"""
+        return 5
