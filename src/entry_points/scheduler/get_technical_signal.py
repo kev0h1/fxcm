@@ -142,8 +142,8 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     )
 
     # Create signals
-    refined_data["Buy_Signal"] = bullish_condition
-    refined_data["Sell_Signal"] = bearish_condition
+    refined_data["Buy_Signal"] = bearish_condition
+    refined_data["Sell_Signal"] = bullish_condition
 
     # Combine the Buy_Signal and Sell_Signal into a single Signal column
     refined_data["Signal"] = refined_data["Buy_Signal"].replace(
