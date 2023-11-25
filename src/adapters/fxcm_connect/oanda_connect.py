@@ -21,7 +21,7 @@ from oandapyV20.endpoints.trades import (
     TradesList,
     TradeCRCDO,
 )
-
+from oandapyV20.endpoints.pricing import PricingInfo
 from oandapyV20.exceptions import V20Error
 
 
@@ -339,3 +339,17 @@ class OandaConnect(BaseTradeConnect):
             OrderTransaction, response["orderCancelTransaction"]
         )
         return response_model
+
+    @error_handler
+    async def get_spread(self, instrument: ForexPairEnum) -> float:
+        """returns the spread"""
+        instrument = instrument.value.replace("/", "_")
+        r = PricingInfo(
+            accountID=self.account_id, params={"instruments": instrument}
+        )
+        self.client.request(r)
+        prices = r.response["prices"][0]
+        bid_price = float(prices["bids"][0]["price"])
+        ask_price = float(prices["asks"][0]["price"])
+        pip_value = 0.01 if "JPY" in instrument else 0.0001
+        return (ask_price - bid_price) / pip_value

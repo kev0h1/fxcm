@@ -48,8 +48,8 @@ async def manage_trades_handler(
                 modified = False
 
                 half_spread_pips = (
-                    trade.half_spread_cost / gbp_per_pip
-                ) * pip_value
+                    (trade.half_spread_cost / gbp_per_pip) * pip_value * 1.25
+                )
 
                 if trade.is_buy:
                     adjusted_close_long = close
