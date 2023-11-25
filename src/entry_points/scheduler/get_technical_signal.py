@@ -39,19 +39,35 @@ async def get_technical_signal(
                 refined_data,
                 period=5,
                 col="close",
-                column_name="MA",
+                column_name="ShortTerm_MA",
             )
-            refined_data = await indicator.fibonacci_retracements(refined_data)
+            refined_data = await indicator.get_simple_moving_average(
+                refined_data,
+                period=10,
+                col="close",
+                column_name="MediumTerm_MA",
+            )
+            refined_data = await indicator.get_simple_moving_average(
+                refined_data,
+                period=50,
+                col="close",
+                column_name="LongTerm_MA",
+            )
 
             refined_data = await indicator.get_rsi(refined_data, period=14)
+
+            refined_data["Prev_ShortTerm_MA"] = refined_data[
+                "ShortTerm_MA"
+            ].shift(1)
+            refined_data["Prev_MediumTerm_MA"] = refined_data[
+                "MediumTerm_MA"
+            ].shift(1)
 
             refined_data = await indicator.get_macd(refined_data, "close")
 
             refined_data = await indicator.get_atr(refined_data, period=14)
 
             refined_data = await indicator.get_adx(refined_data, period=14)
-
-            refined_data["prev_close"] = refined_data["close"].shift(1)
 
             refined_data = await get_signal(refined_data)
             if refined_data.iloc[-1]["Signal"] > 0:
@@ -92,58 +108,31 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     """Gets the signal for the currency"""
 
     # Define divergence conditions
-    bullish_condition = (
+    condition_bullish_divergence = (
         (
-            (
-                (refined_data["prev_close"] <= refined_data["Fib_23.6"])
-                & (refined_data["close"] > refined_data["Fib_23.6"])
-            )
-            | (
-                (refined_data["prev_close"] <= refined_data["Fib_38.2"])
-                & (refined_data["close"] > refined_data["Fib_38.2"])
-            )
-            | (
-                (refined_data["prev_close"] <= refined_data["Fib_50.0"])
-                & (refined_data["close"] > refined_data["Fib_50.0"])
-            )
-            | (
-                (refined_data["prev_close"] <= refined_data["Fib_61.8"])
-                & (refined_data["close"] > refined_data["Fib_61.8"])
-            )
+            refined_data["Prev_ShortTerm_MA"]
+            <= refined_data["Prev_MediumTerm_MA"]
         )
-        & (refined_data["close"] > refined_data["Fib_23.6"])
-        & (refined_data["close"] > refined_data["MA"])
+        & (refined_data["ShortTerm_MA"] > refined_data["MediumTerm_MA"])
+        & (refined_data["close"] > refined_data["LongTerm_MA"])
         & (refined_data["adx"] > 25)
         & (refined_data["plus_di"] > refined_data["minus_di"])
     )
 
-    bearish_condition = (
+    condition_bearish_divergence = (
         (
-            (
-                (refined_data["prev_close"] >= refined_data["Fib_23.6"])
-                & (refined_data["close"] < refined_data["Fib_23.6"])
-            )
-            | (
-                (refined_data["prev_close"] >= refined_data["Fib_38.2"])
-                & (refined_data["close"] < refined_data["Fib_38.2"])
-            )
-            | (
-                (refined_data["prev_close"] >= refined_data["Fib_50.0"])
-                & (refined_data["close"] < refined_data["Fib_50.0"])
-            )
-            | (
-                (refined_data["prev_close"] >= refined_data["Fib_61.8"])
-                & (refined_data["close"] < refined_data["Fib_61.8"])
-            )
+            refined_data["Prev_ShortTerm_MA"]
+            >= refined_data["Prev_MediumTerm_MA"]
         )
-        & (refined_data["close"] < refined_data["MA"])
+        & (refined_data["ShortTerm_MA"] < refined_data["MediumTerm_MA"])
+        & (refined_data["close"] < refined_data["LongTerm_MA"])
         & (refined_data["adx"] > 25)
         & (refined_data["plus_di"] < refined_data["minus_di"])
     )
 
     # Create signals
-    refined_data["Buy_Signal"] = bearish_condition
-    refined_data["Sell_Signal"] = bullish_condition
+    refined_data["Buy_Signal"] = condition_bullish_divergence
+    refined_data["Sell_Signal"] = condition_bearish_divergence
 
     # Combine the Buy_Signal and Sell_Signal into a single Signal column
     refined_data["Signal"] = refined_data["Buy_Signal"].replace(
@@ -153,25 +142,27 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     refined_data = refined_data.drop(columns=["Buy_Signal", "Sell_Signal"])
 
     def calculate_stop(row):
+        atr_multiplier = 3
         if row["Signal"] == 1:  # Buy
             return (
-                row["close"] - 3 * row["atr"]
+                row["close"] - atr_multiplier * row["atr"]
             )  # Adjust the multiplier as needed
         elif row["Signal"] == -1:  # Sell
             return (
-                row["close"] + 3 * row["atr"]
+                row["close"] + atr_multiplier * row["atr"]
             )  # Adjust the multiplier as needed
         else:  # No signal
             return None
 
     def calculate_limit(row):
+        atr_multiplier = 6
         if row["Signal"] == 1:  # Buy
             return (
-                row["close"] + 4 * row["atr"]
+                row["close"] + atr_multiplier * row["atr"]
             )  # Adjust the multiplier as needed
         elif row["Signal"] == -1:  # Sell
             return (
-                row["close"] - 4 * row["atr"]
+                row["close"] - atr_multiplier * row["atr"]
             )  # Adjust the multiplier as needed
         else:  # No signal
             return None
