@@ -142,7 +142,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     refined_data = refined_data.drop(columns=["Buy_Signal", "Sell_Signal"])
 
     def calculate_stop(row):
-        atr_multiplier = 3
+        atr_multiplier = 4
         if row["Signal"] == 1:  # Buy
             return (
                 row["close"] - atr_multiplier * row["atr"]
