@@ -25,7 +25,7 @@ async def manage_trades_handler(
         ] = await uow.trade_repository.get_distinct_forex_pairs()
         for forex_pair in forex_pairs:
             data = await uow.fxcm_connection.get_candle_data(
-                forex_pair, PeriodEnum.MINUTE_1, 20
+                forex_pair, PeriodEnum.MINUTE_15, 20
             )
             data = await indicator.get_atr(data, 14)
             close = data.iloc[-1]["close"]
@@ -38,9 +38,7 @@ async def manage_trades_handler(
             )
             multiplier = 3
 
-            pip_value = (
-                0.0001 if "JPY" not in forex_pair.value.split("/") else 0.01
-            )
+            pip_value = 0.0001 if "JPY" not in forex_pair.value.split("/") else 0.01
 
             gbp_per_pip = await calculate_gbp_pips(forex_pair, uow, pip_value)
 
