@@ -4,7 +4,6 @@ import os
 import uuid
 
 import dotenv
-from fxcmpy import fxcmpy
 from pandas import DataFrame
 from src.adapters.fxcm_connect.base_trade_connect import BaseTradeConnect
 from src.config import ForexPairEnum, PeriodEnum, OrderTypeEnum
