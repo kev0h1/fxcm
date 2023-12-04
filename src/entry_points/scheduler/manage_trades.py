@@ -36,7 +36,7 @@ async def manage_trades_handler(
             ] = await uow.trade_repository.get_open_trades_by_forex_pair(
                 forex_pair=forex_pair
             )
-            multiplier = 4
+            multiplier = 2
 
             pip_value = 0.0001 if "JPY" not in forex_pair.value.split("/") else 0.01
 
