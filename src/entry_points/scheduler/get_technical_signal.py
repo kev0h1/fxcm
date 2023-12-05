@@ -132,6 +132,8 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
 
     window_size = 3  # Number of candles for sequential confirmation
 
+    condition_adx_above_25 = refined_data["adx"] > 25
+
     # For Buy Signals
     rolling_close_above_MA = condition_close_above_MA.rolling(window_size).sum()
     rolling_macd_above_signal = condition_macd_above_signal.rolling(window_size).sum()
@@ -170,6 +172,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         window_size
     ).sum()
 
+    rolling_adx_above_25 = condition_adx_above_25.rolling(window_size).sum()
     # For Buy Signal
     refined_data["Buy_Signal"] = (
         (rolling_close_above_MA > 0)
@@ -179,7 +182,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (rolling_macd_below_signal_previous > 0)
         & (rolling_rsi_below_35_previous > 0)
         & (rolling_plus_di_above_minus_di > 0)
-        & (refined_data["adx"] > 25)
+        # & (rolling_adx_above_25 > 0)
     )
 
     # For Sell Signal
@@ -191,7 +194,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (rolling_macd_above_signal_previous > 0)
         & (rolling_rsi_above_65_previous > 0)
         & (rolling_minus_di_above_plus_di > 0)
-        & (refined_data["adx"] > 25)
+        # & (rolling_adx_above_25 > 0)
     )
 
     # Combine the Buy_Signal and Sell_Signal into a single Signal column
