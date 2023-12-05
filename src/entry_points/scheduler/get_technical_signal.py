@@ -35,16 +35,18 @@ async def get_technical_signal(
 
             refined_data = await indicator.get_simple_moving_average(
                 refined_data,
-                period=10,
+                period=20,
                 col="close",
                 column_name="ShortTerm_MA",
             )
 
             refined_data = await indicator.get_macd(refined_data, "close")
 
-            refined_data = await indicator.get_rsi(refined_data, period=14)
+            refined_data = await indicator.get_rsi(refined_data, period=20)
 
-            refined_data = await indicator.get_atr(refined_data, period=14)
+            refined_data = await indicator.get_atr(refined_data, period=20)
+
+            refined_data = await indicator.get_adx(refined_data, period=20)
 
             refined_data["Prev_ShortTerm_MA"] = refined_data["ShortTerm_MA"].shift(1)
 
@@ -103,6 +105,10 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     )
     condition_rsi_below_35_previous = refined_data["prev_rsi"] < 35
 
+    condition_plus_di_above_minus_di = (
+        refined_data["plus_di"] > refined_data["minus_di"]
+    )
+
     # Sell Signal Conditions
     condition_close_below_MA = refined_data["close"] < refined_data["ShortTerm_MA"]
     condition_macd_below_signal = refined_data["macd"] < refined_data["macd_s"]
@@ -119,6 +125,10 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     condition_rsi_above_65_previous = (
         refined_data["prev_rsi"] > 65
     )  # Assuming you want to use 65 here
+
+    condition_minus_di_above_plus_di = (
+        refined_data["minus_di"] > refined_data["plus_di"]
+    )
 
     window_size = 3  # Number of candles for sequential confirmation
 
@@ -137,6 +147,10 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         window_size
     ).sum()
 
+    rolling_plus_di_above_minus_di = condition_plus_di_above_minus_di.rolling(
+        window_size
+    ).sum()
+
     # For Sell Signals
     rolling_close_below_MA = condition_close_below_MA.rolling(window_size).sum()
     rolling_macd_below_signal = condition_macd_below_signal.rolling(window_size).sum()
@@ -152,6 +166,10 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         window_size
     ).sum()
 
+    rolling_minus_di_above_plus_di = condition_minus_di_above_plus_di.rolling(
+        window_size
+    ).sum()
+
     # For Buy Signal
     refined_data["Buy_Signal"] = (
         (rolling_close_above_MA > 0)
@@ -160,6 +178,8 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (rolling_close_below_MA_previous > 0)
         & (rolling_macd_below_signal_previous > 0)
         & (rolling_rsi_below_35_previous > 0)
+        & (rolling_plus_di_above_minus_di > 0)
+        & (refined_data["adx"] > 25)
     )
 
     # For Sell Signal
@@ -170,6 +190,8 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (rolling_close_above_MA_previous > 0)
         & (rolling_macd_above_signal_previous > 0)
         & (rolling_rsi_above_65_previous > 0)
+        & (rolling_minus_di_above_plus_di > 0)
+        & (refined_data["adx"] > 25)
     )
 
     # Combine the Buy_Signal and Sell_Signal into a single Signal column
@@ -194,16 +216,16 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
 
     def calculate_limit(row):
         atr_multiplier = 8
-        if row["Signal"] == 1:  # Buy
-            return (
-                row["close"] + atr_multiplier * row["atr"]
-            )  # Adjust the multiplier as needed
-        elif row["Signal"] == -1:  # Sell
-            return (
-                row["close"] - atr_multiplier * row["atr"]
-            )  # Adjust the multiplier as needed
-        else:  # No signal
-            return None
+        # if row["Signal"] == 1:  # Buy
+        #     return (
+        #         row["close"] + atr_multiplier * row["atr"]
+        #     )  # Adjust the multiplier as needed
+        # elif row["Signal"] == -1:  # Sell
+        #     return (
+        #         row["close"] - atr_multiplier * row["atr"]
+        #     )  # Adjust the multiplier as needed
+        # else:  # No signal
+        return None
 
     refined_data["ATR_Stop"] = refined_data.apply(calculate_stop, axis=1)
     refined_data["ATR_Limit"] = refined_data.apply(calculate_limit, axis=1)
