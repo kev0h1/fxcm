@@ -181,7 +181,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (rolling_close_below_MA_previous > 0)
         & (rolling_macd_below_signal_previous > 0)
         & (rolling_rsi_below_35_previous > 0)
-        & (rolling_plus_di_above_minus_di > 0)
+        # & (rolling_plus_di_above_minus_di > 0)
         # & (rolling_adx_above_25 > 0)
     )
 
@@ -193,7 +193,7 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
         & (rolling_close_above_MA_previous > 0)
         & (rolling_macd_above_signal_previous > 0)
         & (rolling_rsi_above_65_previous > 0)
-        & (rolling_minus_di_above_plus_di > 0)
+        # & (rolling_minus_di_above_plus_di > 0)
         # & (rolling_adx_above_25 > 0)
     )
 
