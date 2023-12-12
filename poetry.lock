@@ -3771,6 +3771,20 @@ anyio = ">=3.4.0,<5"
 full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyaml"]
 
 [[package]]
+name = "ta-lib"
+version = "0.4.28"
+description = "Python wrapper for TA-Lib"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "TA-Lib-0.4.28.tar.gz", hash = "sha256:3f03847162e003e0d92a8a89d9e8b7192dfe1235507e2f7d1d0e66cd5af7a48e"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "terminado"
 version = "0.17.1"
 description = "Tornado websocket backend for the Xterm.js Javascript terminal emulator library."
@@ -4071,4 +4085,4 @@ requests = ">=2.0,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "148976da168fb9d672c0e4f20635c51d216d2de89add73941c1329a8ab8651f9"
+content-hash = "8c2e8225c5dfb1e436e75fbe4ee2207fc67acabf5cb8c0b2c6cf279fe892a950"
