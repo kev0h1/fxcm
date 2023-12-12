@@ -11,7 +11,6 @@ from src.config import (
     CurrencyEnum,
     ForexPairEnum,
     PeriodEnum,
-    PositionEnum,
     SentimentEnum,
 )
 from src.domain.events import CloseTradeEvent
@@ -83,6 +82,10 @@ class DebugResource(Resource):
                         sentiment=SentimentEnum.BULLISH,
                     )
                 )
+
+        if debug_task == DebugEnum.ScrapeSentiment:
+            async with self.uow:
+                await self.uow.sentiment_scraper.scrape()
         if debug_task == DebugEnum.RunIndicatorEvent:
             await get_technical_signal()
 
@@ -126,9 +129,7 @@ class DebugResource(Resource):
                 (
                     state,
                     realised_pl,
-                ) = await self.uow.fxcm_connection.get_trade_state(
-                    trade_id=18140
-                )
+                ) = await self.uow.fxcm_connection.get_trade_state(trade_id=18140)
                 if state != "OPEN":
                     pass
                     # trade.position = PositionEnum.CLOSED
@@ -166,9 +167,9 @@ class DebugResource(Resource):
         if debug_task == DebugEnum.LoadData:
             for i in range(1, 120):
                 if os.environ.get("DEPLOY_ENV", "local") == "aws":
-                    date_ = datetime.now(
-                        pytz.timezone("America/New_York")
-                    ) - timedelta(days=i)
+                    date_ = datetime.now(pytz.timezone("America/New_York")) - timedelta(
+                        days=i
+                    )
                 else:
                     date_ = datetime.now(pytz.utc) - timedelta(days=i)
                 if date_.weekday() < 5:
@@ -176,9 +177,7 @@ class DebugResource(Resource):
                     await process_data(date_=date_, load_data=True)
 
         if debug_task == DebugEnum.TestGetSpread:
-            speard = await self.uow.fxcm_connection.get_spread(
-                ForexPairEnum.USDCAD
-            )
+            speard = await self.uow.fxcm_connection.get_spread(ForexPairEnum.USDCAD)
             return speard
         return "done"
 

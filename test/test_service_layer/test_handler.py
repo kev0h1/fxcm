@@ -3,6 +3,7 @@ from hypothesis import settings, given, HealthCheck
 import mock
 from src.adapters.database.mongo.trade_model import Trade
 from src.adapters.fxcm_connect.mock_trade_connect import MockTradeConnect
+from src.adapters.scraper import sentiment_scraper
 from src.domain.events import (
     CloseForexPairEvent,
     CloseTradeEvent,
@@ -71,15 +72,14 @@ class TestCloseEventHandler:
         uow = MongoUnitOfWork(
             MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
         async with uow:
             await uow.trade_repository.save(trade)
             await close_trade_handler(event, uow)
             closed_trade: TradeDomain = (
-                await uow.trade_repository.get_trade_by_trade_id(
-                    trade.trade_id
-                )
+                await uow.trade_repository.get_trade_by_trade_id(trade.trade_id)
             )
             assert closed_trade.position == PositionEnum.CLOSED
 
@@ -112,15 +112,14 @@ class TestCloseEventHandler:
         uow = MongoUnitOfWork(
             MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
         async with uow:
             await uow.trade_repository.save(trade)
             await close_trade_handler(event, uow)
             closed_trade: TradeDomain = (
-                await uow.trade_repository.get_trade_by_trade_id(
-                    trade.trade_id
-                )
+                await uow.trade_repository.get_trade_by_trade_id(trade.trade_id)
             )
             assert closed_trade.position == PositionEnum.CLOSED
 
@@ -154,15 +153,14 @@ class TestCloseEventHandler:
         uow = MongoUnitOfWork(
             MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
         async with uow:
             await uow.trade_repository.save(trade)
             await close_trade_handler(event, uow)
             closed_trade: TradeDomain = (
-                await uow.trade_repository.get_trade_by_trade_id(
-                    trade.trade_id
-                )
+                await uow.trade_repository.get_trade_by_trade_id(trade.trade_id)
             )
             assert closed_trade.position == PositionEnum.CLOSED
 
@@ -196,15 +194,14 @@ class TestCloseEventHandler:
         uow = MongoUnitOfWork(
             MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
         async with uow:
             await uow.trade_repository.save(trade)
             await close_trade_handler(event, uow)
             closed_trade: TradeDomain = (
-                await uow.trade_repository.get_trade_by_trade_id(
-                    trade.trade_id
-                )
+                await uow.trade_repository.get_trade_by_trade_id(trade.trade_id)
             )
             assert closed_trade.position == PositionEnum.CLOSED
 
@@ -329,47 +326,66 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
         uow = MongoUnitOfWork(
             MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=sentiment_scraper.SentimentScraper(),
             db_name=get_db,
         )
 
-        async with uow:
-            for index, fundamental in enumerate(fundamentals):
-                if index == 0:
-                    fundamental.currency = CurrencyEnum.USD
-                    fundamental.aggregate_sentiment = base_sentiment
-                    fundamental.processed = processed
-                    fundamental.last_updated = (
-                        datetime.now()
-                        if delay_quoted
-                        else datetime.now() - timedelta(minutes=1)
-                    )
+        with mock.patch.object(
+            sentiment_scraper.SentimentScraper, "scrape"
+        ) as mock_scrape:
+            if event_sentiment == SentimentEnum.BULLISH:
+                mock_scrape.return_value = {
+                    "USDCAD": {
+                        "long": 90,
+                        "short": 10,
+                    }
+                }
+            else:
+                mock_scrape.return_value = {
+                    "USDCAD": {
+                        "long": 45,
+                        "short": 55,
+                    }
+                }
 
-                else:
-                    fundamental.currency = CurrencyEnum.CAD
-                    fundamental.processed = processed
-                    fundamental.aggregate_sentiment = quoted_sentiment
-                    fundamental.last_updated = (
-                        datetime.now() - timedelta(minutes=1)
-                        if delay_quoted
-                        else datetime.now()
-                    )
-                await uow.fundamental_data_repository.save(fundamental)
+            async with uow:
+                for index, fundamental in enumerate(fundamentals):
+                    if index == 0:
+                        fundamental.currency = CurrencyEnum.USD
+                        fundamental.aggregate_sentiment = base_sentiment
+                        fundamental.processed = processed
+                        fundamental.last_updated = (
+                            datetime.now()
+                            if delay_quoted
+                            else datetime.now() - timedelta(minutes=1)
+                        )
 
-        event = OpenTradeEvent(
-            forex_pair=ForexPairEnum.USDCAD,
-            sentiment=event_sentiment,
-            stop=1.3,
-            close=1.2,
-        )
+                    else:
+                        fundamental.currency = CurrencyEnum.CAD
+                        fundamental.processed = processed
+                        fundamental.aggregate_sentiment = quoted_sentiment
+                        fundamental.last_updated = (
+                            datetime.now() - timedelta(minutes=1)
+                            if delay_quoted
+                            else datetime.now()
+                        )
+                    await uow.fundamental_data_repository.save(fundamental)
 
-        async with uow:
-            combined_sentiment = (
-                await get_combined_techincal_and_fundamental_sentiment(
-                    event, uow, ForexPairEnum.USDCAD.value.split("/")
-                )
+            event = OpenTradeEvent(
+                forex_pair=ForexPairEnum.USDCAD,
+                sentiment=event_sentiment,
+                stop=1.3,
+                close=1.2,
             )
 
-            assert combined_sentiment == expected
+            async with uow:
+                combined_sentiment = (
+                    await get_combined_techincal_and_fundamental_sentiment(
+                        event, uow, ForexPairEnum.USDCAD.value.split("/")
+                    )
+                )
+
+                assert combined_sentiment == expected
 
     @pytest.mark.asyncio
     @given(
@@ -418,10 +434,30 @@ class TestGetCombinedTechnicalAndFundamentalSentiment:
         uow = MongoUnitOfWork(
             MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=sentiment_scraper.SentimentScraper(),
             db_name=get_db,
         )
-        with mock.patch.object(MockTradeConnect, "get_spread") as mock_spread:
+        with mock.patch.object(
+            MockTradeConnect, "get_spread"
+        ) as mock_spread, mock.patch.object(
+            sentiment_scraper.SentimentScraper, "scrape"
+        ) as mock_scrape:
+            if event_sentiment == SentimentEnum.BULLISH:
+                mock_scrape.return_value = {
+                    "USDCAD": {
+                        "long": 90,
+                        "short": 10,
+                    }
+                }
+            else:
+                mock_scrape.return_value = {
+                    "USDCAD": {
+                        "long": 45,
+                        "short": 55,
+                    }
+                }
             mock_spread.return_value = 13
+
             async with uow:
                 for index, fundamental in enumerate(fundamentals):
                     if index == 0:
@@ -516,6 +552,7 @@ class TestOpenTradeHandler:
         uow = MongoUnitOfWork(
             MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=sentiment_scraper.SentimentScraper(),
             db_name=get_db,
         )
 
@@ -527,31 +564,49 @@ class TestOpenTradeHandler:
             limit=None,
         )
 
-        async with uow:
-            for index, fundamental in enumerate(fundamentals):
-                if index == 0:
-                    fundamental.currency = CurrencyEnum.USD
-                    fundamental.aggregate_sentiment = base_sentiment
-                    fundamental.processed = True
-                    fundamental.last_updated = (
-                        datetime.now()
-                        if delay_quoted
-                        else datetime.now() - timedelta(minutes=1)
-                    )
+        with mock.patch.object(
+            sentiment_scraper.SentimentScraper, "scrape"
+        ) as mock_scrape:
+            if event_sentiment == SentimentEnum.BULLISH:
+                mock_scrape.return_value = {
+                    "USDCAD": {
+                        "long": 90,
+                        "short": 10,
+                    }
+                }
+            else:
+                mock_scrape.return_value = {
+                    "USDCAD": {
+                        "long": 45,
+                        "short": 55,
+                    }
+                }
 
-                else:
-                    fundamental.currency = CurrencyEnum.CAD
-                    fundamental.aggregate_sentiment = quoted_sentiment
-                    fundamental.processed = True
-                    fundamental.last_updated = (
-                        datetime.now() - timedelta(minutes=1)
-                        if delay_quoted
-                        else datetime.now()
-                    )
-                await uow.fundamental_data_repository.save(fundamental)
-            await open_trade_handler(event, uow)
-            trades = await uow.trade_repository.get_all()
-            assert len(trades) == expected
+            async with uow:
+                for index, fundamental in enumerate(fundamentals):
+                    if index == 0:
+                        fundamental.currency = CurrencyEnum.USD
+                        fundamental.aggregate_sentiment = base_sentiment
+                        fundamental.processed = True
+                        fundamental.last_updated = (
+                            datetime.now()
+                            if delay_quoted
+                            else datetime.now() - timedelta(minutes=1)
+                        )
+
+                    else:
+                        fundamental.currency = CurrencyEnum.CAD
+                        fundamental.aggregate_sentiment = quoted_sentiment
+                        fundamental.processed = True
+                        fundamental.last_updated = (
+                            datetime.now() - timedelta(minutes=1)
+                            if delay_quoted
+                            else datetime.now()
+                        )
+                    await uow.fundamental_data_repository.save(fundamental)
+                await open_trade_handler(event, uow)
+                trades = await uow.trade_repository.get_all()
+                assert len(trades) == expected
 
     class TestGetTradeParameters:
         @pytest.mark.asyncio
@@ -621,6 +676,7 @@ class TestOpenTradeHandler:
                 uow = MongoUnitOfWork(
                     MockTradeConnect(),
                     scraper=mock.MagicMock(),
+                    sentiment_scraper=mock.MagicMock(),
                     db_name=get_db,
                 )
                 event = OpenTradeEvent(
@@ -637,9 +693,7 @@ class TestOpenTradeHandler:
                     stop_loss,
                     sl_pips,
                     limit,
-                ) = await get_trade_parameters(
-                    event, uow, forex_pair.value.split("/")
-                )
+                ) = await get_trade_parameters(event, uow, forex_pair.value.split("/"))
                 assert is_buy == expected
                 assert amount == units
                 # assert stop_loss == 1.3
@@ -673,19 +727,16 @@ class TestOpenTradeHandler:
             suppress_health_check=[HealthCheck.function_scoped_fixture],
             deadline=None,
         )
-        async def test_close_forex_pair_handler(
-            self, sentiment, get_db, trades
-        ):
+        async def test_close_forex_pair_handler(self, sentiment, get_db, trades):
             uow = MongoUnitOfWork(
                 MockTradeConnect(),
                 scraper=mock.MagicMock(),
+                sentiment_scraper=mock.MagicMock(),
                 db_name=get_db,
             )
             async with uow:
                 for trade in trades:
-                    trade.is_buy = (
-                        True if sentiment == SentimentEnum.BULLISH else False
-                    )
+                    trade.is_buy = True if sentiment == SentimentEnum.BULLISH else False
                     trade.id = str(uuid4())
                     await uow.trade_repository.save(trade)
 

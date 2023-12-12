@@ -47,12 +47,11 @@ class TestManageClosedTrades:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
 
-        with mock.patch.object(
-            uow.fxcm_connection, "get_trade_state"
-        ) as mock_method:
+        with mock.patch.object(uow.fxcm_connection, "get_trade_state") as mock_method:
             async with uow:
                 await uow.trade_repository.save(trade)
             mock_method.return_value = ("OPEN", 0)

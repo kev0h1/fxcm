@@ -49,6 +49,7 @@ class TestManageTrades:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
         multiplier = 3
@@ -69,9 +70,7 @@ class TestManageTrades:
                 await uow.trade_repository.save(trade)
             await manage_trades_handler(uow=uow, indicator=Indicators())
 
-            expected_stop = (
-                close - trade.half_spread_cost - multiplier * 0.0001
-            )
+            expected_stop = close - trade.half_spread_cost - multiplier * 0.0001
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - expected_stop) < 0.0001
@@ -100,9 +99,7 @@ class TestManageTrades:
                 ]
             )
             await manage_trades_handler(uow=uow, indicator=Indicators())
-            expected_stop = (
-                close - trade.half_spread_cost - multiplier * 0.0001
-            )
+            expected_stop = close - trade.half_spread_cost - multiplier * 0.0001
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - expected_stop) < 0.0001
@@ -149,6 +146,7 @@ class TestManageTrades:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
 
@@ -170,9 +168,7 @@ class TestManageTrades:
                 await uow.trade_repository.save(trade)
             await manage_trades_handler(uow=uow, indicator=Indicators())
 
-            expected_close = (
-                close + trade.half_spread_cost + multiplier * 0.0001
-            )
+            expected_close = close + trade.half_spread_cost + multiplier * 0.0001
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - expected_close) < 0.0001
@@ -200,9 +196,7 @@ class TestManageTrades:
                 ]
             )
             await manage_trades_handler(uow=uow, indicator=Indicators())
-            expected_close = (
-                close + trade.half_spread_cost + multiplier * 0.0001
-            )
+            expected_close = close + trade.half_spread_cost + multiplier * 0.0001
             async with uow:
                 trades = await uow.trade_repository.get_all()
                 assert abs(trades[0].stop - expected_close) < 0.0001

@@ -14,7 +14,10 @@ def get_db() -> None:
 
     db_name = "mydb_test_" + str(uuid.uuid4())
     uow = MongoUnitOfWork(
-        fxcm_connection=MagicMock(), db_name=db_name, scraper=MagicMock()
+        fxcm_connection=MagicMock(),
+        db_name=db_name,
+        scraper=MagicMock(),
+        sentiment_scraper=MagicMock(),
     )
     db = Database(uow=uow)
     # Connect to the test database
