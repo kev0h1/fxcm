@@ -61,16 +61,20 @@ class TradingEventBus(EventBus):
         logger.info("Event loop for event bus started")
         self.running = True
         while True:
-            event = await self.queue.get()
-            if isinstance(event, self.StopEvent):
-                break
+            try:
+                event = await self.queue.get()
+                if isinstance(event, self.StopEvent):
+                    break
 
-            event_type = type(event)
+                event_type = type(event)
 
-            if event_type in self.handlers:
-                for handler in self.handlers[event_type]:
-                    async with self.uow:
-                        await handler(event, self.uow)
+                if event_type in self.handlers:
+                    for handler in self.handlers[event_type]:
+                        async with self.uow:
+                            await handler(event, self.uow)
+            except Exception as e:
+                logger.error("DANGER: Error in event loop")
+                logger.error(e)
 
         self.running = False
 
