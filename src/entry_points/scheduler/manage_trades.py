@@ -53,7 +53,9 @@ async def manage_trades_handler(
                     adjusted_close_long = close
                     new_stop = adjusted_close_long - multiplier * atr
                     if new_stop > trade.stop and new_stop > (
-                        trade.close + half_spread_pips
+                        # trade.close + half_spread_pips
+                        trade.stop
+                        + half_spread_pips
                     ):
                         # get the pip location =
                         trade.stop = new_stop
@@ -62,7 +64,9 @@ async def manage_trades_handler(
                     adjusted_close_short = close
                     new_stop = adjusted_close_short + multiplier * atr
                     if new_stop < trade.stop and new_stop < (
-                        trade.close - half_spread_pips
+                        # trade.close - half_spread_pips
+                        trade.stop
+                        - half_spread_pips
                     ):
                         trade.stop = new_stop
                         modified = True
@@ -81,11 +85,11 @@ async def manage_trades_handler(
                 if (
                     trade.is_buy
                     and trade.stop > close
-                    and trade.stop > (trade.close + half_spread_pips)
+                    # and trade.stop > (trade.close + half_spread_pips)
                 ) or (
                     not trade.is_buy
                     and trade.stop < close
-                    and trade.stop < (trade.close - half_spread_pips)
+                    # and trade.stop < (trade.close - half_spread_pips)
                 ):
                     logger.info(
                         "Trade crossed stop loss for trade %s, with stop of %s and is buy is %s"
