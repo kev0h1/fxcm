@@ -3571,6 +3571,21 @@ files = [
 ]
 
 [[package]]
+name = "snakeviz"
+version = "2.2.0"
+description = "A web-based viewer for Python profiler output"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "snakeviz-2.2.0-py2.py3-none-any.whl", hash = "sha256:569e2d71c47f80a886aa6e70d6405cb6d30aa3520969ad956b06f824c5f02b8e"},
+    {file = "snakeviz-2.2.0.tar.gz", hash = "sha256:7bfd00be7ae147eb4a170a471578e1cd3f41f803238958b6b8efcf2c698a6aa9"},
+]
+
+[package.dependencies]
+tornado = ">=2.0"
+
+[[package]]
 name = "sniffio"
 version = "1.3.0"
 description = "Sniff out which async library your code is running under"
@@ -3769,20 +3784,6 @@ anyio = ">=3.4.0,<5"
 
 [package.extras]
 full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyaml"]
-
-[[package]]
-name = "ta-lib"
-version = "0.4.28"
-description = "Python wrapper for TA-Lib"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "TA-Lib-0.4.28.tar.gz", hash = "sha256:3f03847162e003e0d92a8a89d9e8b7192dfe1235507e2f7d1d0e66cd5af7a48e"},
-]
-
-[package.dependencies]
-numpy = "*"
 
 [[package]]
 name = "terminado"
@@ -4085,4 +4086,4 @@ requests = ">=2.0,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "8c2e8225c5dfb1e436e75fbe4ee2207fc67acabf5cb8c0b2c6cf279fe892a950"
+content-hash = "a23cbe4277eb5602f1aaf5d095c0629eb1fa672aabee18e03641e0a71a4bd768"

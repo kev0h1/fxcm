@@ -9,6 +9,7 @@ from src.entry_points.routes.trade_routes import TradeResource, TradePl
 from src.entry_points.scheduler.scheduler import scheduler
 from src.logger import get_logger
 from src.service_layer.uow import MongoUnitOfWork
+import cProfile
 
 logger = get_logger(__name__)
 
@@ -28,6 +29,10 @@ def create_app():
         allow_headers=["*"],
     )
 
+    # do not push this
+    profiler = cProfile.Profile()
+    profiler.enable()
+
     api.add_resource(DebugResource(), "/debug", tags=["Debug"])
     api.add_resource(
         FundamentalResource(), "/fundamental-data", tags=["Fundamental Data"]
@@ -45,5 +50,10 @@ def create_app():
         asyncio.create_task(uow.event_bus.start())
         app.state.uow = uow
         app.state.event_bus = uow.event_bus
+
+    @app.on_event("shutdown")
+    async def shut_down():
+        profiler.disable()  # Stop profiling
+        profiler.dump_stats("profile_output.prof")
 
     return app
