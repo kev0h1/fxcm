@@ -38,6 +38,10 @@ async def ma_cross_adx(refined_data: pd.DataFrame, indicator: "Indicators"):
 
     refined_data = await indicator.get_adx(refined_data, period=14)
 
+    # Define RSI thresholds
+    rsi_overbought = 70
+    rsi_oversold = 30
+
     # Define divergence conditions
     condition_bullish_divergence = (
         (refined_data["Prev_ShortTerm_MA"] <= refined_data["Prev_MediumTerm_MA"])
@@ -45,6 +49,8 @@ async def ma_cross_adx(refined_data: pd.DataFrame, indicator: "Indicators"):
         & (refined_data["close"] > refined_data["LongTerm_MA"])
         & (refined_data["adx"] > 25)
         & (refined_data["plus_di"] > refined_data["minus_di"])
+        & (refined_data["rsi"] > 50)
+        & (refined_data["rsi"] < rsi_overbought)
     )
 
     condition_bearish_divergence = (
@@ -53,6 +59,8 @@ async def ma_cross_adx(refined_data: pd.DataFrame, indicator: "Indicators"):
         & (refined_data["close"] > refined_data["LongTerm_MA"])
         & (refined_data["adx"] > 25)
         & (refined_data["plus_di"] < refined_data["minus_di"])
+        & (refined_data["rsi"] < 50)
+        & (refined_data["rsi"] > rsi_oversold)
     )
 
     # Create signals
