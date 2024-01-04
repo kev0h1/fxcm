@@ -42,7 +42,7 @@ async def get_technical_signal(
             refined_data = refined_data.drop(columns=["Buy_Signal", "Sell_Signal"])
 
             def calculate_stop(row):
-                atr_multiplier = 4
+                atr_multiplier = 8
                 if row["Signal"] == 1:  # Buy
                     return (
                         row["close"] - atr_multiplier * row["atr"]
