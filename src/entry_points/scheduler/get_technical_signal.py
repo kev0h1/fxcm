@@ -6,7 +6,7 @@ from src.service_layer.uow import MongoUnitOfWork
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.config import ForexPairEnum, PeriodEnum, SentimentEnum
-from src.service_layer.strategies.ma_cross_adx import ma_cross_adx
+from src.service_layer.strategies.divergence_convergence import divergence_convergence
 from src.domain.events import (
     CloseForexPairEvent,
     OpenTradeEvent,
@@ -32,7 +32,7 @@ async def get_technical_signal(
             )
 
             # Choose strategy here
-            refined_data = await ma_cross_adx(refined_data, indicator)
+            refined_data = await divergence_convergence(refined_data, indicator)
 
             # Combine the Buy_Signal and Sell_Signal into a single Signal column
             refined_data["Signal"] = refined_data["Buy_Signal"].replace(
@@ -42,7 +42,7 @@ async def get_technical_signal(
             refined_data = refined_data.drop(columns=["Buy_Signal", "Sell_Signal"])
 
             def calculate_stop(row):
-                atr_multiplier = 8
+                atr_multiplier = 5
                 if row["Signal"] == 1:  # Buy
                     return (
                         row["close"] - atr_multiplier * row["atr"]

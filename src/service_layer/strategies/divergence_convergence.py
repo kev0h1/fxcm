@@ -17,6 +17,8 @@ async def divergence_convergence(refined_data: pd.DataFrame, indicator: "Indicat
 
     refined_data = await indicator.get_adx(refined_data, period=14)
 
+    refined_data = await indicator.get_obv(refined_data)
+
     condition_adx_gt_25 = refined_data["adx"] > 25
 
     atr_threshold = 1.5 * refined_data["atr"].rolling(window=100).mean()
@@ -73,6 +75,7 @@ async def divergence_convergence(refined_data: pd.DataFrame, indicator: "Indicat
         & (refined_data["rsi"] < 30)
         & (rolling_adx_25 > 0)
         & (refined_data["atr"] < atr_threshold)
+        & (refined_data["obv"].diff().rolling(window=3).mean() > 0)
     )
 
     condition_bearish_divergence = (
@@ -81,6 +84,7 @@ async def divergence_convergence(refined_data: pd.DataFrame, indicator: "Indicat
         & (refined_data["rsi"] > 70)
         & (rolling_adx_25 > 0)
         & (refined_data["atr"] < atr_threshold)
+        & (refined_data["obv"].diff().rolling(window=3).mean() < 0)
     )
 
     # Create signals
