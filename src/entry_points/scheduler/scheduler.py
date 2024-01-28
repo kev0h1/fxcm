@@ -35,7 +35,7 @@ async def get_fundamental_trend_data():
         await process_data(date_=date_)
 
 
-@scheduler.scheduled_job("cron", minute="*/5")
+@scheduler.scheduled_job("cron", minute="*/15")
 async def get_fundamental_technical_data():
     await asyncio.sleep(1)
     date_: datetime = datetime.now(timezone.utc)
@@ -45,7 +45,7 @@ async def get_fundamental_technical_data():
         await get_technical_signal()
 
 
-@scheduler.scheduled_job("cron", minute="*/5")
+@scheduler.scheduled_job("cron", minute="*/15")
 async def manage_trades():
     await asyncio.sleep(1)
     date_: datetime = datetime.now(timezone.utc)
