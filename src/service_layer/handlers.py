@@ -152,7 +152,7 @@ async def open_trade_handler(event: events.OpenTradeEvent, uow: MongoUnitOfWork)
         ):
             logger.info(
                 "OPEN TRADE: Forex pair: %s, with entry price: %s, stop: %s, isBuy: %s"
-                % (event.forex_pair, entry_price, stop_loss, is_buy)
+                % (event.forex_pair, event.close, stop_loss, is_buy)
             )
             (
                 trade_id,
@@ -173,7 +173,7 @@ async def open_trade_handler(event: events.OpenTradeEvent, uow: MongoUnitOfWork)
         ):
             logger.info(
                 "OPEN TRADE: Forex pair: %s, with entry price: %s, stop: %s, isBuy: %s"
-                % (event.forex_pair, entry_price, stop_loss, is_buy)
+                % (event.forex_pair, event.close, stop_loss, is_buy)
             )
             (
                 trade_id,
