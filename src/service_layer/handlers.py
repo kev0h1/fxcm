@@ -150,6 +150,10 @@ async def open_trade_handler(event: events.OpenTradeEvent, uow: MongoUnitOfWork)
             )
             == SentimentEnum.BULLISH
         ):
+            logger.info(
+                "OPEN TRADE: Forex pair: %s, with entry price: %s, stop: %s, isBuy: %s"
+                % (event.forex_pair, entry_price, stop_loss, is_buy)
+            )
             (
                 trade_id,
                 entry_price,
@@ -167,6 +171,10 @@ async def open_trade_handler(event: events.OpenTradeEvent, uow: MongoUnitOfWork)
             )
             == SentimentEnum.BEARISH
         ):
+            logger.info(
+                "OPEN TRADE: Forex pair: %s, with entry price: %s, stop: %s, isBuy: %s"
+                % (event.forex_pair, entry_price, stop_loss, is_buy)
+            )
             (
                 trade_id,
                 entry_price,
