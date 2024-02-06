@@ -96,28 +96,28 @@ class DebugResource(Resource):
 
         if debug_task == DebugEnum.TestOpenTrade:
             data = await self.uow.fxcm_connection.get_candle_data(
-                ForexPairEnum.AUDUSD, PeriodEnum.HOUR_1, 100
+                ForexPairEnum.USDCHF, PeriodEnum.HOUR_1, 100
             )
-            close = data.iloc[-1]["close"]
-            stop = data.iloc[-1]["low"]
+            close = 1.07582
+            stop = 1.0769707143
 
             event = OpenTradeEvent(
-                forex_pair=ForexPairEnum.AUDUSD,
-                sentiment=SentimentEnum.BULLISH,
-                stop=0.63181,
-                close=float(close),
+                forex_pair=ForexPairEnum.USDCHF,
+                sentiment=SentimentEnum.BEARISH,
+                stop=stop,
+                close=close,
                 limit=None,
             )
 
-            is_buy, _, _, _, _ = await get_trade_parameters(
-                event, self.uow, ForexPairEnum.AUDUSD.value.split("_")
+            is_buy, units, stop_loss, sl_pips, _ = await get_trade_parameters(
+                event, self.uow, ForexPairEnum.USDCHF.value.split("_")
             )
 
             return await self.uow.fxcm_connection.open_trade(
-                instrument=ForexPairEnum.AUDUSD,
+                instrument=ForexPairEnum.EURUSD,
                 is_buy=is_buy,
-                amount=int(20),
-                stop=event.stop,
+                amount=units,
+                stop=stop_loss,
                 limit=None,
             )
         if debug_task == DebugEnum.TestModifyTrade:
