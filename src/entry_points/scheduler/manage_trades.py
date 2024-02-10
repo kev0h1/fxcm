@@ -20,9 +20,9 @@ async def manage_trades_handler(
     indicator: Indicators = Depends(Provide[Container.indicator_service]),
 ) -> None:  # type: ignore
     async with uow:
-        forex_pairs: list[
-            ForexPairEnum
-        ] = await uow.trade_repository.get_distinct_forex_pairs()
+        forex_pairs: list[ForexPairEnum] = (
+            await uow.trade_repository.get_distinct_forex_pairs()
+        )
         for forex_pair in forex_pairs:
             data = await uow.fxcm_connection.get_candle_data(
                 forex_pair, PeriodEnum.MINUTE_15, 20
@@ -31,12 +31,12 @@ async def manage_trades_handler(
             close = data.iloc[-1]["close"]
             atr = data.iloc[-1]["atr"]
 
-            trades: list[
-                Trade
-            ] = await uow.trade_repository.get_open_trades_by_forex_pair(
-                forex_pair=forex_pair
+            trades: list[Trade] = (
+                await uow.trade_repository.get_open_trades_by_forex_pair(
+                    forex_pair=forex_pair
+                )
             )
-            multiplier = 1.5
+            multiplier = 0.75
 
             pip_value = 0.0001 if "JPY" not in forex_pair.value.split("/") else 0.01
 
