@@ -74,7 +74,7 @@ class TradingEventBus(EventBus):
                             await handler(event, self.uow)
             except Exception as e:
                 logger.error("DANGER: Error in event loop")
-                raise e
+                logger.error(e.__traceback__)
 
         self.running = False
 
