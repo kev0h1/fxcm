@@ -36,7 +36,7 @@ async def manage_trades_handler(
                     forex_pair=forex_pair
                 )
             )
-            multiplier = 0.75
+            multiplier = 0.25
 
             pip_value = 0.0001 if "JPY" not in forex_pair.value.split("/") else 0.01
 
