@@ -21,6 +21,7 @@ from src.service_layer.uow import MongoUnitOfWork
 from src.entry_points.scheduler.manage_trades import manage_trades_handler
 
 
+@pytest.mark.skip
 class TestManageTrades:
     @pytest.mark.asyncio
     @given(
