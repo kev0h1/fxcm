@@ -244,11 +244,17 @@ async def get_trade_parameters(
 
     stop_loss_pips = abs(event.close - event.stop) / pip_value
 
+    logger.info("stop loss pips is %s" % stop_loss_pips)
+    logger.info("getting the latest close for %s" % conversion_map[event.forex_pair])
+
     quoted_currency_exchange_rate = await uow.fxcm_connection.get_latest_close(
         conversion_map[event.forex_pair]
     )
+    logger.info("Quoted currency exchange rate is %s" % quoted_currency_exchange_rate)
 
+    logger.info("getting the account balance")
     balance = float(await uow.fxcm_connection.get_account_balance())
+    logger.info("Account balance is %s" % balance)
     risk_amount = balance * risk
     adjusted_pip_value = 100000 * pip_value * 1 / quoted_currency_exchange_rate
     stop_loss_in_account_currency = stop_loss_pips * adjusted_pip_value
