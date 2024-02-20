@@ -163,3 +163,4 @@ class DebugEnum(Enum):
     TestProcessEvents = "Test Process Events"
     TestGetSpread = "Test Get Spread"
     ScrapeSentiment = "Scrape Sentiment"
+    GetBalance = "Get Balance"

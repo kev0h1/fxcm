@@ -124,6 +124,9 @@ class DebugResource(Resource):
             return await self.uow.fxcm_connection.modify_trade(
                 trade_id="511", stop=1.07944
             )
+
+        if debug_task == DebugEnum.GetBalance:
+            return await self.uow.fxcm_connection.get_account_balance()
         if debug_task == DebugEnum.GetTradeState:
             try:
                 (
