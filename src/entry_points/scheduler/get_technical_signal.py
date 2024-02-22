@@ -50,7 +50,7 @@ async def generate_signal_for_forex_pair(uow, indicator, forex_pair):
     refined_data = refined_data.drop(columns=["Buy_Signal", "Sell_Signal"])
 
     def calculate_stop(row):
-        atr_multiplier = 2
+        atr_multiplier = 3
         if row["Signal"] == 1:  # Buy
             return (
                 row["close"] - atr_multiplier * row["atr"]
