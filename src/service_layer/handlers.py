@@ -22,9 +22,7 @@ from datetime import datetime
 logger = get_logger(__name__)
 
 
-async def close_trade_handler(
-    event: events.CloseTradeEvent, uow: MongoUnitOfWork
-):
+async def close_trade_handler(event: events.CloseTradeEvent, uow: MongoUnitOfWork):
     """Handles a close trade event"""
     logger.info(
         "Handling close trade event for currency %s with sentiment %s"
@@ -66,6 +64,8 @@ async def get_combined_techincal_and_fundamental_sentiment(
 
     spread = await uow.fxcm_connection.get_spread(event.forex_pair)
 
+    community_sentiment = (await uow.sentiment_scraper.scrape())[event.forex_pair.name]
+
     logger.info(
         "Latest object is %s, base currency fundamentals is %s, quoted currency fundamentals is %s"
         % (
@@ -85,44 +85,36 @@ async def get_combined_techincal_and_fundamental_sentiment(
     if event.sentiment == SentimentEnum.BULLISH and (
         (
             base_currency_fundamentals == latest_object
-            and base_currency_fundamentals.aggregate_sentiment
-            != SentimentEnum.BEARISH
+            and base_currency_fundamentals.aggregate_sentiment != SentimentEnum.BEARISH
         )
         or (
             quote_currency_fundamentals == latest_object
-            and quote_currency_fundamentals.aggregate_sentiment
-            != SentimentEnum.BULLISH
+            and quote_currency_fundamentals.aggregate_sentiment != SentimentEnum.BULLISH
         )
+        and community_sentiment["long"] > community_sentiment["short"]
     ):
-        logger.warning(
-            "Combined sentiment is bullish for %s" % event.forex_pair
-        )
+        logger.warning("Combined sentiment is bullish for %s" % event.forex_pair)
         return SentimentEnum.BULLISH
 
     if event.sentiment == SentimentEnum.BEARISH and (
         (
             base_currency_fundamentals == latest_object
-            and base_currency_fundamentals.aggregate_sentiment
-            != SentimentEnum.BULLISH
+            and base_currency_fundamentals.aggregate_sentiment != SentimentEnum.BULLISH
         )
         or (
             quote_currency_fundamentals == latest_object
-            and quote_currency_fundamentals.aggregate_sentiment
-            != SentimentEnum.BEARISH
+            and quote_currency_fundamentals.aggregate_sentiment != SentimentEnum.BEARISH
         )
+        and community_sentiment["short"] > community_sentiment["long"]
     ):
-        logger.warning(
-            "Combined sentiment is bearish for %s" % event.forex_pair
-        )
+        logger.warning("Combined sentiment is bearish for %s" % event.forex_pair)
         return SentimentEnum.BEARISH
 
     logger.warning("Combined sentiment is flat for %s" % event.forex_pair)
     return SentimentEnum.FLAT
 
 
-async def open_trade_handler(
-    event: events.OpenTradeEvent, uow: MongoUnitOfWork
-):
+async def open_trade_handler(event: events.OpenTradeEvent, uow: MongoUnitOfWork):
     """Handles an open trade event
 
     (Number of Units) = (Total Equity * Risk per Trade %) / (Stop Loss in Pips * Pip Value)
@@ -158,6 +150,10 @@ async def open_trade_handler(
             )
             == SentimentEnum.BULLISH
         ):
+            logger.info(
+                "OPEN TRADE: Forex pair: %s, with entry price: %s, stop: %s, isBuy: %s"
+                % (event.forex_pair, event.close, stop_loss, is_buy)
+            )
             (
                 trade_id,
                 entry_price,
@@ -175,6 +171,10 @@ async def open_trade_handler(
             )
             == SentimentEnum.BEARISH
         ):
+            logger.info(
+                "OPEN TRADE: Forex pair: %s, with entry price: %s, stop: %s, isBuy: %s"
+                % (event.forex_pair, event.close, stop_loss, is_buy)
+            )
             (
                 trade_id,
                 entry_price,
@@ -192,9 +192,7 @@ async def open_trade_handler(
                 units=units,
                 stop=stop_loss,
                 limit=limit,
-                is_buy=True
-                if event.sentiment == SentimentEnum.BULLISH
-                else False,
+                is_buy=True if event.sentiment == SentimentEnum.BULLISH else False,
                 base_currency=CurrencyEnum(currencies[0]),
                 quote_currency=CurrencyEnum(currencies[1]),
                 forex_currency_pair=event.forex_pair,
@@ -246,11 +244,17 @@ async def get_trade_parameters(
 
     stop_loss_pips = abs(event.close - event.stop) / pip_value
 
+    logger.info("stop loss pips is %s" % stop_loss_pips)
+    logger.info("getting the latest close for %s" % conversion_map[event.forex_pair])
+
     quoted_currency_exchange_rate = await uow.fxcm_connection.get_latest_close(
         conversion_map[event.forex_pair]
     )
+    logger.info("Quoted currency exchange rate is %s" % quoted_currency_exchange_rate)
 
+    logger.info("getting the account balance")
     balance = float(await uow.fxcm_connection.get_account_balance())
+    logger.info("Account balance is %s" % balance)
     risk_amount = balance * risk
     adjusted_pip_value = 100000 * pip_value * 1 / quoted_currency_exchange_rate
     stop_loss_in_account_currency = stop_loss_pips * adjusted_pip_value

@@ -54,6 +54,7 @@ class TestTradeOrm:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
         repo = TradeRepository()
@@ -94,6 +95,7 @@ class TestTradeOrm:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
         repo = TradeRepository()

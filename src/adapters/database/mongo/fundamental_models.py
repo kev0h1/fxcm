@@ -1,5 +1,4 @@
 from typing import Union
-import pytz
 from src.config import CurrencyEnum, SentimentEnum
 from mongoengine import (
     StringField,
@@ -17,6 +16,7 @@ from src.domain.fundamental import (
     FundamentalData as FundamentalDataDomain,
     CalendarEvent as CalendarEventDomain,
 )
+import zoneinfo
 
 
 class CalendarEvent(EmbeddedDocument):
@@ -114,8 +114,6 @@ def map_to_domain_model(
     """
     if not fundamental_data:
         return None
-
-    timezone = pytz.timezone("UTC")
     calendar_events = [
         CalendarEventDomain(
             calendar_event=calendar_event.calendar_event,
@@ -126,9 +124,10 @@ def map_to_domain_model(
         )
         for calendar_event in fundamental_data.calendar_events
     ]
+    tz = zoneinfo.ZoneInfo("UTC")
     return FundamentalDataDomain(
         currency=fundamental_data.currency,
-        last_updated=timezone.localize(fundamental_data.last_updated),
+        last_updated=fundamental_data.last_updated.replace(tzinfo=tz),
         aggregate_sentiment=fundamental_data.aggregate_sentiment,
         calendar_events=calendar_events,
         processed=fundamental_data.processed,

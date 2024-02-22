@@ -6,16 +6,15 @@ from src.service_layer.uow import MongoUnitOfWork
 from dependency_injector.wiring import inject, Provide
 from fastapi import Depends
 from src.config import ForexPairEnum, PeriodEnum, SentimentEnum
-
+from src.service_layer.strategies.divergence_convergence import divergence_convergence
 from src.domain.events import (
     CloseForexPairEvent,
     OpenTradeEvent,
 )
 from src.logger import get_logger
 import pandas as pd
+import asyncio
 
-pd.set_option("display.max_rows", None)
-pd.set_option("display.max_columns", None)
 logger = get_logger(__name__)
 
 
@@ -26,124 +25,22 @@ async def get_technical_signal(
 ) -> None:  # type: ignore
     """Gets the technical signal for the currency"""
     async with uow:
+        tasks = []
         for forex_pair in ForexPairEnum.__members__.values():
-            refined_data: pd.DataFrame = (
-                await uow.fxcm_connection.get_candle_data(
-                    instrument=ForexPairEnum(forex_pair),
-                    period=PeriodEnum.MINUTE_5,
-                    number=250,
-                )
-            )
-
-            refined_data = await indicator.get_simple_moving_average(
-                refined_data,
-                period=5,
-                col="close",
-                column_name="MA",
-            )
-            refined_data = await indicator.fibonacci_retracements(refined_data)
-
-            refined_data = await indicator.get_rsi(refined_data, period=14)
-
-            refined_data = await indicator.get_macd(refined_data, "close")
-
-            refined_data = await indicator.get_atr(refined_data, period=14)
-
-            refined_data = await indicator.get_adx(refined_data, period=14)
-
-            refined_data["prev_close"] = refined_data["close"].shift(1)
-
-            refined_data = await get_signal(refined_data)
-            if refined_data.iloc[-1]["Signal"] > 0:
-                logger.warning("Bullish Signal generated for %s" % forex_pair)
-                await uow.publish(
-                    CloseForexPairEvent(
-                        forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH
-                    )
-                )
-                await uow.publish(
-                    OpenTradeEvent(
-                        forex_pair=forex_pair,
-                        sentiment=SentimentEnum.BULLISH,
-                        stop=refined_data.iloc[-1]["ATR_Stop"],
-                        close=refined_data.iloc[-1]["close"],
-                        limit=refined_data.iloc[-1]["ATR_Limit"],
-                    )
-                )
-            elif refined_data.iloc[-1]["Signal"] < 0:
-                logger.warning("Bearish Signal generated for %s" % forex_pair)
-                await uow.publish(
-                    CloseForexPairEvent(
-                        forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH
-                    )
-                )
-                await uow.publish(
-                    OpenTradeEvent(
-                        forex_pair=forex_pair,
-                        sentiment=SentimentEnum.BEARISH,
-                        stop=refined_data.iloc[-1]["ATR_Stop"],
-                        close=refined_data.iloc[-1]["close"],
-                        limit=refined_data.iloc[-1]["ATR_Limit"],
-                    )
-                )
+            tasks.append(generate_signal_for_forex_pair(uow, indicator, forex_pair))
+        await asyncio.gather(*tasks)
 
 
-async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
-    """Gets the signal for the currency"""
-
-    # Define divergence conditions
-    bullish_condition = (
-        (
-            (
-                (refined_data["prev_close"] <= refined_data["Fib_23.6"])
-                & (refined_data["close"] > refined_data["Fib_23.6"])
-            )
-            | (
-                (refined_data["prev_close"] <= refined_data["Fib_38.2"])
-                & (refined_data["close"] > refined_data["Fib_38.2"])
-            )
-            | (
-                (refined_data["prev_close"] <= refined_data["Fib_50.0"])
-                & (refined_data["close"] > refined_data["Fib_50.0"])
-            )
-            | (
-                (refined_data["prev_close"] <= refined_data["Fib_61.8"])
-                & (refined_data["close"] > refined_data["Fib_61.8"])
-            )
-        )
-        & (refined_data["close"] > refined_data["Fib_23.6"])
-        & (refined_data["close"] > refined_data["MA"])
-        & (refined_data["adx"] > 25)
-        & (refined_data["plus_di"] > refined_data["minus_di"])
+async def generate_signal_for_forex_pair(uow, indicator, forex_pair):
+    logger.info("Getting data for forex pair %s" % forex_pair)
+    refined_data: pd.DataFrame = await uow.fxcm_connection.get_candle_data(
+        instrument=ForexPairEnum(forex_pair),
+        period=PeriodEnum.MINUTE_15,
+        number=250,
     )
 
-    bearish_condition = (
-        (
-            (
-                (refined_data["prev_close"] >= refined_data["Fib_23.6"])
-                & (refined_data["close"] < refined_data["Fib_23.6"])
-            )
-            | (
-                (refined_data["prev_close"] >= refined_data["Fib_38.2"])
-                & (refined_data["close"] < refined_data["Fib_38.2"])
-            )
-            | (
-                (refined_data["prev_close"] >= refined_data["Fib_50.0"])
-                & (refined_data["close"] < refined_data["Fib_50.0"])
-            )
-            | (
-                (refined_data["prev_close"] >= refined_data["Fib_61.8"])
-                & (refined_data["close"] < refined_data["Fib_61.8"])
-            )
-        )
-        & (refined_data["close"] < refined_data["MA"])
-        & (refined_data["adx"] > 25)
-        & (refined_data["plus_di"] < refined_data["minus_di"])
-    )
-
-    # Create signals
-    refined_data["Buy_Signal"] = bearish_condition
-    refined_data["Sell_Signal"] = bullish_condition
+    # Choose strategy here
+    refined_data = await divergence_convergence(refined_data, indicator)
 
     # Combine the Buy_Signal and Sell_Signal into a single Signal column
     refined_data["Signal"] = refined_data["Buy_Signal"].replace(
@@ -153,30 +50,61 @@ async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     refined_data = refined_data.drop(columns=["Buy_Signal", "Sell_Signal"])
 
     def calculate_stop(row):
+        atr_multiplier = 3
         if row["Signal"] == 1:  # Buy
             return (
-                row["close"] - 3 * row["atr"]
+                row["close"] - atr_multiplier * row["atr"]
             )  # Adjust the multiplier as needed
         elif row["Signal"] == -1:  # Sell
             return (
-                row["close"] + 3 * row["atr"]
+                row["close"] + atr_multiplier * row["atr"]
             )  # Adjust the multiplier as needed
         else:  # No signal
             return None
 
     def calculate_limit(row):
-        if row["Signal"] == 1:  # Buy
-            return (
-                row["close"] + 4 * row["atr"]
-            )  # Adjust the multiplier as needed
-        elif row["Signal"] == -1:  # Sell
-            return (
-                row["close"] - 4 * row["atr"]
-            )  # Adjust the multiplier as needed
-        else:  # No signal
-            return None
+        atr_multiplier = 8
+        # if row["Signal"] == 1:  # Buy
+        #     return (
+        #         row["close"] + atr_multiplier * row["atr"]
+        #     )  # Adjust the multiplier as needed
+        # elif row["Signal"] == -1:  # Sell
+        #     return (
+        #         row["close"] - atr_multiplier * row["atr"]
+        #     )  # Adjust the multiplier as needed
+        # else:  # No signal
+        return None
 
     refined_data["ATR_Stop"] = refined_data.apply(calculate_stop, axis=1)
     refined_data["ATR_Limit"] = refined_data.apply(calculate_limit, axis=1)
 
+    if refined_data.iloc[-1]["Signal"] > 0:
+        logger.warning("Bullish Signal generated for %s" % forex_pair)
+        await uow.publish(
+            CloseForexPairEvent(forex_pair=forex_pair, sentiment=SentimentEnum.BEARISH)
+        )
+        await uow.publish(
+            OpenTradeEvent(
+                forex_pair=forex_pair,
+                sentiment=SentimentEnum.BULLISH,
+                stop=refined_data.iloc[-1]["ATR_Stop"],
+                close=refined_data.iloc[-1]["close"],
+            )
+        )
+    elif refined_data.iloc[-1]["Signal"] < 0:
+        logger.warning("Bearish Signal generated for %s" % forex_pair)
+        await uow.publish(
+            CloseForexPairEvent(forex_pair=forex_pair, sentiment=SentimentEnum.BULLISH)
+        )
+        await uow.publish(
+            OpenTradeEvent(
+                forex_pair=forex_pair,
+                sentiment=SentimentEnum.BEARISH,
+                stop=refined_data.iloc[-1]["ATR_Stop"],
+                close=refined_data.iloc[-1]["close"],
+            )
+        )
+
+
+async def get_signal(refined_data: pd.DataFrame) -> pd.DataFrame:
     return refined_data

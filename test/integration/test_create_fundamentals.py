@@ -38,12 +38,11 @@ class TestFundamentalMapper:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
         deadline=None,
     )
-    async def test_add_fundamental_data_to_db(
-        self, get_db, data: FundamentalData
-    ):
+    async def test_add_fundamental_data_to_db(self, get_db, data: FundamentalData):
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
         currency = data.currency
@@ -81,6 +80,7 @@ class TestFundamentalMapper:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
         async with uow:
@@ -119,6 +119,7 @@ class TestFundamentalMapper:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=mock.MagicMock(),
+            sentiment_scraper=mock.MagicMock(),
             db_name=get_db,
         )
         async with uow:
@@ -131,7 +132,9 @@ class TestFundamentalMapper:
 
         max_object = max(objs, key=lambda x: x.last_updated)
         async with uow:
-            fundamental_data = await uow.fundamental_data_repository.get_latest_fundamental_data(
-                CurrencyEnum.USD
+            fundamental_data = (
+                await uow.fundamental_data_repository.get_latest_fundamental_data(
+                    CurrencyEnum.USD
+                )
             )
             assert fundamental_data == max_object

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from mock import MagicMock
 
 import pytz
 from src.adapters.fxcm_connect.mock_trade_connect import MockTradeConnect
@@ -29,6 +30,7 @@ class TestGetFundamentalData:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
             scraper=MockScraper(sentiment=sentiment),
+            sentiment_scraper=MagicMock(),
             db_name=get_db,
         )
 
@@ -49,9 +51,8 @@ class TestGetFundamentalData:
     async def test_process_data_for_processed_events(self, get_db) -> None:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
-            scraper=MockScraper(
-                sentiment=SentimentEnum.BULLISH, is_processed=True
-            ),
+            scraper=MockScraper(sentiment=SentimentEnum.BULLISH, is_processed=True),
+            sentiment_scraper=MagicMock(),
             db_name=get_db,
         )
         fundamental_service = FundamentalDataService(uow=uow)
@@ -212,9 +213,8 @@ class TestProcessFundamentalEvent:
     ) -> None:
         uow = MongoUnitOfWork(
             fxcm_connection=MockTradeConnect(),
-            scraper=MockScraper(
-                sentiment=SentimentEnum.BULLISH, is_processed=True
-            ),
+            scraper=MockScraper(sentiment=SentimentEnum.BULLISH, is_processed=True),
+            sentiment_scraper=MagicMock(),
             db_name=get_db,
         )
 
@@ -235,8 +235,7 @@ class TestProcessFundamentalEvent:
         )
         fundamental_data = FundamentalData(
             currency=CurrencyEnum.USD,
-            last_updated=datetime.now(tz=pytz.utc)
-            - timedelta(minutes=time_delta),
+            last_updated=datetime.now(tz=pytz.utc) - timedelta(minutes=time_delta),
             calendar_events=[test_event, test_event_2],
             processed=False,
         )

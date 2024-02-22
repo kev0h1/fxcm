@@ -20,6 +20,7 @@ from src.utils import get_secret
 
 if TYPE_CHECKING:
     from src.adapters.scraper.base_scraper import BaseScraper
+    from src.adapters.scraper.sentiment_scraper import SentimentScraper
 
 # Use this code snippet in your app.
 # If you need more information about configurations
@@ -43,14 +44,15 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         self,
         fxcm_connection: BaseTradeConnect,
         scraper: "BaseScraper",
+        sentiment_scraper: "SentimentScraper",
         db_name: str = "my_db",
     ):
-        self.init_db(fxcm_connection, scraper, db_name)
+        self.init_db(fxcm_connection, scraper, db_name, sentiment_scraper)
 
         for event, handler in handlers.items():
             self.event_bus.subscribe(event, handler)
 
-    def init_db(self, fxcm_connection, scraper, db_name):
+    def init_db(self, fxcm_connection, scraper, db_name, sentiment_scraper):
         self.db_name = db_name
         if os.environ.get("DEPLOY_ENV", "local") == "aws":
             logger.info("Using AWS DocDB")
@@ -64,7 +66,9 @@ class MongoUnitOfWork(AbstractUnitOfWork):
             logger.info("Using Circle CLI")
             mongodb_username = os.environ["MONGODB_USERNAME"]
             mongodb_password = os.environ["MONGODB_PASSWORD"]
-            self.host = f"mongodb://{mongodb_username}:{mongodb_password}@localhost:27017"
+            self.host = (
+                f"mongodb://{mongodb_username}:{mongodb_password}@localhost:27017"
+            )
         else:
             logger.info("Using local MongoDB")
             self.host = f"mongodb://localhost"
@@ -76,6 +80,7 @@ class MongoUnitOfWork(AbstractUnitOfWork):
         self.trade_repository: TradeRepository = TradeRepository()
         self.fxcm_connection: BaseTradeConnect = fxcm_connection
         self.scraper: "BaseScraper" = scraper
+        self.sentiment_scraper: "SentimentScraper" = sentiment_scraper
 
     def refresh_connection_id(self):
         while True:
@@ -87,7 +92,7 @@ class MongoUnitOfWork(AbstractUnitOfWork):
             # self.some_client_object.refresh_connection_id()
 
             # Sleep for 30 minutes
-            time.sleep(30 * 60)
+            # time.sleep(30 * 60)
 
     async def __aenter__(self):
         self.client = connect(self.db_name, host=self.host)

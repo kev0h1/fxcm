@@ -86,9 +86,7 @@ class OandaConnect(BaseTradeConnect):
                 period.value
             ),  # Candlestick granularity, M5 means 5 minutes
         }
-        r = instruments.InstrumentsCandles(
-            instrument=instrument, params=params
-        )
+        r = instruments.InstrumentsCandles(instrument=instrument, params=params)
         return await self.get_refined_data(self.client.request(r))
 
     @error_handler
@@ -120,9 +118,7 @@ class OandaConnect(BaseTradeConnect):
 
         logger.info(
             "Retrieved open positions %s"
-            % ", ".join(
-                [retrieved_trade.id for retrieved_trade in retrieved_trades]
-            )
+            % ", ".join([retrieved_trade.id for retrieved_trade in retrieved_trades])
         )
         return trades
 
@@ -214,9 +210,7 @@ class OandaConnect(BaseTradeConnect):
             return None, None, None
 
     @error_handler
-    async def close_trade(
-        self, trade_id: str, amount: int
-    ) -> tuple[str, float]:
+    async def close_trade(self, trade_id: str, amount: int) -> tuple[str, float]:
         """closes a trade position"""
         trade_close_endpoint = TradeClose(self.account_id, trade_id)
         response = self.client.request(trade_close_endpoint)
@@ -254,17 +248,13 @@ class OandaConnect(BaseTradeConnect):
         account_details_endpoint = AccountDetails(self.account_id)
 
         response = self.client.request(account_details_endpoint)
-        response: AccountDetailsSchema = parse_obj_as(
-            AccountDetailsSchema, response
-        )
+        response: AccountDetailsSchema = parse_obj_as(AccountDetailsSchema, response)
         return response
 
     @error_handler
     async def get_latest_close(self, instrument: ForexPairEnum) -> float:
         """returns the latest close"""
-        data: DataFrame = await self.get_candle_data(
-            instrument, PeriodEnum.MINUTE_1, 1
-        )
+        data: DataFrame = await self.get_candle_data(instrument, PeriodEnum.MINUTE_1, 1)
         return float(data.iloc[-1]["close"])
 
     @error_handler
@@ -287,9 +277,7 @@ class OandaConnect(BaseTradeConnect):
             accountID=self.account_id, tradeID=trade_id, data=data
         )
         response = self.client.request(trade_modify_request)
-        response_model: TradeCRDCOSchema = parse_obj_as(
-            TradeCRDCOSchema, response
-        )
+        response_model: TradeCRDCOSchema = parse_obj_as(TradeCRDCOSchema, response)
         return response_model
 
     @error_handler
@@ -344,9 +332,7 @@ class OandaConnect(BaseTradeConnect):
     async def get_spread(self, instrument: ForexPairEnum) -> float:
         """returns the spread"""
         instrument = instrument.value.replace("/", "_")
-        r = PricingInfo(
-            accountID=self.account_id, params={"instruments": instrument}
-        )
+        r = PricingInfo(accountID=self.account_id, params={"instruments": instrument})
         self.client.request(r)
         prices = r.response["prices"][0]
         bid_price = float(prices["bids"][0]["price"])

@@ -162,3 +162,5 @@ class DebugEnum(Enum):
     TestCancelPendingOrder = "Test Cancel Pending Order"
     TestProcessEvents = "Test Process Events"
     TestGetSpread = "Test Get Spread"
+    ScrapeSentiment = "Scrape Sentiment"
+    GetBalance = "Get Balance"

@@ -2,7 +2,7 @@ import itertools
 import os
 from typing import Tuple, Union
 from bs4 import BeautifulSoup, element
-from pytz import BaseTzInfo
+import zoneinfo
 from src.adapters.scraper.base_scraper import BaseScraper
 from src.domain.fundamental import CalendarEvent, FundamentalData
 import requests
@@ -36,9 +36,7 @@ class ForexFactoryScraper(BaseScraper):
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0"
         }
 
-    async def set_scraper_params(
-        self, date_: datetime = datetime.today()
-    ) -> None:
+    async def set_scraper_params(self, date_: datetime = datetime.today()) -> None:
         self.date_ = date_
         self.url = await self.get_url_for_today(date_=self.date_)
 
@@ -58,10 +56,10 @@ class ForexFactoryScraper(BaseScraper):
                 continue
             date_time = datetime.combine(self.date_.date(), time)
             if os.environ.get("DEPLOY_ENV", "local") == "aws":
-                local_timezone = pytz.timezone("America/New_York")
+                local_timezone = zoneinfo.ZoneInfo("America/New_York")
             else:
                 local_timezone = get_localzone()
-            date_time = local_timezone.localize(date_time)
+            date_time = date_time.replace(tzinfo=local_timezone)
             date_time = date_time.astimezone(pytz.utc)
             currency = await self.get_event_values(
                 element=data, class_name=CALENDAR_CURRENCY
@@ -69,13 +67,11 @@ class ForexFactoryScraper(BaseScraper):
             if currency not in CurrencyEnum.__members__:
                 continue
             currency = CurrencyEnum(currency)
-            scraped_calendar_event: CalendarEvent = (
-                await self.create_calendar_event(tag=data)
+            scraped_calendar_event: CalendarEvent = await self.create_calendar_event(
+                tag=data
             )
             if scraped_calendar_event:
-                scraped_items.append(
-                    (scraped_calendar_event, currency, date_time)
-                )
+                scraped_items.append((scraped_calendar_event, currency, date_time))
                 fundamental_data: FundamentalData = (
                     await uow.fundamental_data_repository.get_fundamental_data(
                         currency=currency, last_updated=date_time
@@ -85,10 +81,8 @@ class ForexFactoryScraper(BaseScraper):
                     fundamental_data = await self.create_fundamental_object(
                         data, date_time=date_time
                     )
-                    fundamental_data = (
-                        await uow.fundamental_data_repository.save(
-                            fundamental_data
-                        )
+                    fundamental_data = await uow.fundamental_data_repository.save(
+                        fundamental_data
                     )
         return scraped_items
 
@@ -102,9 +96,7 @@ class ForexFactoryScraper(BaseScraper):
     @staticmethod
     async def get_url_for_today(date_: datetime) -> str:
         """Get the url to search for today"""
-        today: str = await ForexFactoryScraper.get_correct_date_format(
-            date_=date_
-        )
+        today: str = await ForexFactoryScraper.get_correct_date_format(date_=date_)
         return "%s?day=%s" % (URL, today)
 
     async def __get_calendar_objects(self) -> element.ResultSet:
